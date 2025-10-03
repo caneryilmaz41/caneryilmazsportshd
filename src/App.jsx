@@ -120,7 +120,7 @@ function App() {
                 <span className="text-base">⚽</span>
                 <span className="hidden xs:inline">MAÇLAR</span>
                 <span className="xs:hidden">MAÇ</span>
-                <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full font-bold min-w-[20px] text-center">{matches.filter(m => m.type === 'match' || m.name.includes('-')).length}</span>
+                <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full font-bold min-w-[20px] text-center">{matches.length}</span>
               </button>
               <button
                 onClick={() => setActiveTab('channels')}
@@ -133,7 +133,7 @@ function App() {
                 <span className="text-base">📺</span>
                 <span className="hidden xs:inline">KANALLAR</span>
                 <span className="xs:hidden">TV</span>
-                <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full font-bold min-w-[20px] text-center">{channels.filter(c => c.type === 'channel' || !c.name.includes('-')).length}</span>
+                <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full font-bold min-w-[20px] text-center">{channels.length}</span>
               </button>
             </div>
 
@@ -170,7 +170,6 @@ function App() {
                   {activeTab === 'matches' ? (
                     <div className="lg:space-y-1 lg:p-2 p-1 space-y-1">
                       {matches
-                        .filter(match => match.type === 'match' || match.name.includes('-'))
                         .filter(match => match.name.toLowerCase().includes(searchTerm.toLowerCase()))
                         .map(match => (
                         <button
@@ -197,7 +196,6 @@ function App() {
                         </button>
                       ))}
                       {matches
-                        .filter(match => match.type === 'match' || match.name.includes('-'))
                         .filter(match => match.name.toLowerCase().includes(searchTerm.toLowerCase()))
                         .length === 0 && (
                         <div className="p-4 text-center text-slate-400 text-sm">
@@ -208,7 +206,6 @@ function App() {
                   ) : (
                     <div className="lg:space-y-1 lg:p-2 p-1 space-y-1">
                       {channels
-                        .filter(channel => channel.type === 'channel' || !channel.name.includes('-'))
                         .filter(channel => channel.name.toLowerCase().includes(searchTerm.toLowerCase()))
                         .map(channel => (
                         <button
@@ -235,7 +232,6 @@ function App() {
                         </button>
                       ))}
                       {channels
-                        .filter(channel => channel.type === 'channel' || !channel.name.includes('-'))
                         .filter(channel => channel.name.toLowerCase().includes(searchTerm.toLowerCase()))
                         .length === 0 && (
                         <div className="p-4 text-center text-slate-400 text-sm">
