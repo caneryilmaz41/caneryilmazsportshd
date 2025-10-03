@@ -1,17 +1,3 @@
-// TRGoals domain checker
-const checkDomain = async (baseNumber) => {
-  const domain = `https://trgoals${baseNumber}.xyz`
-  try {
-    const response = await fetch(`${domain}/channel.html?id=yayin1`, { 
-      method: 'HEAD',
-      mode: 'no-cors'
-    })
-    return domain
-  } catch {
-    return null
-  }
-}
-
 // Find active TRGoals domain
 export const findActiveDomain = async () => {
   const currentNumber = 1424
@@ -19,10 +5,16 @@ export const findActiveDomain = async () => {
   // Check current and next 10 numbers
   for (let i = 0; i <= 10; i++) {
     const testNumber = currentNumber + i
-    const domain = await checkDomain(testNumber)
-    if (domain) {
-      localStorage.setItem('activeTRGoalsDomain', domain)
-      return domain
+    try {
+      const response = await fetch(`/api/checkDomain?baseNumber=${testNumber}`)
+      const data = await response.json()
+      
+      if (data.active) {
+        localStorage.setItem('activeTRGoalsDomain', data.domain)
+        return data.domain
+      }
+    } catch (error) {
+      console.error('Domain check error:', error)
     }
   }
   
