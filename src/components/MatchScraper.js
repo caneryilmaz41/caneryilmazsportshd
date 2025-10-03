@@ -7,14 +7,18 @@ export const scrapeMatches = async () => {
     const response = await fetch(`/api/scrapeMatches?domain=${encodeURIComponent(activeDomain)}`)
     const data = await response.json()
     
-    if (data.matches && data.channels) {
-      return { matches: data.matches, channels: data.channels }
+    if (data.matches || data.channels) {
+      return { 
+        matches: data.matches || [], 
+        channels: data.channels || [] 
+      }
     } else {
-      return { matches: [], channels: [] }
+      // Fallback data kullan
+      return getFallbackData()
     }
   } catch (error) {
     console.error('Scraping error:', error)
-    return { matches: [], channels: [] }
+    return getFallbackData()
   }
 }
 

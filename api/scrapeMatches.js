@@ -24,40 +24,29 @@ export default async function handler(req, res) {
     const matches = []
     const channels = []
     
-    // Tüm .channel-item'ları çek ve ayır
-    $('.channel-item').each((i, element) => {
+    // Maçları çek
+    $('#matches-tab .channel-item').each((i, element) => {
       const href = $(element).attr('href')
       const name = $(element).find('.channel-name').text().trim()
-      const timeOrStatus = $(element).find('.channel-status').text().trim()
+      const time = $(element).find('.channel-status').text().trim()
       
-      if (href && name && timeOrStatus) {
-        const id = href.includes('id=') ? href.split('id=')[1] : `item_${i}`
-        
-        // Maç mı kanal mı kontrol et
-        if (name.includes(' - ') || name.includes(' vs ') || timeOrStatus.includes(':')) {
-          // Maç gibi görünüyor
-          matches.push({ id: `match_${id}`, name, time: timeOrStatus })
-        } else {
-          // Kanal gibi görünüyor
-          channels.push({ id: `channel_${id}`, name, status: timeOrStatus })
-        }
+      if (href && name && time) {
+        const id = href.split('id=')[1]
+        matches.push({ id, name, time })
       }
     })
     
-    // Eğer hiç veri bulunamazsa fallback
-    if (matches.length === 0 && channels.length === 0) {
-      // Fallback data
-      matches.push(
-        { id: 'yayin1', name: 'Trabzonspor - Kayserispor', time: '20:00' },
-        { id: 'yayin2', name: 'Antalyaspor - Çaykur Rizespor', time: '20:00' },
-        { id: 'yayin3', name: 'F. Düsseldorf - Nürnberg', time: '19:30' }
-      )
-      channels.push(
-        { id: 'kanal1', name: 'BeIN Sports 1', status: '7/24' },
-        { id: 'kanal2', name: 'BeIN Sports 2', status: '7/24' },
-        { id: 'kanal3', name: 'S Sport', status: '7/24' }
-      )
-    }
+    // Kanalları çek
+    $('#24-7-tab .channel-item').each((i, element) => {
+      const href = $(element).attr('href')
+      const name = $(element).find('.channel-name').text().trim()
+      const status = $(element).find('.channel-status').text().trim()
+      
+      if (href && name && status) {
+        const id = href.split('id=')[1]
+        channels.push({ id, name, status })
+      }
+    })
     
     return res.json({ matches, channels })
     
