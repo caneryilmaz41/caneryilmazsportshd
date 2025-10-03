@@ -24,29 +24,48 @@ export default async function handler(req, res) {
     const matches = []
     const channels = []
     
-    // Maçları çek
-    $('#matches-tab .channel-item').each((i, element) => {
-      const href = $(element).attr('href')
-      const name = $(element).find('.channel-name').text().trim()
-      const time = $(element).find('.channel-status').text().trim()
+    // Maçları çek - daha spesifik selectors
+    $('.match-item, .live-match, [data-type="match"]').each((i, element) => {
+      const href = $(element).attr('href') || $(element).find('a').attr('href')
+      const name = $(element).find('.match-name, .channel-name').first().text().trim()
+      const time = $(element).find('.match-time, .channel-status').first().text().trim()
       
-      if (href && name && time) {
-        const id = href.split('id=')[1]
-        matches.push({ id, name, time })
+      if (href && name && time && name.includes('-')) {
+        const id = href.includes('id=') ? href.split('id=')[1] : `match_${i}`
+        matches.push({ id: `match_${id}`, name, time, type: 'match' })
       }
     })
     
-    // Kanalları çek
-    $('#24-7-tab .channel-item').each((i, element) => {
-      const href = $(element).attr('href')
-      const name = $(element).find('.channel-name').text().trim()
-      const status = $(element).find('.channel-status').text().trim()
+    // Kanalları çek - TV kanalları için
+    $('.channel-item, .tv-channel, [data-type="channel"]').each((i, element) => {
+      const href = $(element).attr('href') || $(element).find('a').attr('href')
+      const name = $(element).find('.channel-name').first().text().trim()
+      const status = $(element).find('.channel-status').first().text().trim()
       
-      if (href && name && status) {
-        const id = href.split('id=')[1]
-        channels.push({ id, name, status })
+      if (href && name && status && !name.includes('-')) {
+        const id = href.includes('id=') ? href.split('id=')[1] : `channel_${i}`
+        channels.push({ id: `channel_${id}`, name, status, type: 'channel' })
       }
     })
+    
+    // Fallback - genel scraping
+    if (matches.length === 0 && channels.length === 0) {
+      $('.channel-item').each((i, element) => {
+        const href = $(element).attr('href')
+        const name = $(element).find('.channel-name').text().trim()
+        const timeOrStatus = $(element).find('.channel-status').text().trim()
+        
+        if (href && name && timeOrStatus) {
+          const id = href.includes('id=') ? href.split('id=')[1] : `item_${i}`
+          
+          if (name.includes('-') || timeOrStatus.includes(':')) {
+            matches.push({ id: `match_${id}`, name, time: timeOrStatus, type: 'match' })
+          } else {
+            channels.push({ id: `channel_${id}`, name, status: timeOrStatus, type: 'channel' })
+          }
+        }
+      })
+    }
     
     return res.json({ matches, channels })
     

@@ -8,6 +8,7 @@ function App() {
   const [matches, setMatches] = useState([])
   const [channels, setChannels] = useState([])
   const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
     const loadData = async () => {
@@ -107,30 +108,32 @@ function App() {
             </div>
 
             {/* Mobile Modern Tabs */}
-            <div className="flex bg-slate-800/80 backdrop-blur-sm rounded-2xl p-1 shadow-xl border border-slate-700/50 lg:hidden">
+            <div className="flex bg-slate-800/60 backdrop-blur-sm rounded-2xl p-1 shadow-lg border border-slate-700/30 lg:hidden">
               <button
                 onClick={() => setActiveTab('matches')}
-                className={`flex-1 py-3 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-300 ${
+                className={`flex-1 py-3 px-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-200 ${
                   activeTab === 'matches' 
-                    ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/25' 
-                    : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                    ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md' 
+                    : 'text-slate-300 hover:text-white hover:bg-slate-700/40 active:bg-slate-700/60'
                 }`}
               >
-                <span className="text-lg">⚽</span>
-                <span>MAÇLAR</span>
-                <span className="bg-white/20 text-xs px-2 py-1 rounded-full font-bold">{matches.length}</span>
+                <span className="text-base">⚽</span>
+                <span className="hidden xs:inline">MAÇLAR</span>
+                <span className="xs:hidden">MAÇ</span>
+                <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full font-bold min-w-[20px] text-center">{matches.filter(m => m.type === 'match' || m.name.includes('-')).length}</span>
               </button>
               <button
                 onClick={() => setActiveTab('channels')}
-                className={`flex-1 py-3 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-300 ${
+                className={`flex-1 py-3 px-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-200 ${
                   activeTab === 'channels' 
-                    ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/25' 
-                    : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                    ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md' 
+                    : 'text-slate-300 hover:text-white hover:bg-slate-700/40 active:bg-slate-700/60'
                 }`}
               >
-                <span className="text-lg">📺</span>
-                <span>KANALLAR</span>
-                <span className="bg-white/20 text-xs px-2 py-1 rounded-full font-bold">{channels.length}</span>
+                <span className="text-base">📺</span>
+                <span className="hidden xs:inline">KANALLAR</span>
+                <span className="xs:hidden">TV</span>
+                <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full font-bold min-w-[20px] text-center">{channels.filter(c => c.type === 'channel' || !c.name.includes('-')).length}</span>
               </button>
             </div>
 
@@ -138,75 +141,107 @@ function App() {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Maç ara..."
-                className="w-full text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 lg:bg-slate-700 lg:hover:bg-slate-600 bg-slate-800/80 backdrop-blur-sm pl-12 rounded-2xl border border-slate-700/50 focus:ring-blue-500/50 focus:border-blue-500/50 placeholder-slate-400 shadow-lg lg:pl-4 lg:rounded-lg lg:border-0 lg:shadow-none"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder={activeTab === 'matches' ? 'Maç ara...' : 'Kanal ara...'}
+                className="w-full text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 lg:bg-slate-700 lg:hover:bg-slate-600 bg-slate-800/60 backdrop-blur-sm pl-12 rounded-2xl border border-slate-700/30 focus:ring-blue-500/50 focus:border-blue-500/50 placeholder-slate-400 shadow-md lg:pl-4 lg:rounded-lg lg:border-0 lg:shadow-none"
               />
               <span className="absolute top-3 text-blue-400 lg:hidden left-4 text-lg">🔍</span>
               <span className="absolute right-3 top-3 text-blue-400 hidden lg:inline">🔍</span>
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-3 top-3 text-slate-400 hover:text-white lg:hidden"
+                >
+                  ✕
+                </button>
+              )}
             </div>
 
-            {/* List - Desktop Classic, Mobile Modern */}
-            <div className="rounded-lg overflow-hidden lg:bg-slate-700 lg:max-h-96 bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-700/50 max-h-80">
+            {/* List - Optimized */}
+            <div className="rounded-lg overflow-hidden lg:bg-slate-700 lg:max-h-96 bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-700/30 max-h-72">
               {loading ? (
                 <div className="p-6 text-center">
-                  <div className="animate-spin w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full mx-auto mb-2 lg:w-6 lg:h-6 w-8 h-8 border-3 border-blue-500 mb-4"></div>
-                  <p className="text-slate-400 text-sm lg:text-slate-400 text-slate-300 font-medium">Maçlar yüklüyor...</p>
+                  <div className="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                  <p className="text-slate-300 text-sm">Yükleniyor...</p>
                 </div>
               ) : (
-                <div className="overflow-y-auto lg:max-h-96 max-h-80">
+                <div className="overflow-y-auto lg:max-h-96 max-h-72 overscroll-contain">
                   {activeTab === 'matches' ? (
-                    <div className="lg:space-y-1 lg:p-2 p-2 space-y-2">
-                      {matches.map(match => (
+                    <div className="lg:space-y-1 lg:p-2 p-1 space-y-1">
+                      {matches
+                        .filter(match => match.type === 'match' || match.name.includes('-'))
+                        .filter(match => match.name.toLowerCase().includes(searchTerm.toLowerCase()))
+                        .map(match => (
                         <button
                           key={match.id}
                           onClick={() => handleMatchSelect(match)}
-                          className={`w-full text-left transition-all duration-300 lg:p-3 lg:rounded-lg lg:hover:bg-slate-600 p-4 rounded-xl group ${
+                          className={`w-full text-left transition-colors duration-200 lg:p-3 lg:rounded-lg lg:hover:bg-slate-600 p-3 rounded-xl ${
                             selectedMatch?.id === match.id 
-                              ? 'lg:bg-slate-600 bg-gradient-to-r from-blue-600/20 to-blue-500/20 border border-blue-500/30 shadow-lg' 
-                              : 'lg:bg-slate-800 bg-slate-700/50 hover:bg-slate-600/60 border border-transparent hover:border-slate-500/50'
+                              ? 'lg:bg-slate-600 bg-blue-600/20 border border-blue-500/40' 
+                              : 'lg:bg-slate-800 bg-slate-700/40 hover:bg-slate-600/50 active:bg-slate-600/70'
                           }`}
                         >
                           <div className="lg:block flex items-center justify-between">
-                            <div className="lg:block flex-1">
-                              <div className="font-medium text-sm lg:text-sm text-white group-hover:text-blue-300 transition-colors">{match.name}</div>
-                              <div className="text-xs text-slate-400 lg:text-xs lg:text-slate-400 text-sm mt-1 flex items-center gap-2">
-                                <span className="text-xs lg:hidden">🕐</span>
-                                {match.time}
+                            <div className="lg:block flex-1 min-w-0">
+                              <div className="font-medium text-sm text-white truncate">{match.name}</div>
+                              <div className="text-xs text-slate-400 mt-1 flex items-center gap-1">
+                                <span className="lg:hidden">⚽</span>
+                                <span className="truncate">{match.time}</span>
                               </div>
                             </div>
                             {selectedMatch?.id === match.id && (
-                              <div className="text-blue-400 text-lg lg:hidden">▶️</div>
+                              <div className="text-blue-400 text-sm lg:hidden flex-shrink-0 ml-2">▶️</div>
                             )}
                           </div>
                         </button>
                       ))}
+                      {matches
+                        .filter(match => match.type === 'match' || match.name.includes('-'))
+                        .filter(match => match.name.toLowerCase().includes(searchTerm.toLowerCase()))
+                        .length === 0 && (
+                        <div className="p-4 text-center text-slate-400 text-sm">
+                          Henüz maç yok
+                        </div>
+                      )}
                     </div>
                   ) : (
-                    <div className="lg:space-y-1 lg:p-2 p-2 space-y-2">
-                      {channels.map(channel => (
+                    <div className="lg:space-y-1 lg:p-2 p-1 space-y-1">
+                      {channels
+                        .filter(channel => channel.type === 'channel' || !channel.name.includes('-'))
+                        .filter(channel => channel.name.toLowerCase().includes(searchTerm.toLowerCase()))
+                        .map(channel => (
                         <button
                           key={channel.id}
                           onClick={() => handleMatchSelect(channel)}
-                          className={`w-full text-left transition-all duration-300 lg:p-3 lg:rounded-lg lg:hover:bg-slate-600 p-4 rounded-xl group ${
+                          className={`w-full text-left transition-colors duration-200 lg:p-3 lg:rounded-lg lg:hover:bg-slate-600 p-3 rounded-xl ${
                             selectedMatch?.id === channel.id 
-                              ? 'lg:bg-slate-600 bg-gradient-to-r from-blue-600/20 to-blue-500/20 border border-blue-500/30 shadow-lg' 
-                              : 'lg:bg-slate-800 bg-slate-700/50 hover:bg-slate-600/60 border border-transparent hover:border-slate-500/50'
+                              ? 'lg:bg-slate-600 bg-blue-600/20 border border-blue-500/40' 
+                              : 'lg:bg-slate-800 bg-slate-700/40 hover:bg-slate-600/50 active:bg-slate-600/70'
                           }`}
                         >
                           <div className="lg:block flex items-center justify-between">
-                            <div className="lg:block flex-1">
-                              <div className="font-medium text-sm lg:text-sm text-white group-hover:text-blue-300 transition-colors">{channel.name}</div>
-                              <div className="text-xs text-slate-400 lg:text-xs lg:text-slate-400 text-sm mt-1 flex items-center gap-2">
-                                <span className="text-xs lg:hidden">📡</span>
-                                {channel.status}
+                            <div className="lg:block flex-1 min-w-0">
+                              <div className="font-medium text-sm text-white truncate">{channel.name}</div>
+                              <div className="text-xs text-slate-400 mt-1 flex items-center gap-1">
+                                <span className="lg:hidden">📺</span>
+                                <span className="truncate">{channel.status}</span>
                               </div>
                             </div>
                             {selectedMatch?.id === channel.id && (
-                              <div className="text-blue-400 text-lg lg:hidden">▶️</div>
+                              <div className="text-blue-400 text-sm lg:hidden flex-shrink-0 ml-2">▶️</div>
                             )}
                           </div>
                         </button>
                       ))}
+                      {channels
+                        .filter(channel => channel.type === 'channel' || !channel.name.includes('-'))
+                        .filter(channel => channel.name.toLowerCase().includes(searchTerm.toLowerCase()))
+                        .length === 0 && (
+                        <div className="p-4 text-center text-slate-400 text-sm">
+                          Henüz kanal yok
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
