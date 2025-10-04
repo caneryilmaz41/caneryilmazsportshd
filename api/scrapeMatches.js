@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     const matches = []
     const channels = []
     
-    // Tüm .channel-item'ları çek ve akıllıca ayır
+    // Tüm .channel-item'ları çek ve ayır
     $('.channel-item').each((i, element) => {
       const href = $(element).attr('href')
       const name = $(element).find('.channel-name').text().trim()
@@ -33,13 +33,13 @@ export default async function handler(req, res) {
       if (href && name && timeOrStatus) {
         const id = href.includes('id=') ? href.split('id=')[1] : `item_${i}`
         
-        // Saat formatı varsa maç, 7/24 varsa kanal
-        if (timeOrStatus.includes(':') || timeOrStatus.includes('LIVE') || timeOrStatus.includes('Başladı')) {
-          // Maç - saat formatı içeriyor
-          matches.push({ id, name, time: timeOrStatus })
-        } else {
-          // Kanal - 7/24, HD, vs. içeriyor
+        // 7/24 içeriyorsa kanal, diğerleri maç
+        if (timeOrStatus.includes('7/24') || timeOrStatus.includes('HD') || timeOrStatus.includes('24/7')) {
+          // Kanal - 7/24 formatı
           channels.push({ id, name, status: timeOrStatus })
+        } else {
+          // Maç - saat formatı veya diğer
+          matches.push({ id, name, time: timeOrStatus })
         }
       }
     })
