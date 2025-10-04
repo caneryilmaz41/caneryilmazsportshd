@@ -231,10 +231,20 @@ function App() {
     const loadData = async () => {
       setLoading(true)
       try {
-        const fallbackData = getFallbackData()
-        setMatches(fallbackData.matches)
-        setChannels(fallbackData.channels)
+        // Gerçek scraping'i dene
+        const scrapedData = await scrapeMatches()
+        if (scrapedData.matches.length > 0) {
+          setMatches(scrapedData.matches)
+          setChannels(scrapedData.channels)
+          localStorage.setItem('lastUpdate', Date.now().toString())
+        } else {
+          // Scraping başarısızsa fallback kullan
+          const fallbackData = getFallbackData()
+          setMatches(fallbackData.matches)
+          setChannels(fallbackData.channels)
+        }
       } catch (error) {
+        console.error('Data loading error:', error)
         const fallbackData = getFallbackData()
         setMatches(fallbackData.matches)
         setChannels(fallbackData.channels)
