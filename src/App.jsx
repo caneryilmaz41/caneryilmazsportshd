@@ -313,6 +313,7 @@ function App() {
     setActiveTab(tab);
   };
 
+  console.log(handleMatchSelect.matches);
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <div className="text-center py-3 lg:py-6 border-b border-slate-700 lg:border-0">
@@ -544,7 +545,7 @@ function App() {
                   ) : (
                     <div className="divide-y divide-slate-700">
                       {channels
-                        .filter((channel) => channel.status === "7/24") // sadece 7/24 olanları al
+                        .filter((channel) => channel.status?.includes("/")) // sadece 7 içerenleri göster
                         .map((channel) => (
                           <button
                             key={channel.id}
