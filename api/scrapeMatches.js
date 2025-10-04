@@ -24,32 +24,33 @@ export default async function handler(req, res) {
     const matches = []
     const channels = []
     
-    // Maçları çek - sadece #matches-tab içindekiler
-    $('#matches-tab .channel-item').each((i, element) => {
+    // Sabit kanal listesi
+    const channelNames = [
+      'BeIN Sports 1', 'BeIN Sports 2', 'BeIN Sports 3', 'BeIN Sports 4', 'BeIN Sports 5',
+      'BeIN Max 1', 'BeIN Max 2', 'S Sport', 'S Sport 2', 'Tivibu 1', 'Tivibu 2', 
+      'Tivibu 3', 'Tivibu 4', 'Smartspor', 'Smartspor 2', 'TRT Spor', 'TRT Spor 2', 
+      'TRT 1', 'A Spor', 'ATV', 'TV 8', 'TV 8,5', 'NBA TV', 'Euro Sport 1', 'Euro Sport 2'
+    ]
+    
+    // Tüm .channel-item'ları çek ve ayır
+    $('.channel-item').each((i, element) => {
       const href = $(element).attr('href')
       const name = $(element).find('.channel-name').text().trim()
-      const time = $(element).find('.channel-status').text().trim()
+      const timeOrStatus = $(element).find('.channel-status').text().trim()
       
-      if (href && name && time) {
-        const id = href.split('id=')[1] || `match_${i}`
-        matches.push({ id, name, time })
+      if (href && name && timeOrStatus) {
+        const id = href.split('id=')[1] || `item_${i}`
+        
+        // Kanal listesinde var mı kontrol et
+        if (channelNames.includes(name)) {
+          // Kanal
+          channels.push({ id, name, status: timeOrStatus })
+        } else {
+          // Maç
+          matches.push({ id, name, time: timeOrStatus })
+        }
       }
     })
-    
-    // Kanalları çek - sadece #24-7-tab içindekiler
-$('#24-7-tab .channel-item').each((i, element) => {
-  const href = $(element).attr('href')
-  const name = $(element).find('.channel-name').text().trim()
-  const status = $(element).find('.channel-status').text().trim()
-
-  // 🔍 Maç isimlerini ayıklamak için filtre ekle
-  const isProbablyMatch = name.includes('-') || name.toLowerCase().includes('vs') || /\d{1,2}:\d{2}/.test(status)
-
-  if (href && name && status && !isProbablyMatch) {
-    const id = href.split('id=')[1] || `channel_${i}`
-    channels.push({ id, name, status })
-  }
-})
 
     
     return res.json({ matches, channels })
