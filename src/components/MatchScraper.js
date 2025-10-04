@@ -24,10 +24,9 @@ export const scrapeMatches = async () => {
 // Fallback data
 export const getFallbackData = () => ({
   matches: [
-    { id: 'yayin1', name: 'Galatasaray - Fenerbahçe', time: '19:00' },
-    { id: 'yayinb2', name: 'Trabzonspor - Kayserispor', time: '20:00' },
-    { id: 'yayint3', name: 'Antalyaspor - Çaykur Rizespor', time: '20:00' },
-    { id: 'yayin4', name: 'Barcelona - Real Madrid', time: '21:30' }
+    { id: 'yayin1', name: 'Trabzonspor - Kayserispor', time: '20:00' },
+    { id: 'yayinb2', name: 'Antalyaspor - Çaykur Rizespor', time: '20:00' },
+    { id: 'yayint3', name: 'F. Düsseldorf - Nürnberg', time: '19:30' }
   ],
   channels: [
     { id: 'yayin1', name: 'BeIN Sports 1', status: '7/24' },

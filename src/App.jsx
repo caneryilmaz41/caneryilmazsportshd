@@ -413,9 +413,7 @@ function App() {
                               selectedMatch?.id === match.id ? 'bg-blue-600/20 border-l-4 border-blue-500' : ''
                             }`}
                           >
-                            <div className="flex items-center gap-3">
-                              {/* Takım logoları kaldırıldı */}
-                              
+                            <div className="flex items-center justify-between">
                               <div className="flex-1 min-w-0">
                                 <div className="font-medium text-sm text-white truncate">{match.name}</div>
                                 <div className="text-xs text-slate-400 mt-1">{match.time}</div>
