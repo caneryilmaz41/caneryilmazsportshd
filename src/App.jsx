@@ -368,8 +368,11 @@ function App() {
                         className="w-full h-full rounded-lg"
                         frameBorder="0"
                         allowFullScreen
+                        webkitAllowFullScreen
+                        mozAllowFullScreen
                         scrolling="no"
-                        allow="autoplay; fullscreen"
+                        allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+                        allowTransparency="true"
                         style={{
                           filter: "brightness(1.05) contrast(1.1)",
                           background: "#000",
