@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     const matches = []
     const channels = []
     
-    // 🎯 Maçları çek
+    // Maçları çek - sadece #matches-tab içindekiler
     $('#matches-tab .channel-item').each((i, element) => {
       const href = $(element).attr('href')
       const name = $(element).find('.channel-name').text().trim()
@@ -36,22 +36,21 @@ export default async function handler(req, res) {
       }
     })
     
-    // 🎯 Kanalları çek
-    $('#24-7-tab .channel-item').each((i, element) => {
-      const href = $(element).attr('href')
-      const name = $(element).find('.channel-name').text().trim()
-      const status = $(element).find('.channel-status').text().trim()
-      
-      if (href && name && status) {
-        const id = href.split('id=')[1] || `channel_${i}`
-        
-        // 🚫 Eğer bu id veya name zaten maçlarda varsa, kanala ekleme
-        const isDuplicate = matches.some(m => m.id === id || m.name === name)
-        if (!isDuplicate) {
-          channels.push({ id, name, status })
-        }
-      }
-    })
+    // Kanalları çek - sadece #24-7-tab içindekiler
+$('#24-7-tab .channel-item').each((i, element) => {
+  const href = $(element).attr('href')
+  const name = $(element).find('.channel-name').text().trim()
+  const status = $(element).find('.channel-status').text().trim()
+
+  // 🔍 Maç isimlerini ayıklamak için filtre ekle
+  const isProbablyMatch = name.includes('-') || name.toLowerCase().includes('vs') || /\d{1,2}:\d{2}/.test(status)
+
+  if (href && name && status && !isProbablyMatch) {
+    const id = href.split('id=')[1] || `channel_${i}`
+    channels.push({ id, name, status })
+  }
+})
+
     
     return res.json({ matches, channels })
     
