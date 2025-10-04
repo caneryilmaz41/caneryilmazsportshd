@@ -54,6 +54,11 @@ function App() {
     setSelectedMatch({ ...match, url: streamUrl })
   }
 
+  const handleTabChange = (tab) => {
+    setActiveTab(tab)
+    setSearchTerm('')
+  }
+
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
@@ -80,6 +85,9 @@ function App() {
                       frameBorder="0"
                       allowFullScreen
                       scrolling="no"
+                      sandbox="allow-scripts allow-same-origin allow-presentation"
+                      referrerPolicy="no-referrer"
+                      loading="lazy"
                     />
                   </div>
                 </div>
@@ -102,7 +110,7 @@ function App() {
             {/* Desktop Tabs */}
             <div className="lg:flex lg:bg-slate-700 lg:rounded-lg lg:p-1 hidden">
               <button
-                onClick={() => setActiveTab('matches')}
+                onClick={() => handleTabChange('matches')}
                 className={`flex-1 py-3 px-2 rounded text-sm font-medium flex items-center justify-center gap-1 transition-all duration-300 ${
                   activeTab === 'matches' ? 'bg-slate-600 text-white' : 'text-slate-300 hover:text-white hover:bg-slate-600'
                 }`}
@@ -112,7 +120,7 @@ function App() {
                 <span className="bg-slate-500 text-xs px-2 py-1 rounded-full">{matches.length}</span>
               </button>
               <button
-                onClick={() => setActiveTab('channels')}
+                onClick={() => handleTabChange('channels')}
                 className={`flex-1 py-3 px-2 rounded text-sm font-medium flex items-center justify-center gap-1 transition-all duration-300 ${
                   activeTab === 'channels' ? 'bg-slate-600 text-white' : 'text-slate-300 hover:text-white hover:bg-slate-600'
                 }`}
@@ -126,7 +134,7 @@ function App() {
             {/* Mobile Tabs - Basit */}
             <div className="flex bg-slate-800 rounded-lg p-1 lg:hidden">
               <button
-                onClick={() => setActiveTab('matches')}
+                onClick={() => handleTabChange('matches')}
                 className={`flex-1 py-3 px-2 rounded-md font-medium text-sm flex items-center justify-center gap-2 transition-colors ${
                   activeTab === 'matches' 
                     ? 'bg-blue-600 text-white' 
@@ -138,7 +146,7 @@ function App() {
                 <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded font-bold">{matches.length}</span>
               </button>
               <button
-                onClick={() => setActiveTab('channels')}
+                onClick={() => handleTabChange('channels')}
                 className={`flex-1 py-3 px-2 rounded-md font-medium text-sm flex items-center justify-center gap-2 transition-colors ${
                   activeTab === 'channels' 
                     ? 'bg-blue-600 text-white' 
