@@ -78,17 +78,30 @@ function App() {
                     <h2 className="font-bold text-sm lg:text-base truncate">{selectedMatch.name}</h2>
                     <span className="text-xs lg:text-sm text-slate-400">{selectedMatch.time}</span>
                   </div>
-                  <div className="aspect-video">
+                  <div className="aspect-video relative">
                     <iframe 
                       src={selectedMatch.url}
                       className="w-full h-full"
                       frameBorder="0"
                       allowFullScreen
                       scrolling="no"
-                      sandbox="allow-scripts allow-same-origin allow-presentation"
+                      sandbox="allow-scripts allow-same-origin allow-presentation allow-popups-to-escape-sandbox"
                       referrerPolicy="no-referrer"
                       loading="lazy"
+                      allow="autoplay; fullscreen"
                     />
+                    <style dangerouslySetInnerHTML={{
+                      __html: `
+                        [class*="ad"], [id*="ad"], [class*="banner"], [id*="banner"],
+                        [class*="popup"], [id*="popup"], [class*="overlay"], [id*="overlay"] {
+                          display: none !important;
+                          visibility: hidden !important;
+                          opacity: 0 !important;
+                          height: 0 !important;
+                          width: 0 !important;
+                        }
+                      `
+                    }} />
                   </div>
                 </div>
               ) : (
@@ -187,7 +200,8 @@ function App() {
                   <p className="text-slate-300 text-sm">Yükleniyor...</p>
                 </div>
               ) : (
-                <div className="max-h-80 lg:max-h-96 overflow-y-auto" style={{WebkitOverflowScrolling: 'touch'}}>                  {activeTab === 'matches' ? (
+                <div className="max-h-80 lg:max-h-96 overflow-y-auto" style={{WebkitOverflowScrolling: 'touch'}}>
+                  {activeTab === 'matches' ? (
                     <div className="divide-y divide-slate-700">
                       {matches
                         .filter(match => match.name.toLowerCase().includes(searchTerm.toLowerCase()))
