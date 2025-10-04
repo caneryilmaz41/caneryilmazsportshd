@@ -299,13 +299,27 @@ function App() {
   const toggleFullscreen = () => {
     const playerElement = document.getElementById("video-player");
     if (!document.fullscreenElement) {
-      playerElement.requestFullscreen().then(() => {
-        setIsFullscreen(true);
-      });
+      if (playerElement.requestFullscreen) {
+        playerElement.requestFullscreen();
+      } else if (playerElement.webkitRequestFullscreen) {
+        playerElement.webkitRequestFullscreen();
+      } else if (playerElement.mozRequestFullScreen) {
+        playerElement.mozRequestFullScreen();
+      } else if (playerElement.msRequestFullscreen) {
+        playerElement.msRequestFullscreen();
+      }
+      setIsFullscreen(true);
     } else {
-      document.exitFullscreen().then(() => {
-        setIsFullscreen(false);
-      });
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      }
+      setIsFullscreen(false);
     }
   };
 
@@ -366,17 +380,10 @@ function App() {
                       />
                     </div>
 
-                    <div className="absolute top-6 left-6 pointer-events-none z-10">
-                      <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 shadow-lg">
-                        <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
-                        CANLI YAYIN
-                      </div>
-                    </div>
-
-                    <div className="absolute top-6 right-6 z-10">
+                    <div className="absolute top-6 right-6 lg:top-auto lg:bottom-6 z-10">
                       <button
                         onClick={toggleFullscreen}
-                        className="bg-black/70 backdrop-blur-sm hover:bg-black/90 text-white p-2 rounded-lg transition-all duration-200 opacity-0 group-hover:opacity-100 pointer-events-auto"
+                        className="bg-black/70 backdrop-blur-sm hover:bg-black/90 text-white p-2 rounded-lg transition-all duration-200 opacity-70 lg:opacity-0 lg:group-hover:opacity-100 pointer-events-auto"
                         title="Tam Ekran"
                       >
                         <svg
@@ -486,7 +493,13 @@ function App() {
                         : "bg-slate-600/50 text-slate-400"
                     }`}
                   >
-                    {channels.length}
+                    {channels.filter((channel) => {
+                      const name = channel.name?.toLowerCase() || '';
+                      const hasVs = name.includes(' vs ') || name.includes(' - ') || name.includes(' x ');
+                      const hasTeamNames = name.includes('galatasaray') || name.includes('fenerbahçe') || name.includes('beşiktaş') || name.includes('trabzonspor');
+                      const isChannel = name.includes('tv') || name.includes('spor') || name.includes('kanal') || name.includes('sport');
+                      return !hasVs && !hasTeamNames && (isChannel || channel.status?.includes('/'));
+                    }).length}
                   </span>
                 </button>
               </div>
@@ -545,7 +558,15 @@ function App() {
                   ) : (
                     <div className="divide-y divide-slate-700">
                       {channels
-                        .filter((channel) => channel.status?.includes("/")) // sadece 7 içerenleri göster
+                        .filter((channel) => {
+                          // Maç isimlerini filtrele
+                          const name = channel.name?.toLowerCase() || '';
+                          const hasVs = name.includes(' vs ') || name.includes(' - ') || name.includes(' x ');
+                          const hasTeamNames = name.includes('galatasaray') || name.includes('fenerbahçe') || name.includes('beşiktaş') || name.includes('trabzonspor');
+                          const isChannel = name.includes('tv') || name.includes('spor') || name.includes('kanal') || name.includes('sport');
+                          
+                          return !hasVs && !hasTeamNames && (isChannel || channel.status?.includes('/'));
+                        })
                         .map((channel) => (
                           <button
                             key={channel.id}
