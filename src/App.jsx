@@ -369,9 +369,6 @@ function App() {
                         frameBorder="0"
                         allowFullScreen
                         scrolling="no"
-                        sandbox="allow-scripts allow-same-origin allow-presentation"
-                        referrerPolicy="no-referrer"
-                        loading="lazy"
                         allow="autoplay; fullscreen"
                         style={{
                           filter: "brightness(1.05) contrast(1.1)",
