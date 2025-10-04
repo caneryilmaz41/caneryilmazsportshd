@@ -226,6 +226,7 @@ function App() {
   const [channels, setChannels] = useState([])
   const [loading, setLoading] = useState(true)
   const [logoState, setLogoState] = useState({})
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
   useEffect(() => {
     const loadData = async () => {
@@ -271,6 +272,19 @@ function App() {
     setSelectedMatch({ ...match, url: streamUrl })
   }
 
+  const toggleFullscreen = () => {
+    const playerElement = document.getElementById('video-player')
+    if (!document.fullscreenElement) {
+      playerElement.requestFullscreen().then(() => {
+        setIsFullscreen(true)
+      })
+    } else {
+      document.exitFullscreen().then(() => {
+        setIsFullscreen(false)
+      })
+    }
+  }
+
   const handleTabChange = (tab) => {
     setActiveTab(tab)
   }
@@ -300,7 +314,7 @@ function App() {
                       </div>
                     </div>
                   </div>
-                  <div className="aspect-video relative bg-gradient-to-br from-slate-900 via-slate-800 to-green-900 p-3 rounded-lg">
+                  <div id="video-player" className="aspect-video relative bg-gradient-to-br from-slate-900 via-slate-800 to-green-900 p-3 rounded-lg group">
                     <div className="w-full h-full rounded-lg overflow-hidden border-2 border-green-500/30 shadow-2xl shadow-green-500/10 relative">
                       <iframe 
                         src={selectedMatch.url}
@@ -324,6 +338,18 @@ function App() {
                         <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
                         CANLI YAYIN
                       </div>
+                    </div>
+                    
+                    <div className="absolute top-6 right-6 z-10">
+                      <button
+                        onClick={toggleFullscreen}
+                        className="bg-black/70 backdrop-blur-sm hover:bg-black/90 text-white p-2 rounded-lg transition-all duration-200 opacity-0 group-hover:opacity-100 pointer-events-auto"
+                        title="Tam Ekran"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -371,7 +397,7 @@ function App() {
                 
                 <button
                   onClick={() => handleTabChange('matches')}
-                  className={`relative flex-1 py-3 px-3 text-sm font-light tracking-wide transition-all duration-300 flex items-center justify-center gap-2 ${
+                  className={`relative flex-1 py-3 px-3 text-sm font-bold tracking-wide transition-all duration-300 flex items-center justify-center gap-2 ${
                     activeTab === 'matches' 
                       ? 'text-green-400' 
                       : 'text-slate-400 hover:text-slate-200'
@@ -387,7 +413,7 @@ function App() {
                 
                 <button
                   onClick={() => handleTabChange('channels')}
-                  className={`relative flex-1 py-3 px-3 text-sm font-light tracking-wide transition-all duration-300 flex items-center justify-center gap-2 ${
+                  className={`relative flex-1 py-3 px-3 text-sm font-bold tracking-wide transition-all duration-300 flex items-center justify-center gap-2 ${
                     activeTab === 'channels' 
                       ? 'text-green-400' 
                       : 'text-slate-400 hover:text-slate-200'
@@ -425,12 +451,14 @@ function App() {
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex-1 min-w-0">
-                                <div className="font-medium text-sm text-white truncate">{match.name}</div>
-                                <div className="text-xs text-slate-400 mt-1">{match.time}</div>
+                                <div className="text-white text-sm font-bold">{match.name}</div>
+                                <div className="text-xs text-slate-500 mt-0.5 font-light">{match.time}</div>
                               </div>
                               
                               {selectedMatch?.id === match.id && (
-                                <div className="text-blue-400 ml-2 flex-shrink-0">▶️</div>
+                                <div className="text-green-400 ml-2 flex-shrink-0">
+                                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                                </div>
                               )}
                             </div>
                           </button>
