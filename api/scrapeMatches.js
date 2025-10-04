@@ -24,27 +24,23 @@ export default async function handler(req, res) {
     const matches = []
     const channels = []
     
-    // Maçları çek
-    $('#matches-tab .channel-item').each((i, element) => {
+    // Tüm .channel-item'ları çek ve akıllıca ayır
+    $('.channel-item').each((i, element) => {
       const href = $(element).attr('href')
       const name = $(element).find('.channel-name').text().trim()
-      const time = $(element).find('.channel-status').text().trim()
+      const timeOrStatus = $(element).find('.channel-status').text().trim()
       
-      if (href && name && time) {
-        const id = href.split('id=')[1]
-        matches.push({ id, name, time })
-      }
-    })
-    
-    // Kanalları çek
-    $('#24-7-tab .channel-item').each((i, element) => {
-      const href = $(element).attr('href')
-      const name = $(element).find('.channel-name').text().trim()
-      const status = $(element).find('.channel-status').text().trim()
-      
-      if (href && name && status) {
-        const id = href.split('id=')[1]
-        channels.push({ id, name, status })
+      if (href && name && timeOrStatus) {
+        const id = href.includes('id=') ? href.split('id=')[1] : `item_${i}`
+        
+        // Saat formatı varsa maç, 7/24 varsa kanal
+        if (timeOrStatus.includes(':') || timeOrStatus.includes('LIVE') || timeOrStatus.includes('Başladı')) {
+          // Maç - saat formatı içeriyor
+          matches.push({ id, name, time: timeOrStatus })
+        } else {
+          // Kanal - 7/24, HD, vs. içeriyor
+          channels.push({ id, name, status: timeOrStatus })
+        }
       }
     })
     
