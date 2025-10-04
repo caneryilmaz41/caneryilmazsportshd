@@ -13,7 +13,6 @@ export const scrapeMatches = async () => {
         channels: data.channels || [] 
       }
     } else {
-      // Fallback data kullan
       return getFallbackData()
     }
   } catch (error) {

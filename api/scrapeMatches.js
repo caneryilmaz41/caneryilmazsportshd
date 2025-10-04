@@ -23,28 +23,47 @@ export default async function handler(req, res) {
     
     const matches = []
     const channels = []
+    const allItems = []
     
-    // Maçları çek
-    $('#matches-tab .channel-item').each((i, element) => {
+    // Tüm .channel-item'ları topla
+    $('.channel-item').each((i, element) => {
       const href = $(element).attr('href')
       const name = $(element).find('.channel-name').text().trim()
-      const time = $(element).find('.channel-status').text().trim()
+      const timeOrStatus = $(element).find('.channel-status').text().trim()
       
-      if (href && name && time) {
-        const id = href.split('id=')[1]
-        matches.push({ id, name, time })
+      if (href && name && timeOrStatus) {
+        const id = href.includes('id=') ? href.split('id=')[1] : `item_${i}`
+        allItems.push({ id, name, timeOrStatus, element: $(element).html() })
       }
     })
     
-    // Kanalları çek
-    $('#24-7-tab .channel-item').each((i, element) => {
-      const href = $(element).attr('href')
-      const name = $(element).find('.channel-name').text().trim()
-      const status = $(element).find('.channel-status').text().trim()
+    // Akıllı ayrım yap
+    allItems.forEach((item, index) => {
+      const { id, name, timeOrStatus } = item
       
-      if (href && name && status) {
-        const id = href.split('id=')[1]
-        channels.push({ id, name, status })
+      // Maç belirtileri
+      const isMatch = 
+        name.includes(' - ') ||           // Takım - Takım
+        name.includes(' vs ') ||          // Takım vs Takım  
+        name.includes(' x ') ||           // Takım x Takım
+        /\d{1,2}:\d{2}/.test(timeOrStatus) || // Saat formatı (20:00)
+        timeOrStatus.includes('LIVE') ||   // Canlı yayın
+        timeOrStatus.includes('Maç') ||     // Maç kelimesi
+        name.toLowerCase().includes('maç')   // İsimde maç
+      
+      // Kanal belirtileri  
+      const isChannel = 
+        name.includes('Sports') ||        // BeIN Sports, S Sport
+        name.includes('TV') ||            // TRT1, ATV
+        name.includes('Spor') ||          // Spor kanalları
+        timeOrStatus.includes('7/24') ||  // 7/24 yayın
+        timeOrStatus.includes('HD') ||    // HD kanal
+        /^[A-Z]+ \d+$/.test(name)        // "BEIN 1", "TRT 1" formatı
+      
+      if (isMatch && !isChannel) {
+        matches.push({ id: `match_${id}`, name, time: timeOrStatus })
+      } else {
+        channels.push({ id: `channel_${id}`, name, status: timeOrStatus })
       }
     })
     
