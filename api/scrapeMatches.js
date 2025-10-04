@@ -37,16 +37,20 @@ export default async function handler(req, res) {
     })
     
     // Kanalları çek - sadece #24-7-tab içindekiler
-    $('#24-7-tab .channel-item').each((i, element) => {
-      const href = $(element).attr('href')
-      const name = $(element).find('.channel-name').text().trim()
-      const status = $(element).find('.channel-status').text().trim()
-      
-      if (href && name && status) {
-        const id = href.split('id=')[1] || `channel_${i}`
-        channels.push({ id, name, status })
-      }
-    })
+$('#24-7-tab .channel-item').each((i, element) => {
+  const href = $(element).attr('href')
+  const name = $(element).find('.channel-name').text().trim()
+  const status = $(element).find('.channel-status').text().trim()
+
+  // 🔍 Maç isimlerini ayıklamak için filtre ekle
+  const isProbablyMatch = name.includes('-') || name.toLowerCase().includes('vs') || /\d{1,2}:\d{2}/.test(status)
+
+  if (href && name && status && !isProbablyMatch) {
+    const id = href.split('id=')[1] || `channel_${i}`
+    channels.push({ id, name, status })
+  }
+})
+
     
     return res.json({ matches, channels })
     
