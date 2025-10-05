@@ -1,15 +1,3 @@
-import { decodeStreamUrl, isBase64Encoded } from '../utils/streamUtils';
-
-// Base64 URL decoder (fallback if import fails)
-const decodeStreamUrlFallback = (encodedUrl) => {
-  try {
-    return atob(encodedUrl)
-  } catch (error) {
-    console.error('URL decode error:', error)
-    return encodedUrl // Fallback to original if decode fails
-  }
-}
-
 // Find active TRGoals domain
 export const findActiveDomain = async () => {
   const currentNumber = 1424
@@ -34,17 +22,8 @@ export const findActiveDomain = async () => {
   return localStorage.getItem('activeTRGoalsDomain') || 'https://trgoals1424.xyz'
 }
 
-// Get stream URL with Base64 decoding
+// Get stream URL
 export const getStreamUrl = async (channelId) => {
-  // Check if channelId is Base64 encoded
-  if (channelId && isBase64Encoded(channelId)) {
-    const decodedUrl = decodeStreamUrl(channelId)
-    if (decodedUrl !== channelId && decodedUrl.startsWith('http')) {
-      return decodedUrl
-    }
-  }
-  
-  // Fallback to traditional URL construction
   const activeDomain = await findActiveDomain()
   return `${activeDomain}/channel.html?id=${channelId}`
 }
