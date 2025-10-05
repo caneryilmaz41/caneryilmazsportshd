@@ -157,6 +157,11 @@ const VideoPlayer = ({
                   backfaceVisibility: "hidden",
                   WebkitPerspective: "1000",
                   perspective: "1000",
+                  touchAction: "auto",
+                  pointerEvents: "auto",
+                  WebkitTouchCallout: "none",
+                  WebkitUserSelect: "none",
+                  userSelect: "none",
                 }}
                 onLoad={() => {
                   const iframe = document.querySelector('iframe');
@@ -172,6 +177,29 @@ const VideoPlayer = ({
                     iframe.setAttribute('x5-video-player-type', 'h5');
                     iframe.setAttribute('x5-video-player-fullscreen', 'true');
                     iframe.setAttribute('x5-video-orientation', 'portraint');
+                    
+                    // iPhone Chrome için özel ayarlar
+                    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                    const isChrome = /CriOS/.test(navigator.userAgent);
+                    
+                    if (isIOS && isChrome) {
+                      iframe.style.pointerEvents = 'auto';
+                      iframe.style.touchAction = 'auto';
+                      iframe.setAttribute('gesture', 'media');
+                      iframe.setAttribute('allow', iframe.getAttribute('allow') + '; web-share');
+                      
+                      // Chrome iOS için user interaction trigger
+                      iframe.addEventListener('touchstart', () => {
+                        iframe.contentWindow.postMessage({ action: 'user_interaction' }, '*');
+                      });
+                    }
+                    
+                    // Tüm iOS cihazlar için
+                    if (isIOS) {
+                      iframe.setAttribute('scrolling', 'no');
+                      iframe.style.overflow = 'hidden';
+                      iframe.style.WebkitOverflowScrolling = 'touch';
+                    }
                   }
                 }}
               />
