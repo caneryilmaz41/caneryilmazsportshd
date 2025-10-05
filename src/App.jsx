@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import VideoPlayer from './components/VideoPlayer';
@@ -7,10 +7,20 @@ import MatchList from './components/MatchList';
 import ChannelList from './components/ChannelList';
 import { useStreamData } from './hooks/useStreamData';
 import { useStreamPlayer } from './hooks/useStreamPlayer';
+import { showBrowserWarning } from './utils/streamUtils';
 
 function App() {
   const [activeTab, setActiveTab] = useState("matches");
   const [logoState, setLogoState] = useState({});
+  
+  // Show browser compatibility warning on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      showBrowserWarning();
+    }, 2000); // Show after 2 seconds
+    
+    return () => clearTimeout(timer);
+  }, []);
   
   const { matches, channels, loading } = useStreamData();
   const {
