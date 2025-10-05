@@ -14,7 +14,7 @@ export const useStreamPlayer = () => {
     setStreamLoading(false);
     
 
-  };
+  };  
 
   const toggleFullscreen = () => {
     const playerElement = document.getElementById("video-player");

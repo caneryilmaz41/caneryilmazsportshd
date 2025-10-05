@@ -2,81 +2,105 @@
 const logoCache = new Map();
 const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 saat
 
+// Takım ismi temizleme fonksiyonu
+const normalizeTeamName = (name) => {
+  return name.toLowerCase()
+    .replace(/[çc]/g, 'c')
+    .replace(/[ğg]/g, 'g')
+    .replace(/[ıi]/g, 'i')
+    .replace(/[öo]/g, 'o')
+    .replace(/[şs]/g, 's')
+    .replace(/[üu]/g, 'u')
+    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+// Takım eşleştirme fonksiyonu
+const matchTeam = (teamName, patterns) => {
+  const normalized = normalizeTeamName(teamName);
+  return patterns.some(pattern => {
+    const normalizedPattern = normalizeTeamName(pattern);
+    return normalized.includes(normalizedPattern) || normalizedPattern.includes(normalized);
+  });
+};
+
 // Takım logoları - assets/teamlogos klasöründen
 export const getTeamLogoPath = (teamName) => {
   const cleanName = teamName.toLowerCase().trim();
   
   // Türkiye Süper Lig
-  if (cleanName.includes('galatasaray')) return '/teamlogos/Türkiye - Süper Lig/Galatasaray.png';
-  if (cleanName.includes('fenerbahçe') || cleanName.includes('fenerbahce')) return '/teamlogos/Türkiye - Süper Lig/Fenerbahce.png';
-  if (cleanName.includes('beşiktaş') || cleanName.includes('besiktas')) return '/teamlogos/Türkiye - Süper Lig/Besiktas JK.png';
-  if (cleanName.includes('trabzonspor')) return '/teamlogos/Türkiye - Süper Lig/Trabzonspor.png';
-  if (cleanName.includes('başakşehir') || cleanName.includes('basaksehir')) return '/teamlogos/Türkiye - Süper Lig/Basaksehir FK.png';
-  if (cleanName.includes('alanyaspor')) return '/teamlogos/Türkiye - Süper Lig/Alanyaspor.png';
-  if (cleanName.includes('antalyaspor')) return '/teamlogos/Türkiye - Süper Lig/Antalyaspor.png';
-  if (cleanName.includes('kayserispor')) return '/teamlogos/Türkiye - Süper Lig/Kayserispor.png';
-  if (cleanName.includes('konyaspor')) return '/teamlogos/Türkiye - Süper Lig/Konyaspor.png';
-  if (cleanName.includes('samsunspor')) return '/teamlogos/Türkiye - Süper Lig/Samsunspor.png';
-  if (cleanName.includes('rizespor')) return '/teamlogos/Türkiye - Süper Lig/Caykur Rizespor.png';
-  if (cleanName.includes('kasımpaşa') || cleanName.includes('kasimpasa')) return '/teamlogos/Türkiye - Süper Lig/Kasimpasa.png';
-  if (cleanName.includes('göztepe') || cleanName.includes('goztepe')) return '/teamlogos/Türkiye - Süper Lig/Göztepe.png';
-  if (cleanName.includes('eyüpspor') || cleanName.includes('eyupspor')) return '/teamlogos/Türkiye - Süper Lig/Eyüpspor.png';
-  if (cleanName.includes('gaziantep')) return '/teamlogos/Türkiye - Süper Lig/Gaziantep FK.png';
-  if (cleanName.includes('kocaelispor')) return '/teamlogos/Türkiye - Süper Lig/Kocaelispor.png';
-  if (cleanName.includes('fatih karagümrük')) return '/teamlogos/Türkiye - Süper Lig/Fatih Karagümrük.png';
+  if (matchTeam(cleanName, ['galatasaray', 'gala', 'gs'])) return '/teamlogos/Türkiye - Süper Lig/Galatasaray.png';
+  if (matchTeam(cleanName, ['fenerbahce', 'fenerbahçe', 'fener', 'fb'])) return '/teamlogos/Türkiye - Süper Lig/Fenerbahce.png';
+  if (matchTeam(cleanName, ['besiktas', 'beşiktaş', 'bjk', 'kartal'])) return '/teamlogos/Türkiye - Süper Lig/Besiktas JK.png';
+  if (matchTeam(cleanName, ['trabzonspor', 'trabzon', 'ts'])) return '/teamlogos/Türkiye - Süper Lig/Trabzonspor.png';
+  if (matchTeam(cleanName, ['basaksehir', 'başakşehir', 'istanbul basaksehir'])) return '/teamlogos/Türkiye - Süper Lig/Basaksehir FK.png';
+  if (matchTeam(cleanName, ['alanyaspor', 'alanya'])) return '/teamlogos/Türkiye - Süper Lig/Alanyaspor.png';
+  if (matchTeam(cleanName, ['antalyaspor', 'antalya'])) return '/teamlogos/Türkiye - Süper Lig/Antalyaspor.png';
+  if (matchTeam(cleanName, ['kayserispor', 'kayseri'])) return '/teamlogos/Türkiye - Süper Lig/Kayserispor.png';
+  if (matchTeam(cleanName, ['konyaspor', 'konya'])) return '/teamlogos/Türkiye - Süper Lig/Konyaspor.png';
+  if (matchTeam(cleanName, ['samsunspor', 'samsun'])) return '/teamlogos/Türkiye - Süper Lig/Samsunspor.png';
+  if (matchTeam(cleanName, ['rizespor', 'rize', 'caykur rizespor'])) return '/teamlogos/Türkiye - Süper Lig/Caykur Rizespor.png';
+  if (matchTeam(cleanName, ['kasimpasa', 'kasımpaşa'])) return '/teamlogos/Türkiye - Süper Lig/Kasimpasa.png';
+  if (matchTeam(cleanName, ['goztepe', 'göztepe', 'izmir'])) return '/teamlogos/Türkiye - Süper Lig/Göztepe.png';
+  if (matchTeam(cleanName, ['eyupspor', 'eyüpspor'])) return '/teamlogos/Türkiye - Süper Lig/Eyüpspor.png';
+  if (matchTeam(cleanName, ['gaziantep', 'gaziantepspor'])) return '/teamlogos/Türkiye - Süper Lig/Gaziantep FK.png';
+  if (matchTeam(cleanName, ['kocaelispor', 'kocaeli', 'izmit'])) return '/teamlogos/Türkiye - Süper Lig/Kocaelispor.png';
+  if (matchTeam(cleanName, ['fatih karagumruk', 'fatih karagümrük', 'karagumruk'])) return '/teamlogos/Türkiye - Süper Lig/Fatih Karagümrük.png';
+  if (matchTeam(cleanName, ['sivasspor', 'sivas'])) return '/teamlogos/Türkiye - Süper Lig/Sivasspor.png';
   
   // Premier League
-  if (cleanName.includes('manchester united')) return '/teamlogos/England - Premier League/Manchester United.png';
-  if (cleanName.includes('manchester city')) return '/teamlogos/England - Premier League/Manchester City.png';
-  if (cleanName.includes('liverpool')) return '/teamlogos/England - Premier League/Liverpool FC.png';
-  if (cleanName.includes('chelsea')) return '/teamlogos/England - Premier League/Chelsea FC.png';
-  if (cleanName.includes('arsenal')) return '/teamlogos/England - Premier League/Arsenal FC.png';
-  if (cleanName.includes('tottenham')) return '/teamlogos/England - Premier League/Tottenham Hotspur.png';
-  if (cleanName.includes('newcastle')) return '/teamlogos/England - Premier League/Newcastle United.png';
-  if (cleanName.includes('aston villa')) return '/teamlogos/England - Premier League/Aston Villa.png';
-  if (cleanName.includes('west ham')) return '/teamlogos/England - Premier League/West Ham United.png';
-  if (cleanName.includes('brighton')) return '/teamlogos/England - Premier League/Brighton & Hove Albion.png';
+  if (matchTeam(cleanName, ['manchester united', 'man united', 'man utd', 'united'])) return '/teamlogos/England - Premier League/Manchester United.png';
+  if (matchTeam(cleanName, ['manchester city', 'man city', 'city'])) return '/teamlogos/England - Premier League/Manchester City.png';
+  if (matchTeam(cleanName, ['liverpool', 'lfc'])) return '/teamlogos/England - Premier League/Liverpool FC.png';
+  if (matchTeam(cleanName, ['chelsea', 'cfc'])) return '/teamlogos/England - Premier League/Chelsea FC.png';
+  if (matchTeam(cleanName, ['arsenal', 'afc', 'gunners'])) return '/teamlogos/England - Premier League/Arsenal FC.png';
+  if (matchTeam(cleanName, ['tottenham', 'spurs', 'thfc'])) return '/teamlogos/England - Premier League/Tottenham Hotspur.png';
+  if (matchTeam(cleanName, ['newcastle', 'nufc', 'toon'])) return '/teamlogos/England - Premier League/Newcastle United.png';
+  if (matchTeam(cleanName, ['aston villa', 'villa', 'avfc'])) return '/teamlogos/England - Premier League/Aston Villa.png';
+  if (matchTeam(cleanName, ['west ham', 'hammers', 'whufc'])) return '/teamlogos/England - Premier League/West Ham United.png';
+  if (matchTeam(cleanName, ['brighton', 'seagulls', 'bhafc'])) return '/teamlogos/England - Premier League/Brighton & Hove Albion.png';
   
   // La Liga
-  if (cleanName.includes('real madrid')) return '/teamlogos/Spain - LaLiga/Real Madrid.png';
-  if (cleanName.includes('barcelona')) return '/teamlogos/Spain - LaLiga/FC Barcelona.png';
-  if (cleanName.includes('atletico madrid') || cleanName.includes('atlético madrid')) return '/teamlogos/Spain - LaLiga/Atlético de Madrid.png';
-  if (cleanName.includes('sevilla')) return '/teamlogos/Spain - LaLiga/Sevilla FC.png';
-  if (cleanName.includes('valencia')) return '/teamlogos/Spain - LaLiga/Valencia CF.png';
-  if (cleanName.includes('villarreal')) return '/teamlogos/Spain - LaLiga/Villarreal CF.png';
-  if (cleanName.includes('real betis')) return '/teamlogos/Spain - LaLiga/Real Betis Balompié.png';
-  if (cleanName.includes('athletic bilbao')) return '/teamlogos/Spain - LaLiga/Athletic Bilbao.png';
+  if (matchTeam(cleanName, ['real madrid', 'madrid', 'real', 'rmcf'])) return '/teamlogos/Spain - LaLiga/Real Madrid.png';
+  if (matchTeam(cleanName, ['barcelona', 'barca', 'fcb', 'blaugrana'])) return '/teamlogos/Spain - LaLiga/FC Barcelona.png';
+  if (matchTeam(cleanName, ['atletico madrid', 'atlético madrid', 'atletico', 'atleti'])) return '/teamlogos/Spain - LaLiga/Atlético de Madrid.png';
+  if (matchTeam(cleanName, ['sevilla', 'sfc'])) return '/teamlogos/Spain - LaLiga/Sevilla FC.png';
+  if (matchTeam(cleanName, ['valencia', 'vcf', 'che'])) return '/teamlogos/Spain - LaLiga/Valencia CF.png';
+  if (matchTeam(cleanName, ['villarreal', 'yellow submarine'])) return '/teamlogos/Spain - LaLiga/Villarreal CF.png';
+  if (matchTeam(cleanName, ['real betis', 'betis', 'verdiblancos'])) return '/teamlogos/Spain - LaLiga/Real Betis Balompié.png';
+  if (matchTeam(cleanName, ['athletic bilbao', 'athletic', 'bilbao', 'lions'])) return '/teamlogos/Spain - LaLiga/Athletic Bilbao.png';
   
   // Bundesliga
-  if (cleanName.includes('bayern munich') || cleanName.includes('bayern')) return '/teamlogos/Germany - Bundesliga/Bayern Munich.png';
-  if (cleanName.includes('borussia dortmund') || cleanName.includes('dortmund')) return '/teamlogos/Germany - Bundesliga/Borussia Dortmund.png';
-  if (cleanName.includes('rb leipzig') || cleanName.includes('leipzig')) return '/teamlogos/Germany - Bundesliga/RB Leipzig.png';
-  if (cleanName.includes('bayer leverkusen') || cleanName.includes('leverkusen')) return '/teamlogos/Germany - Bundesliga/Bayer 04 Leverkusen.png';
-  if (cleanName.includes('eintracht frankfurt')) return '/teamlogos/Germany - Bundesliga/Eintracht Frankfurt.png';
-  if (cleanName.includes('vfb stuttgart')) return '/teamlogos/Germany - Bundesliga/VfB Stuttgart.png';
+  if (matchTeam(cleanName, ['bayern munich', 'bayern', 'fcb', 'bavaria'])) return '/teamlogos/Germany - Bundesliga/Bayern Munich.png';
+  if (matchTeam(cleanName, ['borussia dortmund', 'dortmund', 'bvb', 'bvb 09'])) return '/teamlogos/Germany - Bundesliga/Borussia Dortmund.png';
+  if (matchTeam(cleanName, ['rb leipzig', 'leipzig', 'red bull leipzig'])) return '/teamlogos/Germany - Bundesliga/RB Leipzig.png';
+  if (matchTeam(cleanName, ['bayer leverkusen', 'leverkusen', 'bayer 04'])) return '/teamlogos/Germany - Bundesliga/Bayer 04 Leverkusen.png';
+  if (matchTeam(cleanName, ['eintracht frankfurt', 'frankfurt', 'sge'])) return '/teamlogos/Germany - Bundesliga/Eintracht Frankfurt.png';
+  if (matchTeam(cleanName, ['vfb stuttgart', 'stuttgart', 'vfb'])) return '/teamlogos/Germany - Bundesliga/VfB Stuttgart.png';
   
   // Serie A
-  if (cleanName.includes('juventus')) return '/teamlogos/Italy - Serie A/Juventus FC.png';
-  if (cleanName.includes('ac milan') || cleanName.includes('milan')) return '/teamlogos/Italy - Serie A/AC Milan.png';
-  if (cleanName.includes('inter milan') || cleanName.includes('inter')) return '/teamlogos/Italy - Serie A/Inter Milan.png';
-  if (cleanName.includes('napoli')) return '/teamlogos/Italy - Serie A/SSC Napoli.png';
-  if (cleanName.includes('roma')) return '/teamlogos/Italy - Serie A/AS Roma.png';
-  if (cleanName.includes('lazio')) return '/teamlogos/Italy - Serie A/SS Lazio.png';
-  if (cleanName.includes('atalanta')) return '/teamlogos/Italy - Serie A/Atalanta BC.png';
-  if (cleanName.includes('fiorentina')) return '/teamlogos/Italy - Serie A/ACF Fiorentina.png';
+  if (matchTeam(cleanName, ['juventus', 'juve', 'bianconeri'])) return '/teamlogos/Italy - Serie A/Juventus FC.png';
+  if (matchTeam(cleanName, ['ac milan', 'milan', 'rossoneri', 'acm'])) return '/teamlogos/Italy - Serie A/AC Milan.png';
+  if (matchTeam(cleanName, ['inter milan', 'inter', 'internazionale', 'nerazzurri'])) return '/teamlogos/Italy - Serie A/Inter Milan.png';
+  if (matchTeam(cleanName, ['napoli', 'ssc napoli', 'azzurri'])) return '/teamlogos/Italy - Serie A/SSC Napoli.png';
+  if (matchTeam(cleanName, ['roma', 'as roma', 'giallorossi'])) return '/teamlogos/Italy - Serie A/AS Roma.png';
+  if (matchTeam(cleanName, ['lazio', 'ss lazio', 'biancocelesti'])) return '/teamlogos/Italy - Serie A/SS Lazio.png';
+  if (matchTeam(cleanName, ['atalanta', 'atalanta bc', 'nerazzurri bergamo'])) return '/teamlogos/Italy - Serie A/Atalanta BC.png';
+  if (matchTeam(cleanName, ['fiorentina', 'acf fiorentina', 'viola'])) return '/teamlogos/Italy - Serie A/ACF Fiorentina.png';
   
   // Ligue 1
-  if (cleanName.includes('psg') || cleanName.includes('paris saint-germain')) return '/teamlogos/France - Ligue 1/Paris Saint-Germain.png';
-  if (cleanName.includes('marseille')) return '/teamlogos/France - Ligue 1/Olympique Marseille.png';
-  if (cleanName.includes('lyon')) return '/teamlogos/France - Ligue 1/Olympique Lyon.png';
-  if (cleanName.includes('monaco')) return '/teamlogos/France - Ligue 1/AS Monaco.png';
-  if (cleanName.includes('lille')) return '/teamlogos/France - Ligue 1/LOSC Lille.png';
-  if (cleanName.includes('nice')) return '/teamlogos/France - Ligue 1/OGC Nice.png';
+  if (matchTeam(cleanName, ['psg', 'paris saint-germain', 'paris', 'saint germain'])) return '/teamlogos/France - Ligue 1/Paris Saint-Germain.png';
+  if (matchTeam(cleanName, ['marseille', 'olympique marseille', 'om'])) return '/teamlogos/France - Ligue 1/Olympique Marseille.png';
+  if (matchTeam(cleanName, ['lyon', 'olympique lyon', 'ol'])) return '/teamlogos/France - Ligue 1/Olympique Lyon.png';
+  if (matchTeam(cleanName, ['monaco', 'as monaco', 'asm'])) return '/teamlogos/France - Ligue 1/AS Monaco.png';
+  if (matchTeam(cleanName, ['lille', 'losc lille', 'losc'])) return '/teamlogos/France - Ligue 1/LOSC Lille.png';
+  if (matchTeam(cleanName, ['nice', 'ogc nice', 'ogc'])) return '/teamlogos/France - Ligue 1/OGC Nice.png';
   
   // Eredivisie
-  if (cleanName.includes('ajax')) return '/teamlogos/Netherlands - Eredivisie/Ajax Amsterdam.png';
-  if (cleanName.includes('psv')) return '/teamlogos/Netherlands - Eredivisie/PSV Eindhoven.png';
-  if (cleanName.includes('feyenoord')) return '/teamlogos/Netherlands - Eredivisie/Feyenoord Rotterdam.png';
+  if (matchTeam(cleanName, ['ajax', 'ajax amsterdam', 'afc ajax'])) return '/teamlogos/Netherlands - Eredivisie/Ajax Amsterdam.png';
+  if (matchTeam(cleanName, ['psv', 'psv eindhoven', 'eindhoven'])) return '/teamlogos/Netherlands - Eredivisie/PSV Eindhoven.png';
+  if (matchTeam(cleanName, ['feyenoord', 'feyenoord rotterdam', 'rotterdam'])) return '/teamlogos/Netherlands - Eredivisie/Feyenoord Rotterdam.png';
   
   return null;
 };

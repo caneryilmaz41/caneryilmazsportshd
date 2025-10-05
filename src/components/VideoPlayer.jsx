@@ -139,15 +139,41 @@ const VideoPlayer = ({
                 allowFullScreen
                 webkitAllowFullScreen
                 mozAllowFullScreen
+                msAllowFullScreen
                 scrolling="no"
-                allow="autoplay; fullscreen; encrypted-media; picture-in-picture; microphone; camera"
+                allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; microphone *; camera *; accelerometer *; gyroscope *; payment *; geolocation *; midi *; sync-xhr *; usb *; vr *; magnetometer *; display-capture *"
                 allowTransparency="true"
-                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation allow-modals allow-pointer-lock allow-orientation-lock allow-popups-to-escape-sandbox allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
+                webkitPlaysinline
+                playsInline
+                autoPlay
+                muted
                 style={{
                   filter: "brightness(1.05) contrast(1.1)",
                   background: "#000",
+                  WebkitTransform: "translateZ(0)",
+                  transform: "translateZ(0)",
+                  WebkitBackfaceVisibility: "hidden",
+                  backfaceVisibility: "hidden",
+                  WebkitPerspective: "1000",
+                  perspective: "1000",
                 }}
-
+                onLoad={() => {
+                  const iframe = document.querySelector('iframe');
+                  if (iframe) {
+                    // Tüm tarayıcılar için ayarlar
+                    iframe.setAttribute('webkitallowfullscreen', '');
+                    iframe.setAttribute('mozallowfullscreen', '');
+                    iframe.setAttribute('msallowfullscreen', '');
+                    iframe.setAttribute('allowfullscreen', '');
+                    iframe.setAttribute('playsinline', '');
+                    iframe.setAttribute('webkit-playsinline', '');
+                    iframe.setAttribute('x5-playsinline', '');
+                    iframe.setAttribute('x5-video-player-type', 'h5');
+                    iframe.setAttribute('x5-video-player-fullscreen', 'true');
+                    iframe.setAttribute('x5-video-orientation', 'portraint');
+                  }
+                }}
               />
 
             </div>
