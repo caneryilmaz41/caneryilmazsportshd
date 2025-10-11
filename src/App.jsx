@@ -5,6 +5,7 @@ import VideoPlayer from './components/VideoPlayer';
 import TabSelector from './components/TabSelector';
 import MatchList from './components/MatchList';
 import ChannelList from './components/ChannelList';
+
 import { useStreamData } from './hooks/useStreamData';
 import { useStreamPlayer } from './hooks/useStreamPlayer';
 
@@ -91,6 +92,8 @@ function App() {
         </div>
       </div>
 
+
+      
       <Footer />
     </div>
   );

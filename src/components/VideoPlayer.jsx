@@ -1,5 +1,6 @@
 import TeamLogo from './TeamLogo';
 import { parseMatchTeams } from '../utils/teamUtils';
+import { getChannelLogoPath } from '../utils/channelUtils';
 
 const VideoPlayer = ({ 
   selectedMatch, 
@@ -52,13 +53,39 @@ const VideoPlayer = ({
   }
 
   const teams = parseMatchTeams(selectedMatch.name);
+  // Kanal kontrolü: vs, -, x gibi ayırıcılar yoksa ve kanal ismi gibi görünüyorsa
+  const hasMatchSeparator = selectedMatch.name.includes(' vs ') || selectedMatch.name.includes(' - ') || selectedMatch.name.includes(' x ');
+  const looksLikeChannel = selectedMatch.name.toLowerCase().includes('tv') || 
+                          selectedMatch.name.toLowerCase().includes('spor') || 
+                          selectedMatch.name.toLowerCase().includes('sport') ||
+                          selectedMatch.name.toLowerCase().includes('kanal');
+  const isChannel = !hasMatchSeparator && (looksLikeChannel || (!teams[0] || !teams[1]));
 
   return (
     <div>
       <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-3">
         <div className="flex items-center justify-center">
           <div className="flex items-center gap-4">
-            {teams[0] && (
+            {isChannel ? (
+              <div className="flex items-center gap-2">
+                <img 
+                  src={getChannelLogoPath(selectedMatch.name)} 
+                  alt="Kanal"
+                  className="w-6 h-6 object-contain"
+                  onError={(e) => e.target.style.display = 'none'}
+                />
+                <span className="text-white text-sm font-medium">
+                  {selectedMatch.name}
+                </span>
+                <div className="flex items-center gap-2 ml-4">
+                  <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
+                  <span className="text-xs text-green-100 font-medium">
+                    CANLI
+                  </span>
+                </div>
+              </div>
+            ) : null}
+            {!isChannel && teams[0] && (
               <div className="flex items-center gap-2">
                 <TeamLogo 
                   teamName={teams[0]} 
@@ -71,19 +98,21 @@ const VideoPlayer = ({
               </div>
             )}
             
-            <div className="flex flex-col items-center gap-1">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
-                <span className="text-xs text-green-100 font-medium">
-                  CANLI
+            {!isChannel && (
+              <div className="flex flex-col items-center gap-1">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
+                  <span className="text-xs text-green-100 font-medium">
+                    CANLI
+                  </span>
+                </div>
+                <span className="text-xs text-green-100">
+                  {selectedMatch.time}
                 </span>
               </div>
-              <span className="text-xs text-green-100">
-                {selectedMatch.time}
-              </span>
-            </div>
+            )}
             
-            {teams[1] && (
+            {!isChannel && teams[1] && (
               <div className="flex items-center gap-2">
                 <span className="text-white font-medium text-sm">
                   {teams[1]}
@@ -107,7 +136,7 @@ const VideoPlayer = ({
           {streamLoading ? (
             <div className="w-full h-full bg-slate-900 flex items-center justify-center">
               <div className="flex items-center gap-8">
-                {teams[0] && (
+                {!isChannel && teams[0] && (
                   <div className="animate-spin">
                     <TeamLogo 
                       teamName={teams[0]} 
@@ -119,7 +148,7 @@ const VideoPlayer = ({
                 <div className="text-white text-lg font-medium">
                   Yükleniyor...
                 </div>
-                {teams[1] && (
+                {!isChannel && teams[1] && (
                   <div className="animate-spin" style={{animationDirection: 'reverse'}}>
                     <TeamLogo 
                       teamName={teams[1]} 

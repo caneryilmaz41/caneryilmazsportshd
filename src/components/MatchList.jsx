@@ -33,9 +33,7 @@ const MatchList = ({
                 )}
                 <div className="flex-1 min-w-0 px-2">
                   <div className="text-center">
-                    <div className="text-xs text-slate-400 mb-1">
-                      Futbol
-                    </div>
+
                     <div className="text-xs text-slate-500 mb-2">
                       {match.time}
                     </div>

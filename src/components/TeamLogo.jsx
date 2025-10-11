@@ -66,9 +66,9 @@ const TeamLogo = ({ teamName, logoState, setLogoState }) => {
   }
 
   return (
-    <div className="w-10 h-10 flex items-center justify-center">
-      <span className="text-white text-sm font-bold tracking-tight">
-        {initials}
+    <div className="w-10 h-10 flex items-center justify-center bg-slate-700 rounded-full">
+      <span className="text-white text-lg">
+        ⚽
       </span>
     </div>
   );
