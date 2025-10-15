@@ -1,30 +1,50 @@
+// Aktif domain listesi
+const TRGOALS_DOMAINS = [
+  'https://trgoals1424.xyz',
+  'https://trgoals1425.xyz', 
+  'https://trgoals1426.xyz',
+  'https://trgoals1427.xyz'
+]
+
 // TRGoals'dan maç listesini çek
 export const scrapeMatches = async () => {
-  try {
-    const activeDomain = localStorage.getItem('activeTRGoalsDomain') || 'https://trgoals1424.xyz'
-    
-    // Kendi API'mizi kullan - cache busting ile
-    const timestamp = Date.now()
-    const response = await fetch(`/api/scrapeMatches?domain=${encodeURIComponent(activeDomain)}&t=${timestamp}`, {
-      cache: 'no-cache',
-      headers: {
-        'Cache-Control': 'no-cache'
-      }
-    })
-    const data = await response.json()
-    
-    if (data.matches || data.channels) {
-      return { 
-        matches: data.matches || [], 
-        channels: data.channels || [] 
-      }
-    } else {
-      return getFallbackData()
-    }
-  } catch (error) {
-    console.error('Scraping error:', error)
-    return getFallbackData()
+  let activeDomain = localStorage.getItem('activeTRGoalsDomain')
+  
+  // Yeni kullanıcı için domain set et
+  if (!activeDomain) {
+    activeDomain = TRGOALS_DOMAINS[0]
+    localStorage.setItem('activeTRGoalsDomain', activeDomain)
   }
+  
+  // Tüm domainleri dene
+  for (const domain of TRGOALS_DOMAINS) {
+    try {
+      const timestamp = Date.now()
+      const response = await fetch(`/api/scrapeMatches?domain=${encodeURIComponent(domain)}&t=${timestamp}`, {
+        cache: 'no-cache',
+        headers: { 'Cache-Control': 'no-cache' },
+        timeout: 5000
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        if (data.matches || data.channels) {
+          // Çalışan domaini kaydet
+          localStorage.setItem('activeTRGoalsDomain', domain)
+          return { 
+            matches: data.matches || [], 
+            channels: data.channels || [] 
+          }
+        }
+      }
+    } catch (error) {
+      console.log(`Domain ${domain} failed:`, error)
+      continue
+    }
+  }
+  
+  // Hiçbiri çalışmazsa fallback
+  return getFallbackData()
 }
 
 // Fallback data
