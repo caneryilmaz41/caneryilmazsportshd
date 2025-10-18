@@ -24,37 +24,29 @@ export default async function handler(req, res) {
     const matches = []
     const channels = []
     
-    // Farklı selector'ları dene
-    const selectors = [
-      '#matches-tab .channel-item',
-      '.matches .channel-item', 
-      '.match-list .item',
-      '.channel-item',
-      'a[href*="watch"]'
-    ]
-    
-    for (const selector of selectors) {
-      $(selector).each((i, element) => {
-        const href = $(element).attr('href')
-        const name = $(element).find('.channel-name, .name, .title').text().trim() || $(element).text().trim()
-        const time = $(element).find('.channel-status, .time, .status').text().trim()
-        
-        if (href && name && name.length > 3) {
-          const id = href.split('id=')[1] || href.split('/').pop() || `item_${i}`
-          
-          // Maç mı kanal mı kontrol et
-          const isMatch = name.includes('-') || name.includes('vs') || /\d{1,2}:\d{2}/.test(time)
-          
-          if (isMatch) {
-            matches.push({ id, name, time: time || 'Canlı' })
-          } else {
-            channels.push({ id, name, status: time || '7/24' })
-          }
-        }
-      })
+    // Maçları çek - #matches-tab içindeki .channel-item'lar
+    $('#matches-tab .channel-item').each((i, element) => {
+      const href = $(element).attr('href')
+      const name = $(element).find('.channel-name').text().trim()
+      const time = $(element).find('.channel-status').text().trim()
       
-      if (matches.length > 0 || channels.length > 0) break
-    }
+      if (href && name && time) {
+        const id = href.split('id=')[1] || `match_${i}`
+        matches.push({ id, name, time })
+      }
+    })
+    
+    // Kanalları çek - #24-7-tab içindeki .channel-item'lar
+    $('#24-7-tab .channel-item').each((i, element) => {
+      const href = $(element).attr('href')
+      const name = $(element).find('.channel-name').text().trim()
+      const status = $(element).find('.channel-status').text().trim()
+      
+      if (href && name && status) {
+        const id = href.split('id=')[1] || `channel_${i}`
+        channels.push({ id, name, status })
+      }
+    })
 
     
     console.log(`Scraped from ${domain}: ${matches.length} matches, ${channels.length} channels`)
