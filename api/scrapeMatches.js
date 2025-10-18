@@ -50,7 +50,19 @@ export default async function handler(req, res) {
 
     
     console.log(`Scraped from ${domain}: ${matches.length} matches, ${channels.length} channels`)
-    return res.json({ matches, channels, domain })
+    console.log('HTML length:', html.length)
+    console.log('First 500 chars:', html.substring(0, 500))
+    
+    return res.json({ 
+      matches, 
+      channels, 
+      domain,
+      htmlLength: html.length,
+      debug: {
+        matchesFound: matches.length,
+        channelsFound: channels.length
+      }
+    })
     
   } catch (error) {
     return res.status(500).json({ 
