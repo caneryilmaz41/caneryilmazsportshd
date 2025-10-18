@@ -1,9 +1,15 @@
-// Aktif domain listesi
+// Aktif domain listesi - Güncel aralık genişletildi
 const TRGOALS_DOMAINS = [
   'https://trgoals1424.xyz',
   'https://trgoals1425.xyz', 
   'https://trgoals1426.xyz',
-  'https://trgoals1427.xyz'
+  'https://trgoals1427.xyz',
+  'https://trgoals1428.xyz',
+  'https://trgoals1429.xyz',
+  'https://trgoals1430.xyz',
+  'https://trgoals1431.xyz',
+  'https://trgoals1432.xyz',
+  'https://trgoals1433.xyz'
 ]
 
 // TRGoals'dan maç listesini çek
