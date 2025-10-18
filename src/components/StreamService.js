@@ -1,25 +1,47 @@
-// Find active TRGoals domain
+// Aktif domain listesi - MatchScraper ile aynı
+const TRGOALS_DOMAINS = [
+  'https://trgoals1431.xyz',
+  'https://trgoals1432.xyz',
+  'https://trgoals1433.xyz',
+  'https://trgoals1434.xyz',
+  'https://trgoals1435.xyz',
+  'https://trgoals1436.xyz',
+  'https://trgoals1437.xyz',
+  'https://trgoals1438.xyz',
+  'https://trgoals1439.xyz',
+  'https://trgoals1440.xyz',
+  'https://trgoals1441.xyz',
+  'https://trgoals1442.xyz',
+  'https://trgoals1443.xyz',
+  'https://trgoals1444.xyz',
+  'https://trgoals1445.xyz',
+  'https://trgoals1446.xyz'
+]
+
+// Çalışan domain bul
 export const findActiveDomain = async () => {
-  const currentNumber = 1424
-  
-  // Check current and next 10 numbers
-  for (let i = 0; i <= 10; i++) {
-    const testNumber = currentNumber + i
+  for (const domain of TRGOALS_DOMAINS) {
     try {
-      const response = await fetch(`/api/checkDomain?baseNumber=${testNumber}`)
-      const data = await response.json()
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 5000)
       
-      if (data.active) {
-        localStorage.setItem('activeTRGoalsDomain', data.domain)
-        return data.domain
+      const response = await fetch(`${domain}/`, {
+        method: 'HEAD',
+        signal: controller.signal
+      })
+      
+      clearTimeout(timeoutId)
+      
+      if (response.ok) {
+        return domain
       }
     } catch (error) {
-      console.error('Domain check error:', error)
+      continue
     }
   }
   
-  // Fallback to stored domain or default
-  return localStorage.getItem('activeTRGoalsDomain') || 'https://trgoals1424.xyz'
+  // Fallback
+  return TRGOALS_DOMAINS[0]
 }
 
 // Get stream URL
