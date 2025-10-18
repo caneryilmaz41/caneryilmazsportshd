@@ -20,18 +20,8 @@ const TRGOALS_DOMAINS = [
 
 // TRGoals'dan maç listesini çek
 export const scrapeMatches = async () => {
-  let activeDomain = localStorage.getItem('activeTRGoalsDomain')
-  
-  // Yeni kullanıcı için domain set et
-  if (!activeDomain) {
-    activeDomain = TRGOALS_DOMAINS[0]
-    localStorage.setItem('activeTRGoalsDomain', activeDomain)
-  }
-  
-  // Önce aktif domaini dene
-  const domainsToTry = [activeDomain, ...TRGOALS_DOMAINS.filter(d => d !== activeDomain)]
-  
-  for (const domain of domainsToTry) {
+  // Tüm domainleri dene, çalışan ilkini kullan
+  for (const domain of TRGOALS_DOMAINS) {
     try {
       const timestamp = Date.now()
       const controller = new AbortController()
@@ -48,8 +38,6 @@ export const scrapeMatches = async () => {
       if (response.ok) {
         const data = await response.json()
         if (data.matches || data.channels) {
-          // Çalışan domaini kaydet
-          localStorage.setItem('activeTRGoalsDomain', domain)
           return { 
             matches: data.matches || [], 
             channels: data.channels || [] 
