@@ -28,15 +28,22 @@ export const scrapeMatches = async () => {
     localStorage.setItem('activeTRGoalsDomain', activeDomain)
   }
   
-  // Tüm domainleri dene
-  for (const domain of TRGOALS_DOMAINS) {
+  // Önce aktif domaini dene
+  const domainsToTry = [activeDomain, ...TRGOALS_DOMAINS.filter(d => d !== activeDomain)]
+  
+  for (const domain of domainsToTry) {
     try {
       const timestamp = Date.now()
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 15000)
+      
       const response = await fetch(`/api/scrapeMatches?domain=${encodeURIComponent(domain)}&t=${timestamp}`, {
         cache: 'no-cache',
         headers: { 'Cache-Control': 'no-cache' },
-        timeout: 5000
+        signal: controller.signal
       })
+      
+      clearTimeout(timeoutId)
       
       if (response.ok) {
         const data = await response.json()
