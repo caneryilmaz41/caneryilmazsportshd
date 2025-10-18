@@ -18,34 +18,8 @@ const TRGOALS_DOMAINS = [
   'https://trgoals1446.xyz'
 ]
 
-// Çalışan domain bul
-export const findActiveDomain = async () => {
-  for (const domain of TRGOALS_DOMAINS) {
-    try {
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 5000)
-      
-      const response = await fetch(`${domain}/`, {
-        method: 'HEAD',
-        signal: controller.signal
-      })
-      
-      clearTimeout(timeoutId)
-      
-      if (response.ok) {
-        return domain
-      }
-    } catch (error) {
-      continue
-    }
-  }
-  
-  // Fallback
-  return TRGOALS_DOMAINS[0]
-}
-
-// Get stream URL
+// Get stream URL - MatchScraper zaten çalışan domaini buluyor
 export const getStreamUrl = async (channelId) => {
-  const activeDomain = await findActiveDomain()
-  return `${activeDomain}/channel.html?id=${channelId}`
+  // İlk domaini kullan, MatchScraper çalışan domaini zaten test ediyor
+  return `${TRGOALS_DOMAINS[0]}/channel.html?id=${channelId}`
 }
