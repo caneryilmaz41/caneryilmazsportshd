@@ -18,14 +18,30 @@ const TRGOALS_DOMAINS = [
   'https://trgoals1446.xyz'
 ]
 
-// Get stream URL - Mobil uyumlu versiyon
+// Çalışan domain testi
+const testDomain = async (domain) => {
+  try {
+    const response = await fetch(`${domain}/channel.html?id=yayin1`, {
+      method: 'HEAD',
+      timeout: 3000
+    })
+    return response.ok
+  } catch {
+    return false
+  }
+}
+
+// Get stream URL - Domain testi ile
 export const getStreamUrl = async (channelId) => {
-  const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-  const baseUrl = `${TRGOALS_DOMAINS[0]}/channel.html?id=${channelId}`
-  
-  if (isMobile) {
-    return `${baseUrl}&mobile=1&autoplay=0`
+  // İlk 3 domain'i hızlıca test et
+  for (let i = 0; i < 3; i++) {
+    const domain = TRGOALS_DOMAINS[i]
+    const works = await testDomain(domain)
+    if (works) {
+      return `${domain}/channel.html?id=${channelId}`
+    }
   }
   
-  return baseUrl
+  // Hiçbiri çalışmazsa fallback
+  return `${TRGOALS_DOMAINS[0]}/channel.html?id=${channelId}`
 }

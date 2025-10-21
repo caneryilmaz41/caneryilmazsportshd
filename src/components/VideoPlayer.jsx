@@ -166,16 +166,24 @@ const VideoPlayer = ({
                 className="w-full h-full rounded-lg"
                 frameBorder="0"
                 allowFullScreen
-                allow="autoplay; fullscreen; encrypted-media; accelerometer; gyroscope"
-                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
+                allow="autoplay; fullscreen; encrypted-media"
                 style={{
                   background: "#000",
-                  border: "none",
-                  outline: "none"
+                  border: "none"
                 }}
-
+                onError={() => {
+                  const iframe = document.querySelector('iframe')
+                  if (iframe && !iframe.dataset.retried) {
+                    iframe.dataset.retried = 'true'
+                    const currentUrl = iframe.src
+                    const channelId = currentUrl.split('id=')[1]
+                    if (channelId) {
+                      const nextDomain = 'https://trgoals1432.xyz'
+                      iframe.src = `${nextDomain}/channel.html?id=${channelId}`
+                    }
+                  }
+                }}
               />
-
             </div>
           )}
         </div>
