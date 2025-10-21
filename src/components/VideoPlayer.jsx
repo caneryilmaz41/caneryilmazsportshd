@@ -161,6 +161,30 @@ const VideoPlayer = ({
             </div>
           ) : (
             <div className="relative w-full h-full">
+              {/* İlk defa giren kullanıcılar için tıklama alanı */}
+              <div 
+                className="absolute inset-0 z-10 flex items-center justify-center bg-black/20 backdrop-blur-sm cursor-pointer transition-opacity duration-300 hover:bg-black/10"
+                onClick={() => {
+                  const iframe = document.querySelector('iframe');
+                  if (iframe) {
+                    try {
+                      iframe.contentWindow.postMessage({ action: 'play', userInitiated: true }, '*');
+                    } catch (e) {
+                      console.log('Cross-origin message failed (expected)');
+                    }
+                  }
+                  // Bu overlay'i kaldır
+                  document.querySelector('.stream-overlay')?.remove();
+                }}
+                style={{ display: localStorage.getItem('stream_visited') ? 'none' : 'flex' }}
+              >
+                <div className="stream-overlay bg-green-600/90 backdrop-blur-sm px-6 py-3 rounded-lg border border-green-400/50 shadow-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
+                    <span className="text-white font-medium">Yayını Başlat</span>
+                  </div>
+                </div>
+              </div>
               <iframe
                 src={selectedMatch.url}
                 className="w-full h-full rounded-lg"
@@ -207,9 +231,32 @@ const VideoPlayer = ({
                     iframe.setAttribute('x5-video-player-fullscreen', 'true');
                     iframe.setAttribute('x5-video-orientation', 'portraint');
                     
+                    // İlk defa giren cihazlar için user interaction trigger
+                    const triggerUserInteraction = () => {
+                      try {
+                        iframe.contentWindow.postMessage({ action: 'user_interaction', autoplay: true }, '*');
+                      } catch (e) {
+                        console.log('Cross-origin iframe message failed (expected)');
+                      }
+                    };
+                    
+                    // Immediate trigger for first-time users
+                    setTimeout(triggerUserInteraction, 100);
+                    
                     // iPhone Chrome için özel ayarlar
                     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
                     const isChrome = /CriOS/.test(navigator.userAgent);
+                    const isFirstVisit = !localStorage.getItem('stream_visited');
+                    
+                    if (isFirstVisit) {
+                      localStorage.setItem('stream_visited', 'true');
+                      // İlk ziyaret için ekstra ayarlar
+                      iframe.style.visibility = 'hidden';
+                      setTimeout(() => {
+                        iframe.style.visibility = 'visible';
+                        triggerUserInteraction();
+                      }, 200);
+                    }
                     
                     if (isIOS && isChrome) {
                       iframe.style.pointerEvents = 'auto';
@@ -218,9 +265,8 @@ const VideoPlayer = ({
                       iframe.setAttribute('allow', iframe.getAttribute('allow') + '; web-share');
                       
                       // Chrome iOS için user interaction trigger
-                      iframe.addEventListener('touchstart', () => {
-                        iframe.contentWindow.postMessage({ action: 'user_interaction' }, '*');
-                      });
+                      iframe.addEventListener('touchstart', triggerUserInteraction);
+                      iframe.addEventListener('click', triggerUserInteraction);
                     }
                     
                     // Tüm iOS cihazlar için
@@ -229,6 +275,25 @@ const VideoPlayer = ({
                       iframe.style.overflow = 'hidden';
                       iframe.style.WebkitOverflowScrolling = 'touch';
                     }
+                    
+                    // Error handling for failed loads
+                    iframe.addEventListener('error', () => {
+                      console.log('Iframe load error, retrying...');
+                      setTimeout(() => {
+                        iframe.src = iframe.src.split('&retry=')[0] + '&retry=' + Date.now();
+                      }, 1000);
+                    });
+                  }
+                }}
+                onError={() => {
+                  console.log('Iframe error occurred');
+                  // Retry mechanism
+                  const iframe = document.querySelector('iframe');
+                  if (iframe && !iframe.dataset.retried) {
+                    iframe.dataset.retried = 'true';
+                    setTimeout(() => {
+                      iframe.src = iframe.src.split('&retry=')[0] + '&retry=' + Date.now();
+                    }, 2000);
                   }
                 }}
               />
