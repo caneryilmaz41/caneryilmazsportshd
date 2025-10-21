@@ -23,7 +23,7 @@ export const getStreamUrl = async (channelId) => {
   // Arsenal maçı için özel URL
   if (channelId === 'arsenal_atletico') {
     const hlsUrl = encodeURIComponent('https://hlssssssss.puanicinumut.workers.dev/https://corestream.ronaldovurdu.help//hls/tabii.m3u8')
-    return `https://hls-js.netlify.app/demo/?src=${hlsUrl}`
+    return `https://www.hlsplayer.net/player/?url=${hlsUrl}`
   }
   
   return `${TRGOALS_DOMAINS[0]}/channel.html?id=${channelId}`
