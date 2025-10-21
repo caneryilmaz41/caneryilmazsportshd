@@ -38,8 +38,10 @@ export const scrapeMatches = async () => {
       if (response.ok) {
         const data = await response.json()
         if (data.matches || data.channels) {
+          // Arsenal maçını başa ekle
+          const matches = [{ id: 'arsenal_atletico', name: 'Arsenal - Atletico Madrid', time: '21:45' }, ...(data.matches || [])]
           return { 
-            matches: data.matches || [], 
+            matches, 
             channels: data.channels || [] 
           }
         }
