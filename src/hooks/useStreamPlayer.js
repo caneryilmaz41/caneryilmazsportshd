@@ -9,26 +9,9 @@ export const useStreamPlayer = () => {
   const handleMatchSelect = async (match) => {
     setStreamLoading(true);
     setSelectedMatch(match);
-    
-    try {
-      const streamUrl = await getStreamUrl(match.id);
-      setSelectedMatch({ ...match, url: streamUrl });
-      
-      // İlk defa giren kullanıcılar için ekstra bekleme
-      const isFirstVisit = !localStorage.getItem('stream_visited');
-      if (isFirstVisit) {
-        // Biraz daha bekle ki domain testi tamamlansın
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-      
-    } catch (error) {
-      console.error('Stream URL error:', error);
-      // Fallback URL
-      const fallbackUrl = `https://trgoals1431.xyz/channel.html?id=${match.id}&t=${Date.now()}&autoplay=1&muted=1`;
-      setSelectedMatch({ ...match, url: fallbackUrl });
-    } finally {
-      setStreamLoading(false);
-    }
+    const streamUrl = await getStreamUrl(match.id);
+    setSelectedMatch({ ...match, url: streamUrl });
+    setStreamLoading(false);
   };  
 
   const toggleFullscreen = () => {

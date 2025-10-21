@@ -18,69 +18,7 @@ const TRGOALS_DOMAINS = [
   'https://trgoals1446.xyz'
 ]
 
-// Cache için working domain
-let workingDomain = null
-let lastCheck = 0
-const CACHE_DURATION = 5 * 60 * 1000 // 5 dakika
-
-// Domain test fonksiyonu
-const testDomain = async (domain) => {
-  try {
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 3000)
-    
-    const response = await fetch(`${domain}/channel.html?id=yayin1`, {
-      method: 'HEAD',
-      signal: controller.signal,
-      cache: 'no-cache'
-    })
-    
-    clearTimeout(timeoutId)
-    return response.ok
-  } catch {
-    return false
-  }
-}
-
-// Çalışan domain bul
-const findWorkingDomain = async () => {
-  const now = Date.now()
-  
-  // Cache kontrolü
-  if (workingDomain && (now - lastCheck) < CACHE_DURATION) {
-    return workingDomain
-  }
-  
-  // Paralel test - daha hızlı
-  const promises = TRGOALS_DOMAINS.map(async (domain) => {
-    const works = await testDomain(domain)
-    return works ? domain : null
-  })
-  
-  const results = await Promise.all(promises)
-  const working = results.find(domain => domain !== null)
-  
-  if (working) {
-    workingDomain = working
-    lastCheck = now
-    return working
-  }
-  
-  // Fallback - ilk domain
-  return TRGOALS_DOMAINS[0]
-}
-
-// Get stream URL - İlk defa giren cihazlar için domain kontrolü
+// Get stream URL - Basit ve çalışan versiyon
 export const getStreamUrl = async (channelId) => {
-  try {
-    const domain = await findWorkingDomain()
-    const url = `${domain}/channel.html?id=${channelId}`
-    
-    // URL'e timestamp ekle - cache bypass
-    const timestamp = Date.now()
-    return `${url}&t=${timestamp}&autoplay=1&muted=1`
-  } catch (error) {
-    console.warn('Domain test failed, using fallback:', error)
-    return `${TRGOALS_DOMAINS[0]}/channel.html?id=${channelId}&t=${Date.now()}&autoplay=1&muted=1`
-  }
+  return `${TRGOALS_DOMAINS[0]}/channel.html?id=${channelId}`
 }

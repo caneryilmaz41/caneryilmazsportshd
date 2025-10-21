@@ -161,46 +161,16 @@ const VideoPlayer = ({
             </div>
           ) : (
             <div className="relative w-full h-full">
-              {/* İlk defa giren kullanıcılar için tıklama alanı */}
-              <div 
-                className="absolute inset-0 z-10 flex items-center justify-center bg-black/20 backdrop-blur-sm cursor-pointer transition-opacity duration-300 hover:bg-black/10"
-                onClick={() => {
-                  const iframe = document.querySelector('iframe');
-                  if (iframe) {
-                    try {
-                      iframe.contentWindow.postMessage({ action: 'play', userInitiated: true }, '*');
-                    } catch (e) {
-                      console.log('Cross-origin message failed (expected)');
-                    }
-                  }
-                  // Bu overlay'i kaldır
-                  document.querySelector('.stream-overlay')?.remove();
-                }}
-                style={{ display: localStorage.getItem('stream_visited') ? 'none' : 'flex' }}
-              >
-                <div className="stream-overlay bg-green-600/90 backdrop-blur-sm px-6 py-3 rounded-lg border border-green-400/50 shadow-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
-                    <span className="text-white font-medium">Yayını Başlat</span>
-                  </div>
-                </div>
-              </div>
               <iframe
                 src={selectedMatch.url}
                 className="w-full h-full rounded-lg"
                 frameBorder="0"
                 allowFullScreen
-                webkitAllowFullScreen
-                mozAllowFullScreen
-                msAllowFullScreen
                 scrolling="no"
-                allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; microphone *; camera *; accelerometer *; gyroscope *; payment *; geolocation *; midi *; sync-xhr *; usb *; vr *; magnetometer *; display-capture *"
-                allowTransparency="true"
-                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation allow-modals allow-pointer-lock allow-orientation-lock allow-popups-to-escape-sandbox allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
-                webkitPlaysinline
+                allow="autoplay; fullscreen; encrypted-media"
+                referrerPolicy="no-referrer"
                 playsInline
-                autoPlay
-                muted
+                webkitPlaysinline
                 style={{
                   filter: "brightness(1.05) contrast(1.1)",
                   background: "#000",
@@ -219,81 +189,17 @@ const VideoPlayer = ({
                 onLoad={() => {
                   const iframe = document.querySelector('iframe');
                   if (iframe) {
-                    // Tüm tarayıcılar için ayarlar
-                    iframe.setAttribute('webkitallowfullscreen', '');
-                    iframe.setAttribute('mozallowfullscreen', '');
-                    iframe.setAttribute('msallowfullscreen', '');
+                    // Telefon uyumluluğu için temel ayarlar
                     iframe.setAttribute('allowfullscreen', '');
                     iframe.setAttribute('playsinline', '');
                     iframe.setAttribute('webkit-playsinline', '');
-                    iframe.setAttribute('x5-playsinline', '');
-                    iframe.setAttribute('x5-video-player-type', 'h5');
-                    iframe.setAttribute('x5-video-player-fullscreen', 'true');
-                    iframe.setAttribute('x5-video-orientation', 'portraint');
                     
-                    // İlk defa giren cihazlar için user interaction trigger
-                    const triggerUserInteraction = () => {
-                      try {
-                        iframe.contentWindow.postMessage({ action: 'user_interaction', autoplay: true }, '*');
-                      } catch (e) {
-                        console.log('Cross-origin iframe message failed (expected)');
-                      }
-                    };
-                    
-                    // Immediate trigger for first-time users
-                    setTimeout(triggerUserInteraction, 100);
-                    
-                    // iPhone Chrome için özel ayarlar
-                    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-                    const isChrome = /CriOS/.test(navigator.userAgent);
-                    const isFirstVisit = !localStorage.getItem('stream_visited');
-                    
-                    if (isFirstVisit) {
-                      localStorage.setItem('stream_visited', 'true');
-                      // İlk ziyaret için ekstra ayarlar
-                      iframe.style.visibility = 'hidden';
-                      setTimeout(() => {
-                        iframe.style.visibility = 'visible';
-                        triggerUserInteraction();
-                      }, 200);
-                    }
-                    
-                    if (isIOS && isChrome) {
-                      iframe.style.pointerEvents = 'auto';
+                    // Mobil cihazlar için
+                    const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                    if (isMobile) {
                       iframe.style.touchAction = 'auto';
-                      iframe.setAttribute('gesture', 'media');
-                      iframe.setAttribute('allow', iframe.getAttribute('allow') + '; web-share');
-                      
-                      // Chrome iOS için user interaction trigger
-                      iframe.addEventListener('touchstart', triggerUserInteraction);
-                      iframe.addEventListener('click', triggerUserInteraction);
-                    }
-                    
-                    // Tüm iOS cihazlar için
-                    if (isIOS) {
                       iframe.setAttribute('scrolling', 'no');
-                      iframe.style.overflow = 'hidden';
-                      iframe.style.WebkitOverflowScrolling = 'touch';
                     }
-                    
-                    // Error handling for failed loads
-                    iframe.addEventListener('error', () => {
-                      console.log('Iframe load error, retrying...');
-                      setTimeout(() => {
-                        iframe.src = iframe.src.split('&retry=')[0] + '&retry=' + Date.now();
-                      }, 1000);
-                    });
-                  }
-                }}
-                onError={() => {
-                  console.log('Iframe error occurred');
-                  // Retry mechanism
-                  const iframe = document.querySelector('iframe');
-                  if (iframe && !iframe.dataset.retried) {
-                    iframe.dataset.retried = 'true';
-                    setTimeout(() => {
-                      iframe.src = iframe.src.split('&retry=')[0] + '&retry=' + Date.now();
-                    }, 2000);
                   }
                 }}
               />
