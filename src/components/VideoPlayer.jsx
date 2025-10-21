@@ -161,12 +161,24 @@ const VideoPlayer = ({
             </div>
           ) : (
             <div className="relative w-full h-full">
-              <iframe
-                src={selectedMatch.url}
-                className="w-full h-full"
-                frameBorder="0"
-                allowFullScreen
-              />
+              {selectedMatch.url.includes('.m3u8') ? (
+                <video
+                  src={selectedMatch.url}
+                  className="w-full h-full rounded-lg"
+                  controls
+                  autoPlay
+                  muted
+                  playsInline
+                  style={{ background: "#000" }}
+                />
+              ) : (
+                <iframe
+                  src={selectedMatch.url}
+                  className="w-full h-full"
+                  frameBorder="0"
+                  allowFullScreen
+                />
+              )}
             </div>
           )}
         </div>

@@ -22,7 +22,7 @@ const TRGOALS_DOMAINS = [
 export const getStreamUrl = async (channelId) => {
   // Arsenal maçı için özel URL
   if (channelId === 'arsenal_atletico') {
-    return 'https://hlssssssss.puanicinumut.workers.dev/https://corestream.ronaldovurdu.help//hls/bein-sports-1.m3u8'
+    return 'https://hlssssssss.puanicinumut.workers.dev/https://corestream.ronaldovurdu.help//hls/tabii.m3u8'
   }
   
   return `${TRGOALS_DOMAINS[0]}/channel.html?id=${channelId}`
