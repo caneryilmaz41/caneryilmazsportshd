@@ -166,42 +166,14 @@ const VideoPlayer = ({
                 className="w-full h-full rounded-lg"
                 frameBorder="0"
                 allowFullScreen
-                scrolling="no"
-                allow="autoplay; fullscreen; encrypted-media"
-                referrerPolicy="no-referrer"
-                playsInline
-                webkitPlaysinline
+                allow="autoplay; fullscreen; encrypted-media; accelerometer; gyroscope"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
                 style={{
-                  filter: "brightness(1.05) contrast(1.1)",
                   background: "#000",
-                  WebkitTransform: "translateZ(0)",
-                  transform: "translateZ(0)",
-                  WebkitBackfaceVisibility: "hidden",
-                  backfaceVisibility: "hidden",
-                  WebkitPerspective: "1000",
-                  perspective: "1000",
-                  touchAction: "auto",
-                  pointerEvents: "auto",
-                  WebkitTouchCallout: "none",
-                  WebkitUserSelect: "none",
-                  userSelect: "none",
+                  border: "none",
+                  outline: "none"
                 }}
-                onLoad={() => {
-                  const iframe = document.querySelector('iframe');
-                  if (iframe) {
-                    // Telefon uyumluluğu için temel ayarlar
-                    iframe.setAttribute('allowfullscreen', '');
-                    iframe.setAttribute('playsinline', '');
-                    iframe.setAttribute('webkit-playsinline', '');
-                    
-                    // Mobil cihazlar için
-                    const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                    if (isMobile) {
-                      iframe.style.touchAction = 'auto';
-                      iframe.setAttribute('scrolling', 'no');
-                    }
-                  }
-                }}
+
               />
 
             </div>

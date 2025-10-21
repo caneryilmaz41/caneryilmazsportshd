@@ -18,7 +18,14 @@ const TRGOALS_DOMAINS = [
   'https://trgoals1446.xyz'
 ]
 
-// Get stream URL - Basit ve çalışan versiyon
+// Get stream URL - Mobil uyumlu versiyon
 export const getStreamUrl = async (channelId) => {
-  return `${TRGOALS_DOMAINS[0]}/channel.html?id=${channelId}`
+  const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  const baseUrl = `${TRGOALS_DOMAINS[0]}/channel.html?id=${channelId}`
+  
+  if (isMobile) {
+    return `${baseUrl}&mobile=1&autoplay=0`
+  }
+  
+  return baseUrl
 }
