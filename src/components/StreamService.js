@@ -18,30 +18,7 @@ const TRGOALS_DOMAINS = [
   'https://trgoals1446.xyz'
 ]
 
-// Çalışan domain testi
-const testDomain = async (domain) => {
-  try {
-    const response = await fetch(`${domain}/channel.html?id=yayin1`, {
-      method: 'HEAD',
-      timeout: 3000
-    })
-    return response.ok
-  } catch {
-    return false
-  }
-}
-
-// Get stream URL - Domain testi ile
+// Get stream URL - Basit versiyon
 export const getStreamUrl = async (channelId) => {
-  // İlk 3 domain'i hızlıca test et
-  for (let i = 0; i < 3; i++) {
-    const domain = TRGOALS_DOMAINS[i]
-    const works = await testDomain(domain)
-    if (works) {
-      return `${domain}/channel.html?id=${channelId}`
-    }
-  }
-  
-  // Hiçbiri çalışmazsa fallback
   return `${TRGOALS_DOMAINS[0]}/channel.html?id=${channelId}`
 }

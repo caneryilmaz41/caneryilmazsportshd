@@ -166,13 +166,6 @@ const VideoPlayer = ({
                 className="w-full h-full rounded-lg"
                 frameBorder="0"
                 allowFullScreen
-                allow="autoplay; fullscreen; encrypted-media"
-                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation allow-top-navigation"
-                referrerPolicy="no-referrer-when-downgrade"
-                style={{
-                  background: "#000",
-                  border: "none"
-                }}
               />
             </div>
           )}
