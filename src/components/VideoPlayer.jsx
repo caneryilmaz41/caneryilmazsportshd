@@ -161,41 +161,12 @@ const VideoPlayer = ({
             </div>
           ) : (
             <div className="relative w-full h-full">
-              {selectedMatch.url.includes('.m3u8') ? (
-                <video
-                  ref={(video) => {
-                    if (video && selectedMatch.url.includes('.m3u8')) {
-                      // HLS.js kullan
-                      if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                        // Safari native HLS desteği
-                        video.src = selectedMatch.url;
-                      } else {
-                        // HLS.js ile
-                        import('https://cdn.jsdelivr.net/npm/hls.js@latest').then(({ default: Hls }) => {
-                          if (Hls.isSupported()) {
-                            const hls = new Hls();
-                            hls.loadSource(selectedMatch.url);
-                            hls.attachMedia(video);
-                          }
-                        });
-                      }
-                    }
-                  }}
-                  className="w-full h-full rounded-lg"
-                  controls
-                  autoPlay
-                  muted
-                  playsInline
-                  style={{ background: "#000" }}
-                />
-              ) : (
-                <iframe
-                  src={selectedMatch.url}
-                  className="w-full h-full"
-                  frameBorder="0"
-                  allowFullScreen
-                />
-              )}
+              <iframe
+                src={selectedMatch.url}
+                className="w-full h-full"
+                frameBorder="0"
+                allowFullScreen
+              />
             </div>
           )}
         </div>
