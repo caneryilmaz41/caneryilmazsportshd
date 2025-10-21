@@ -160,12 +160,38 @@ const VideoPlayer = ({
               </div>
             </div>
           ) : (
-            <div className="relative w-full h-full bg-black rounded-lg flex items-center justify-center">
-              <embed 
+            <div className="relative w-full h-full">
+              <iframe
                 src={selectedMatch.url}
-                type="text/html"
                 className="w-full h-full rounded-lg"
-                style={{ background: "#000" }}
+                frameBorder="0"
+                allowFullScreen
+                allow="autoplay; fullscreen; encrypted-media"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation allow-top-navigation"
+                referrerPolicy="unsafe-url"
+                style={{
+                  background: "#000",
+                  border: "none"
+                }}
+                onLoad={() => {
+                  // Senin cache'indeki ayarları simüle et
+                  const iframe = document.querySelector('iframe');
+                  if (iframe) {
+                    // Cookie ve session simülasyonu
+                    document.cookie = "trgoals_session=active; path=/; domain=.trgoals1431.xyz";
+                    document.cookie = "user_agent=cached; path=/";
+                    
+                    // Local storage simülasyonu
+                    localStorage.setItem('trgoals_visited', 'true');
+                    localStorage.setItem('stream_cache', Date.now().toString());
+                    
+                    // Referer header simülasyonu
+                    const meta = document.createElement('meta');
+                    meta.name = 'referrer';
+                    meta.content = 'unsafe-url';
+                    document.head.appendChild(meta);
+                  }
+                }}
               />
             </div>
           )}
