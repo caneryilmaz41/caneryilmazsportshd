@@ -163,7 +163,24 @@ const VideoPlayer = ({
             <div className="relative w-full h-full">
               {selectedMatch.url.includes('.m3u8') ? (
                 <video
-                  src={selectedMatch.url}
+                  ref={(video) => {
+                    if (video && selectedMatch.url.includes('.m3u8')) {
+                      // HLS.js kullan
+                      if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                        // Safari native HLS desteği
+                        video.src = selectedMatch.url;
+                      } else {
+                        // HLS.js ile
+                        import('https://cdn.jsdelivr.net/npm/hls.js@latest').then(({ default: Hls }) => {
+                          if (Hls.isSupported()) {
+                            const hls = new Hls();
+                            hls.loadSource(selectedMatch.url);
+                            hls.attachMedia(video);
+                          }
+                        });
+                      }
+                    }
+                  }}
                   className="w-full h-full rounded-lg"
                   controls
                   autoPlay
