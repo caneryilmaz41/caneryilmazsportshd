@@ -161,29 +161,27 @@ const VideoPlayer = ({
             </div>
           ) : (
             <div className="relative w-full h-full">
-              <iframe
-                src={selectedMatch.url}
-                className="w-full h-full rounded-lg"
-                frameBorder="0"
-                allowFullScreen
-                allow="autoplay; fullscreen; encrypted-media"
-                style={{
-                  background: "#000",
-                  border: "none"
-                }}
-                onError={() => {
-                  const iframe = document.querySelector('iframe')
-                  if (iframe && !iframe.dataset.retried) {
-                    iframe.dataset.retried = 'true'
-                    const currentUrl = iframe.src
-                    const channelId = currentUrl.split('id=')[1]
-                    if (channelId) {
-                      const nextDomain = 'https://trgoals1432.xyz'
-                      iframe.src = `${nextDomain}/channel.html?id=${channelId}`
-                    }
-                  }
-                }}
-              />
+              <div className="w-full h-full bg-slate-900 flex flex-col items-center justify-center gap-4">
+                <div className="text-center">
+                  <div className="text-white text-lg font-medium mb-2">
+                    {selectedMatch.name}
+                  </div>
+                  <div className="text-slate-300 text-sm mb-6">
+                    Yayını açmak için butona tıklayın
+                  </div>
+                </div>
+                <a 
+                  href={selectedMatch.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-lg font-medium text-lg transition-colors duration-200 flex items-center gap-3"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m-6-8h8a2 2 0 012 2v8a2 2 0 01-2 2H8a2 2 0 01-2-2v-8a2 2 0 012-2z" />
+                  </svg>
+                  Yayını Aç
+                </a>
+              </div>
             </div>
           )}
         </div>
