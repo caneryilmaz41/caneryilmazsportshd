@@ -166,31 +166,11 @@ const VideoPlayer = ({
                 className="w-full h-full rounded-lg"
                 frameBorder="0"
                 allowFullScreen
-                webkitAllowFullScreen
-                mozAllowFullScreen
-                msAllowFullScreen
-                scrolling="no"
-                allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; microphone *; camera *; accelerometer *; gyroscope *; payment *; geolocation *; midi *; sync-xhr *; usb *; vr *; magnetometer *; display-capture *"
-                allowTransparency="true"
-                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation allow-modals allow-pointer-lock allow-orientation-lock allow-popups-to-escape-sandbox allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
-                webkitPlaysinline
-                playsInline
-                autoPlay
-                muted
+                allow="autoplay; fullscreen; encrypted-media"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation allow-top-navigation"
                 style={{
-                  filter: "brightness(1.05) contrast(1.1)",
                   background: "#000",
-                  WebkitTransform: "translateZ(0)",
-                  transform: "translateZ(0)",
-                  WebkitBackfaceVisibility: "hidden",
-                  backfaceVisibility: "hidden",
-                  WebkitPerspective: "1000",
-                  perspective: "1000",
-                  touchAction: "auto",
-                  pointerEvents: "auto",
-                  WebkitTouchCallout: "none",
-                  WebkitUserSelect: "none",
-                  userSelect: "none",
+                  border: "none"
                 }}
               />
             </div>

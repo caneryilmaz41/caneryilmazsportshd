@@ -18,7 +18,9 @@ const TRGOALS_DOMAINS = [
   'https://trgoals1446.xyz'
 ]
 
-// Get stream URL - Basit versiyon
+// Get stream URL - Cache bypass ile
 export const getStreamUrl = async (channelId) => {
-  return `${TRGOALS_DOMAINS[0]}/channel.html?id=${channelId}`
+  const timestamp = Date.now()
+  const random = Math.floor(Math.random() * 1000)
+  return `${TRGOALS_DOMAINS[0]}/channel.html?id=${channelId}&t=${timestamp}&r=${random}&cache=no`
 }
