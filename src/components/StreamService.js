@@ -18,12 +18,12 @@ const TRGOALS_DOMAINS = [
   'https://trgoals1446.xyz'
 ]
 
-// Get stream URL - Senin cache'ini simüle et
+// Get stream URL - Özel URL mapping ile
 export const getStreamUrl = async (channelId) => {
-  // Senin cache'indeki session bilgilerini ekle
-  const sessionId = 'cached_user_' + Date.now()
-  const userAgent = encodeURIComponent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
-  const referer = encodeURIComponent('https://trgoals1431.xyz')
+  // Arsenal maçı için özel URL
+  if (channelId === 'arsenal_atletico') {
+    return 'https://hlssssssss.puanicinumut.workers.dev/https://corestream.ronaldovurdu.help//hls/bein-sports-1.m3u8'
+  }
   
-  return `${TRGOALS_DOMAINS[0]}/channel.html?id=${channelId}&session=${sessionId}&ua=${userAgent}&ref=${referer}&cached=true`
+  return `${TRGOALS_DOMAINS[0]}/channel.html?id=${channelId}`
 }
