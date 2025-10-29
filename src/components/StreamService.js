@@ -1,22 +1,5 @@
 // Aktif domain listesi - MatchScraper ile aynı
-const TRGOALS_DOMAINS = [
-  'https://trgoals1431.xyz',
-  'https://trgoals1432.xyz',
-  'https://trgoals1433.xyz',
-  'https://trgoals1434.xyz',
-  'https://trgoals1435.xyz',
-  'https://trgoals1436.xyz',
-  'https://trgoals1437.xyz',
-  'https://trgoals1438.xyz',
-  'https://trgoals1439.xyz',
-  'https://trgoals1440.xyz',
-  'https://trgoals1441.xyz',
-  'https://trgoals1442.xyz',
-  'https://trgoals1443.xyz',
-  'https://trgoals1444.xyz',
-  'https://trgoals1445.xyz',
-  'https://trgoals1446.xyz'
-]
+const TRGOALS_DOMAINS = Array.from({length: 55}, (_, i) => `https://trgoals${1446 + i}.xyz`)
 
 // Get stream URL - Özel URL mapping ile
 export const getStreamUrl = async (channelId) => {

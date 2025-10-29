@@ -1,22 +1,5 @@
-// Aktif domain listesi - 1431'den başlatıp güncel olanlar
-const TRGOALS_DOMAINS = [
-  'https://trgoals1431.xyz',
-  'https://trgoals1432.xyz',
-  'https://trgoals1433.xyz',
-  'https://trgoals1434.xyz',
-  'https://trgoals1435.xyz',
-  'https://trgoals1436.xyz',
-  'https://trgoals1437.xyz',
-  'https://trgoals1438.xyz',
-  'https://trgoals1439.xyz',
-  'https://trgoals1440.xyz',
-  'https://trgoals1441.xyz',
-  'https://trgoals1442.xyz',
-  'https://trgoals1443.xyz',
-  'https://trgoals1444.xyz',
-  'https://trgoals1445.xyz',
-  'https://trgoals1446.xyz'
-]
+// Aktif domain listesi - 1446'dan 1500'e kadar
+const TRGOALS_DOMAINS = Array.from({length: 55}, (_, i) => `https://trgoals${1446 + i}.xyz`)
 
 // TRGoals'dan maç listesini çek
 export const scrapeMatches = async () => {
