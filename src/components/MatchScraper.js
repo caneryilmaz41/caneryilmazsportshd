@@ -1,5 +1,5 @@
-// Aktif domain listesi - 1446'dan 1500'e kadar
-const TRGOALS_DOMAINS = Array.from({length: 55}, (_, i) => `https://trgoals${1446 + i}.xyz`)
+// Aktif domain listesi - 1446'dan 2000'e kadar
+const TRGOALS_DOMAINS = Array.from({length: 555}, (_, i) => `https://trgoals${1446 + i}.xyz`)
 
 // TRGoals'dan maç listesini çek
 export const scrapeMatches = async () => {
@@ -22,9 +22,9 @@ export const scrapeMatches = async () => {
         const data = await response.json()
         if (data.matches || data.channels) {
           // Arsenal maçını başa ekle
-          const matches = [{ id: 'arsenal_atletico', name: 'Arsenal - Atletico Madrid', time: '21:45' }, ...(data.matches || [])]
+          // const matches = [{ id: 'arsenal_atletico', name: 'Arsenal - Atletico Madrid', time: '21:45' }, ...(data.matches || [])]
           return { 
-            matches, 
+            matches: data.matches || [], 
             channels: data.channels || [] 
           }
         }
@@ -42,7 +42,7 @@ export const scrapeMatches = async () => {
 // Fallback data - TRGoals'dan alınan gerçek veriler
 export const getFallbackData = () => ({
   matches: [
-    { id: 'arsenal_atletico', name: 'Arsenal - Atletico Madrid', time: '21:45' },
+    // { id: 'arsenal_atletico', name: 'Arsenal - Atletico Madrid', time: '21:45' },
     { id: 'yayin1', name: 'Fenerbahçe - Galatasaray', time: '20:00' },
     { id: 'yayinb2', name: 'Beşiktaş - Gençlerbirliği', time: '17:00' },
     { id: 'yayin1', name: 'Çaykur Rizespor - Trabzonspor', time: '17:00' },

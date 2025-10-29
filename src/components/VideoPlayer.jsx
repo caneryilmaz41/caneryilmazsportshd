@@ -171,17 +171,7 @@ const VideoPlayer = ({
           )}
         </div>
 
-        {/* Ege logosu - sağ üst köşe */}
-        <div className="absolute top-4 right-4 z-20">
-          <img 
-            src="/ege.jpg" 
-            alt="Ege" 
-            className="w-20 h-20 rounded-lg opacity-95 shadow-2xl border-2 border-white/30"
-            style={{
-              filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.8)) brightness(1.1) contrast(1.2)"
-            }}
-          />
-        </div>
+
 
         <div className="absolute top-6 right-6 lg:top-auto lg:bottom-6 z-10">
           <button
