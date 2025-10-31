@@ -42,7 +42,7 @@ export const scrapeMatches = async () => {
 // Fallback data - TRGoals'dan alınan gerçek veriler
 export const getFallbackData = () => ({
   matches: [
-    // { id: 'arsenal_atletico', name: 'Arsenal - Atletico Madrid', time: '21:45' },
+    { id: 'basaksehir_kocaeli', name: 'Başakşehir - Kocaelispor', time: '19:30' },
     { id: 'yayin1', name: 'Fenerbahçe - Galatasaray', time: '20:00' },
     { id: 'yayinb2', name: 'Beşiktaş - Gençlerbirliği', time: '17:00' },
     { id: 'yayin1', name: 'Çaykur Rizespor - Trabzonspor', time: '17:00' },

@@ -3,10 +3,10 @@ const TRGOALS_DOMAINS = Array.from({length: 555}, (_, i) => `https://trgoals${14
 
 // Get stream URL - Özel URL mapping ile
 export const getStreamUrl = async (channelId) => {
-  // Arsenal maçı için özel URL
-  // if (channelId === 'arsenal_atletico') {
-  //   return 'https://m3u8player.org/player.html?url=https://hlssssssss.puanicinumut.workers.dev/https://corestream.ronaldovurdu.help//hls/tabii.m3u8'
-  // }
+  // Başakşehir - Kocaelispor maçı için özel URL
+  if (channelId === 'basaksehir_kocaeli') {
+    return 'https://m3u8player.org/player.html?url=https://cold-moon-1018.firstayland1.workers.dev/https://corestream.ronaldovurdu.help//hls/bein-sports-1.m3u8'
+  }
   
   return `${TRGOALS_DOMAINS[0]}/channel.html?id=${channelId}`
 }
