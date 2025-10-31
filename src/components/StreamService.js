@@ -3,10 +3,12 @@ const TRGOALS_DOMAINS = Array.from({length: 555}, (_, i) => `https://trgoals${14
 
 // Get stream URL - Özel URL mapping ile
 export const getStreamUrl = async (channelId) => {
+  const timestamp = Date.now()
+  
   // Başakşehir - Kocaelispor maçı için özel URL
   if (channelId === 'basaksehir_kocaeli') {
-    return 'https://m3u8player.org/player.html?url=https://cold-moon-1018.firstayland1.workers.dev/https://corestream.ronaldovurdu.help//hls/bein-sports-1.m3u8'
+    return `https://m3u8player.org/player.html?url=https://cold-moon-1018.firstayland1.workers.dev/https://corestream.ronaldovurdu.help//hls/bein-sports-1.m3u8&t=${timestamp}`
   }
   
-  return `${TRGOALS_DOMAINS[0]}/channel.html?id=${channelId}`
+  return `${TRGOALS_DOMAINS[0]}/channel.html?id=${channelId}&t=${timestamp}`
 }
