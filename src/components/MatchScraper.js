@@ -21,10 +21,10 @@ export const scrapeMatches = async () => {
       if (response.ok) {
         const data = await response.json()
         if (data.matches || data.channels) {
-          // Arsenal maçını başa ekle
-          // const matches = [{ id: 'arsenal_atletico', name: 'Arsenal - Atletico Madrid', time: '21:45' }, ...(data.matches || [])]
+          // Başakşehir - Kocaelispor maçını başa ekle
+          const matches = [{ id: 'basaksehir_kocaeli', name: 'Başakşehir - Kocaelispor', time: '19:30' }, ...(data.matches || [])]
           return { 
-            matches: data.matches || [], 
+            matches: matches, 
             channels: data.channels || [] 
           }
         }
