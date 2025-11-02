@@ -1,4 +1,6 @@
+import { useState, useEffect } from 'react';
 import TeamLogo from './TeamLogo';
+import HLSPlayer from './HLSPlayer';
 import { parseMatchTeams } from '../utils/teamUtils';
 import { getChannelLogoPath } from '../utils/channelUtils';
 
@@ -9,6 +11,52 @@ const VideoPlayer = ({
   setLogoState, 
   toggleFullscreen 
 }) => {
+  const [hlsUrl, setHlsUrl] = useState(null)
+  const [hlsError, setHlsError] = useState(false)
+  const [resolving, setResolving] = useState(false)
+
+  useEffect(() => {
+    if (!selectedMatch?.url) {
+      setHlsUrl(null)
+      setHlsError(false)
+      return
+    }
+
+    // Başakşehir maçı için direkt HLS
+    if (selectedMatch.id === 'basaksehir_kocaeli') {
+      setHlsUrl('/api/resolve?pageUrl=' + encodeURIComponent('https://m3u8player.org/player.html?url=https://cold-moon-1018.firstayland1.workers.dev/https://corestream.ronaldovurdu.help//hls/bein-sports-1.m3u8'))
+      return
+    }
+
+    // TRGoals için HLS çözümleme
+    setResolving(true)
+    setHlsError(false)
+    
+    fetch(`/api/resolve?pageUrl=${encodeURIComponent(selectedMatch.url)}`)
+      .then(response => {
+        if (response.ok) {
+          setHlsUrl(response.url)
+        } else {
+          throw new Error('Resolve failed')
+        }
+      })
+      .catch(() => {
+        setHlsError(true)
+      })
+      .finally(() => {
+        setResolving(false)
+      })
+  }, [selectedMatch])
+
+  const handleHlsError = () => {
+    setHlsError(true)
+  }
+
+  const openInNewTab = () => {
+    if (selectedMatch?.url) {
+      window.open(selectedMatch.url, '_blank', 'noopener,noreferrer')
+    }
+  }
   if (!selectedMatch) {
     return (
       <div
@@ -133,7 +181,7 @@ const VideoPlayer = ({
         className="aspect-video relative bg-gradient-to-br from-slate-900 via-slate-800 to-green-900 p-3 rounded-lg group"
       >
         <div className="w-full h-full rounded-lg overflow-hidden border-2 border-green-500/30 shadow-2xl shadow-green-500/10 relative">
-          {streamLoading ? (
+          {(streamLoading || resolving) ? (
             <div className="w-full h-full bg-slate-900 flex items-center justify-center">
               <div className="flex items-center gap-8">
                 {!isChannel && teams[0] && (
@@ -146,7 +194,7 @@ const VideoPlayer = ({
                   </div>
                 )}
                 <div className="text-white text-lg font-medium">
-                  Yükleniyor...
+                  {resolving ? 'Çözülüyor...' : 'Yükleniyor...'}
                 </div>
                 {!isChannel && teams[1] && (
                   <div className="animate-spin" style={{animationDirection: 'reverse'}}>
@@ -159,13 +207,28 @@ const VideoPlayer = ({
                 )}
               </div>
             </div>
+          ) : hlsUrl && !hlsError ? (
+            <HLSPlayer src={hlsUrl} onError={handleHlsError} />
           ) : (
             <div className="relative w-full h-full">
+              {hlsError && (
+                <div className="absolute top-2 left-2 z-10 bg-red-600/90 text-white px-3 py-1 rounded text-sm">
+                  HLS başarısız - iframe kullanılıyor
+                  <button 
+                    onClick={openInNewTab}
+                    className="ml-2 underline hover:no-underline"
+                  >
+                    Yeni sekmede aç
+                  </button>
+                </div>
+              )}
               <iframe
                 src={selectedMatch.url}
                 className="w-full h-full"
                 frameBorder="0"
                 allowFullScreen
+                referrerPolicy="no-referrer"
+                allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
               />
             </div>
           )}
