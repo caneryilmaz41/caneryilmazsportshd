@@ -21,10 +21,8 @@ export const scrapeMatches = async () => {
       if (response.ok) {
         const data = await response.json()
         if (data.matches || data.channels) {
-          // Başakşehir - Kocaelispor maçını başa ekle
-          const matches = [{ id: 'basaksehir_kocaeli', name: 'Başakşehir - Kocaelispor', time: '19:30' }, ...(data.matches || [])]
           return { 
-            matches: matches, 
+            matches: data.matches || [], 
             channels: data.channels || [] 
           }
         }
@@ -42,16 +40,13 @@ export const scrapeMatches = async () => {
 // Fallback data - TRGoals'dan alınan gerçek veriler
 export const getFallbackData = () => ({
   matches: [
-    { id: 'basaksehir_kocaeli', name: 'Başakşehir - Kocaelispor', time: '19:30' },
     { id: 'yayin1', name: 'Fenerbahçe - Galatasaray', time: '20:00' },
     { id: 'yayinb2', name: 'Beşiktaş - Gençlerbirliği', time: '17:00' },
-    { id: 'yayin1', name: 'Çaykur Rizespor - Trabzonspor', time: '17:00' },
- 
+    { id: 'yayin1', name: 'Çaykur Rizespor - Trabzonspor', time: '17:00' }
   ],
   channels: [
     { id: 'yayin1', name: 'BeIN Sports 1', status: '7/24' },
     { id: 'yayinb2', name: 'BeIN Sports 2', status: '7/24' },
-    { id: 'yayinb3', name: 'BeIN Sports 3', status: '7/24' },
- 
+    { id: 'yayinb3', name: 'BeIN Sports 3', status: '7/24' }
   ]
 })
