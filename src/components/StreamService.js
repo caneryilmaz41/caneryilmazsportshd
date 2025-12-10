@@ -1,5 +1,5 @@
 // Aktif domain listesi - MatchScraper ile aynı
-const TRGOALS_DOMAINS = Array.from({length: 521}, (_, i) => `https://trgoals${1480 + i}.xyz`)
+const TRGOALS_DOMAINS = Array.from({length: 521}, (_, i) => `https://trgoals${1485 + i}.xyz`)
 
 // Get stream URL - Özel URL mapping ile
 export const getStreamUrl = async (channelId) => {
