@@ -1,5 +1,5 @@
-// Aktif domain listesi - 1480'dan 2000'e kadar
-const TRGOALS_DOMAINS = Array.from({length: 521}, (_, i) => `https://trgoals${1485 + i}.xyz`)
+// Aktif domain listesi - 1494'dan 2100'e kadar
+const TRGOALS_DOMAINS = Array.from({length: 607}, (_, i) => `https://trgoals${1494 + i}.xyz`)
 
 // TRGoals'dan maç listesini çek
 export const scrapeMatches = async () => {
