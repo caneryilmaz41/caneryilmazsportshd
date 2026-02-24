@@ -69,7 +69,20 @@ const VideoPlayer = ({
   return (
     <div>
       <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-3">
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-between">
+          {/* Sol taraf - Kategori ve Özel Etiket */}
+          <div className="flex items-center gap-2">
+            {selectedMatch.category && (
+              <span className="text-xs text-green-100">{selectedMatch.category}</span>
+            )}
+            {selectedMatch.special && (
+              <span className="text-xs text-yellow-300 font-semibold animate-pulse">
+                {selectedMatch.special}
+              </span>
+            )}
+          </div>
+          
+          {/* Orta - Takımlar veya Kanal */}
           <div className="flex items-center gap-4">
             {isChannel ? (
               <div className="flex items-center gap-2">
@@ -82,54 +95,64 @@ const VideoPlayer = ({
                 <span className="text-white text-sm font-medium">
                   {selectedMatch.name}
                 </span>
-                <div className="flex items-center gap-2 ml-4">
-                  <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
-                  <span className="text-xs text-green-100 font-medium">
-                    CANLI
-                  </span>
+              </div>
+            ) : (
+              <>
+                {teams[0] && (
+                  <div className="flex items-center gap-2">
+                    {selectedMatch.homeLogo ? (
+                      <img src={selectedMatch.homeLogo} alt="Home" className="w-6 h-6 object-contain" />
+                    ) : (
+                      <TeamLogo 
+                        teamName={teams[0]} 
+                        logoState={logoState} 
+                        setLogoState={setLogoState} 
+                      />
+                    )}
+                    <span className="text-white font-medium text-sm">
+                      {teams[0]}
+                    </span>
+                  </div>
+                )}
+                
+                <div className="flex flex-col items-center gap-1">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
+                    <span className="text-xs text-green-100 font-medium">
+                      CANLI
+                    </span>
+                  </div>
+                  {selectedMatch.time && (
+                    <span className="text-xs text-green-100">
+                      {selectedMatch.time}
+                    </span>
+                  )}
                 </div>
-              </div>
-            ) : null}
-            {!isChannel && teams[0] && (
-              <div className="flex items-center gap-2">
-                <TeamLogo 
-                  teamName={teams[0]} 
-                  logoState={logoState} 
-                  setLogoState={setLogoState} 
-                />
-                <span className="text-white font-medium text-sm">
-                  {teams[0]}
-                </span>
-              </div>
-            )}
-            
-            {!isChannel && (
-              <div className="flex flex-col items-center gap-1">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
-                  <span className="text-xs text-green-100 font-medium">
-                    CANLI
-                  </span>
-                </div>
-                <span className="text-xs text-green-100">
-                  {selectedMatch.time}
-                </span>
-              </div>
-            )}
-            
-            {!isChannel && teams[1] && (
-              <div className="flex items-center gap-2">
-                <span className="text-white font-medium text-sm">
-                  {teams[1]}
-                </span>
-                <TeamLogo 
-                  teamName={teams[1]} 
-                  logoState={logoState} 
-                  setLogoState={setLogoState} 
-                />
-              </div>
+                
+                {teams[1] && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-white font-medium text-sm">
+                      {teams[1]}
+                    </span>
+                    {selectedMatch.awayLogo ? (
+                      <img src={selectedMatch.awayLogo} alt="Away" className="w-6 h-6 object-contain" />
+                    ) : (
+                      <TeamLogo 
+                        teamName={teams[1]} 
+                        logoState={logoState} 
+                        setLogoState={setLogoState} 
+                      />
+                    )}
+                  </div>
+                )}
+              </>
             )}
           </div>
+          
+          {/* Sağ taraf - Lig bilgisi */}
+          {selectedMatch.league && (
+            <span className="text-xs text-green-100">{selectedMatch.league}</span>
+          )}
         </div>
       </div>
       

@@ -76,16 +76,37 @@ const parseMatches = (html) => {
     const id = aMatch[1]
     const content = aMatch[2]
     
-    // İçerikten home, away ve event çek
+    // Takım logoları
+    const homeLogoMatch = content.match(/<img[^>]*src="([^"]+)"[^>]*alt="Home"/)
+    const awayLogoMatch = content.match(/<img[^>]*src="([^"]+)"[^>]*alt="Away"/)
+    
+    // Takım isimleri
     const homeMatch = content.match(/<div class="home">([^<]+)<\/div>/)
     const awayMatch = content.match(/<div class="away">([^<]+)<\/div>/)
-    const eventMatch = content.match(/<div class="event">\s*([^<|]+)/)
+    
+    // Saat ve lig bilgisi
+    const eventMatch = content.match(/<div class="event">\s*([^<|]+)\s*\|\s*([^<]+)<\/div>/)
+    
+    // Kategori (Futbol TR, Basketbol vb.)
+    const categoryMatch = content.match(/<div class="date">\s*([^<\s]+)/)
+    
+    // Özel etiket (GÜNÜN MAÇI vb.)
+    const specialMatch = content.match(/<span class="colorling">([^<]+)<\/span>/)
+    
+    // data-matchtype
+    const typeMatch = content.match(/data-matchtype="([^"]+)"/)
     
     if (homeMatch && awayMatch && eventMatch) {
       matches.push({
         id,
         name: `${homeMatch[1].trim()} - ${awayMatch[1].trim()}`,
+        homeLogo: homeLogoMatch ? homeLogoMatch[1] : null,
+        awayLogo: awayLogoMatch ? awayLogoMatch[1] : null,
         time: eventMatch[1].trim(),
+        league: eventMatch[2].trim(),
+        category: categoryMatch ? categoryMatch[1].trim() : '',
+        special: specialMatch ? specialMatch[1].trim() : null,
+        type: typeMatch ? typeMatch[1] : '',
         url: `${activeDomain}/matches?id=${id}`
       })
     }
