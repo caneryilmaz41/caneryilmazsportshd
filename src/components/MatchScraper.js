@@ -1,52 +1,140 @@
-// Aktif domain listesi - 1494'dan 2100'e kadar
-const TRGOALS_DOMAINS = Array.from({length: 607}, (_, i) => `https://trgoals${1494 + i}.xyz`)
+// Trgooltv domain listesi - otomatik değişim için
+const TRGOOL_DOMAINS = [
+  'https://trgooltv60.top',
+  'https://trgooltv61.top',
+  'https://trgooltv62.top',
+  'https://trgooltv59.top'
+]
+const DATA_API = 'https://teletv3.top/load'
 
-// TRGoals'dan maç listesini çek
-export const scrapeMatches = async () => {
-  // Tüm domainleri dene, çalışan ilkini kullan
-  for (const domain of TRGOALS_DOMAINS) {
+// Çalışan domain'i bul
+let activeDomain = TRGOOL_DOMAINS[0]
+
+const findWorkingDomain = async () => {
+  for (const domain of TRGOOL_DOMAINS) {
     try {
-      const timestamp = Date.now()
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 15000)
-      
-      const response = await fetch(`/api/scrapeMatches?domain=${encodeURIComponent(domain)}&t=${timestamp}`, {
-        cache: 'no-cache',
-        headers: { 'Cache-Control': 'no-cache' },
-        signal: controller.signal
+      const response = await fetch(`${domain}/matches?id=bein-sports-1`, { 
+        method: 'HEAD',
+        mode: 'no-cors'
       })
-      
-      clearTimeout(timeoutId)
-      
-      if (response.ok) {
-        const data = await response.json()
-        if (data.matches || data.channels) {
-          return { 
-            matches: data.matches || [], 
-            channels: data.channels || [] 
-          }
-        }
-      }
+      activeDomain = domain
+      console.log('Active domain:', domain)
+      return domain
     } catch (error) {
-      console.log(`Domain ${domain} failed:`, error)
       continue
     }
   }
+  return TRGOOL_DOMAINS[0]
+}
+
+// Direkt PHP endpoint'lerinden çek
+export const scrapeMatches = async () => {
+  try {
+    console.log('Fetching matches and channels...')
+    
+    // Çalışan domain'i bul
+    await findWorkingDomain()
+    
+    const [matchesRes, channelsRes] = await Promise.all([
+      fetch(`${DATA_API}/matches.php`),
+      fetch(`${DATA_API}/channels.php`)
+    ])
+
+    if (matchesRes.ok && channelsRes.ok) {
+      const matchesHtml = await matchesRes.text()
+      const channelsHtml = await channelsRes.text()
+      
+      console.log('Matches HTML length:', matchesHtml.length)
+      console.log('Channels HTML length:', channelsHtml.length)
+      console.log('Full matches HTML:', matchesHtml)
+      console.log('Full channels HTML:', channelsHtml)
+      
+      const matches = parseMatches(matchesHtml)
+      const channels = parseChannels(channelsHtml)
+      
+      console.log(`Final: ${matches.length} matches, ${channels.length} channels`)
+      
+      return { matches, channels }
+    }
+  } catch (error) {
+    console.error('Scrape error:', error)
+  }
   
-  // Hiçbiri çalışmazsa fallback
+  console.log('Using fallback data')
   return getFallbackData()
 }
 
-// Fallback data - TRGoals'dan alınan gerçek veriler
+// HTML'den maçları parse et
+const parseMatches = (html) => {
+  const matches = []
+  
+  // <a> tag'lerini bul
+  const aTagRegex = /<a[^>]*class="single-match[^"]*"[^>]*href="matches\?id=([^"]+)"[^>]*>([\s\S]*?)<\/a>/g
+  
+  let aMatch
+  while ((aMatch = aTagRegex.exec(html)) !== null) {
+    const id = aMatch[1]
+    const content = aMatch[2]
+    
+    // İçerikten home, away ve event çek
+    const homeMatch = content.match(/<div class="home">([^<]+)<\/div>/)
+    const awayMatch = content.match(/<div class="away">([^<]+)<\/div>/)
+    const eventMatch = content.match(/<div class="event">\s*([^<|]+)/)
+    
+    if (homeMatch && awayMatch && eventMatch) {
+      matches.push({
+        id,
+        name: `${homeMatch[1].trim()} - ${awayMatch[1].trim()}`,
+        time: eventMatch[1].trim(),
+        url: `${activeDomain}/matches?id=${id}`
+      })
+    }
+  }
+  
+  console.log(`Parsed ${matches.length} matches`)
+  return matches
+}
+
+// HTML'den kanalları parse et
+const parseChannels = (html) => {
+  const channels = []
+  
+  // <a> tag'lerini bul
+  const aTagRegex = /<a[^>]*class="single-match[^"]*"[^>]*href="matches\?id=([^"]+)"[^>]*>([\s\S]*?)<\/a>/g
+  
+  let aMatch
+  while ((aMatch = aTagRegex.exec(html)) !== null) {
+    const id = aMatch[1]
+    const content = aMatch[2]
+    
+    // İçerikten home çek
+    const homeMatch = content.match(/<div class="home">([^<]+)<\/div>/)
+    
+    if (homeMatch) {
+      channels.push({
+        id,
+        name: homeMatch[1].trim(),
+        status: '7/24',
+        url: `${activeDomain}/matches?id=${id}`
+      })
+    }
+  }
+  
+  console.log(`Parsed ${channels.length} channels`)
+  return channels
+}
+
+// Fallback data
 export const getFallbackData = () => ({
   matches: [
-    { id: 'yayin1', name: 'Fenerbahçe - Galatasaray', time: '20:00' },
-    { id: 'yayinb2', name: 'Beşiktaş - Gençlerbirliği', time: '17:00' },
-    { id: 'yayin1', name: 'Çaykur Rizespor - Trabzonspor', time: '17:00' }
+    { id: 'bein-sports-1', name: 'Fenerbahçe - Galatasaray', time: '20:00', url: 'https://trgooltv60.top/matches?id=bein-sports-1' },
+    { id: 'bein-sports-2', name: 'Beşiktaş - Trabzonspor', time: '19:00', url: 'https://trgooltv60.top/matches?id=bein-sports-2' }
   ],
   channels: [
-    { id: 'yayin1', name: 'BeIN Sports 1', status: '7/24' },
-    { id: 'yayinb2', name: 'BeIN Sports 2', status: '7/24' },
-    { id: 'yayinb3', name: 'BeIN Sports 3', status: '7/24' }
+    { id: 'bein-sports-1', name: 'BEIN SPORTS 1', status: '7/24', url: 'https://trgooltv60.top/matches?id=bein-sports-1' },
+    { id: 'bein-sports-2', name: 'BEIN SPORTS 2', status: '7/24', url: 'https://trgooltv60.top/matches?id=bein-sports-2' },
+    { id: 'bein-sports-3', name: 'BEIN SPORTS 3', status: '7/24', url: 'https://trgooltv60.top/matches?id=bein-sports-3' },
+    { id: 's-sport', name: 'S SPORT', status: '7/24', url: 'https://trgooltv60.top/matches?id=s-sport' },
+    { id: 'trt-spor', name: 'TRT SPOR', status: '7/24', url: 'https://trgooltv60.top/matches?id=trt-spor' }
   ]
 })

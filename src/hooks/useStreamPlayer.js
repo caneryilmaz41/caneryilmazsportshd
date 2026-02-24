@@ -9,7 +9,7 @@ export const useStreamPlayer = () => {
   const handleMatchSelect = async (match) => {
     setStreamLoading(true);
     setSelectedMatch(match);
-    const streamUrl = await getStreamUrl(match.id);
+    const streamUrl = await getStreamUrl(match);
     setSelectedMatch({ ...match, url: streamUrl });
     setStreamLoading(false);
   };  

@@ -1,28 +1,18 @@
-// Aktif domain listesi - MatchScraper ile aynı
-const TRGOALS_DOMAINS = Array.from({length: 607}, (_, i) => `https://trgoals${1494 + i}.xyz`)
+// Trgooltv domain listesi
+const TRGOOL_DOMAINS = [
+  'https://trgooltv60.top',
+  'https://trgooltv61.top',
+  'https://trgooltv59.top'
+]
 
-// Get stream URL - Çalışan domain bul ve kullan
-export const getStreamUrl = async (channelId) => {
-  // Başakşehir - Kocaelispor maçı için özel URL
-  if (channelId === 'basaksehir_kocaeli') {
-    return 'https://m3u8player.org/player.html?url=https://cold-moon-1018.firstayland1.workers.dev/https://corestream.ronaldovurdu.help//hls/bein-sports-1.m3u8'
+// Stream URL'i direkt kullan
+export const getStreamUrl = async (match) => {
+  // Match objesinde URL varsa direkt kullan
+  if (match?.url) {
+    return match.url
   }
   
-  // Çalışan domain bul
-  for (const domain of TRGOALS_DOMAINS) {
-    try {
-      const testUrl = `${domain}/channel.html?id=${channelId}`
-      const response = await fetch(testUrl, { 
-        method: 'HEAD',
-        mode: 'no-cors',
-        cache: 'no-cache'
-      })
-      return testUrl
-    } catch (error) {
-      continue
-    }
-  }
-  
-  // Fallback - ilk domain'i kullan
-  return `${TRGOALS_DOMAINS[0]}/channel.html?id=${channelId}`
+  // Yoksa ID'den oluştur
+  const id = match?.id || 'bein-sports-1'
+  return `${TRGOOL_DOMAINS[0]}/matches?id=${id}`
 }

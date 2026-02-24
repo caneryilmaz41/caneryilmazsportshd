@@ -10,7 +10,8 @@ export default async function handler(req, res) {
   try {
     const response = await fetch(domain, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
       }
     })
     
@@ -24,51 +25,55 @@ export default async function handler(req, res) {
     const matches = []
     const channels = []
     
-    // Maçları çek - #matches-tab içindeki .channel-item'lar
-    $('#matches-tab .channel-item').each((i, element) => {
-      const href = $(element).attr('href')
-      const name = $(element).find('.channel-name').text().trim()
-      const time = $(element).find('.channel-status').text().trim()
+    // Maçları çek - .item.football, .item.basketball, .item.tennis, .item.voleybol
+    $('.item.football, .item.basketball, .item.tennis, .item.voleybol').each((i, element) => {
+      const href = $(element).find('a').attr('href')
+      const name = $(element).find('strong.name').text().trim()
+      const time = $(element).find('time').text().trim()
       
-      if (href && name && time) {
-        const id = href.split('id=')[1] || `match_${i}`
-        matches.push({ id, name, time })
+      if (href && name) {
+        const slug = href.split('/izle/')[1] || href.split('/').pop()
+        matches.push({ 
+          id: slug,
+          name, 
+          time: time || 'Canlı',
+          url: `/channel/watch/${slug}`
+        })
       }
     })
     
-    // Kanalları çek - #24-7-tab içindeki .channel-item'lar
-    $('#24-7-tab .channel-item').each((i, element) => {
-      const href = $(element).attr('href')
-      const name = $(element).find('.channel-name').text().trim()
-      const status = $(element).find('.channel-status').text().trim()
+    // Kanalları çek - .item.live
+    $('.item.live').each((i, element) => {
+      const href = $(element).find('a').attr('href')
+      const name = $(element).find('strong.name, strong.tvcp').text().trim()
       
-      if (href && name && status) {
-        const id = href.split('id=')[1] || `channel_${i}`
-        channels.push({ id, name, status })
+      if (href && name) {
+        const slug = href.split('/izle/')[1] || href.split('/').pop()
+        channels.push({ 
+          id: slug,
+          name, 
+          status: '7/24',
+          url: `/channel/watch/${slug}`
+        })
       }
     })
-
     
     console.log(`Scraped from ${domain}: ${matches.length} matches, ${channels.length} channels`)
-    console.log('HTML length:', html.length)
-    console.log('First 500 chars:', html.substring(0, 500))
     
     return res.json({ 
       matches, 
       channels, 
       domain,
-      htmlLength: html.length,
-      debug: {
-        matchesFound: matches.length,
-        channelsFound: channels.length
-      }
+      success: true
     })
     
   } catch (error) {
+    console.error('Scraping error:', error)
     return res.status(500).json({ 
       error: 'Scraping failed',
       matches: [],
-      channels: []
+      channels: [],
+      success: false
     })
   }
 }
