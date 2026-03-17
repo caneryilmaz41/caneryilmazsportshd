@@ -160,6 +160,26 @@ const VideoPlayer = ({
         id="video-player"
         className="aspect-video relative bg-gradient-to-br from-slate-900 via-slate-800 to-green-900 p-3 rounded-lg group"
       >
+        {/* Logo: sağ alt, kontrol çubuğunun üstünde, blurlu arka plan */}
+        <div
+          className="absolute z-30 pointer-events-none flex items-center justify-center rounded-lg shadow-xl border border-slate-600/50"
+          style={{
+            bottom: 'max(3.5rem, calc(env(safe-area-inset-bottom, 0px) + 3rem))',
+            right: 'max(0.75rem, env(safe-area-inset-right, 0.75rem))',
+            background: 'rgba(15, 23, 42, 0.5)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            padding: 'clamp(4px, 1.2vw, 8px)',
+          }}
+          aria-hidden
+        >
+          <img
+            src="/logom.png"
+            alt=""
+            className="object-contain object-center"
+            style={{ height: 'clamp(20px, 4vw, 28px)', width: 'auto', minWidth: '20px', display: 'block' }}
+          />
+        </div>
         <div className="w-full h-full rounded-lg overflow-hidden border-2 border-green-500/30 shadow-2xl shadow-green-500/10 relative">
           {streamLoading ? (
             <div className="w-full h-full bg-slate-900 flex items-center justify-center">

@@ -1,7 +1,7 @@
 // Trgooltv domain listesi - otomatik değişim için
 const TRGOOL_DOMAINS = [
-  'https://trgooltv60.top',
   'https://trgooltv61.top',
+  'https://trgooltv60.top',
   'https://trgooltv62.top',
   'https://trgooltv59.top'
 ]
@@ -64,11 +64,11 @@ export const scrapeMatches = async () => {
   return getFallbackData()
 }
 
-// HTML'den maçları parse et
+
 const parseMatches = (html) => {
   const matches = []
   
-  // <a> tag'lerini bul
+
   const aTagRegex = /<a[^>]*class="single-match[^"]*"[^>]*href="matches\?id=([^"]+)"[^>]*>([\s\S]*?)<\/a>/g
   
   let aMatch
@@ -148,14 +148,14 @@ const parseChannels = (html) => {
 // Fallback data
 export const getFallbackData = () => ({
   matches: [
-    { id: 'bein-sports-1', name: 'Fenerbahçe - Galatasaray', time: '20:00', url: 'https://trgooltv60.top/matches?id=bein-sports-1' },
-    { id: 'bein-sports-2', name: 'Beşiktaş - Trabzonspor', time: '19:00', url: 'https://trgooltv60.top/matches?id=bein-sports-2' }
+    { id: 'bein-sports-1', name: 'Fenerbahçe - Galatasaray', time: '20:00', url: 'https://trgooltv61.top/matches?id=bein-sports-1' },
+    { id: 'bein-sports-2', name: 'Beşiktaş - Trabzonspor', time: '19:00', url: 'https://trgooltv61.top/matches?id=bein-sports-2' }
   ],
   channels: [
-    { id: 'bein-sports-1', name: 'BEIN SPORTS 1', status: '7/24', url: 'https://trgooltv60.top/matches?id=bein-sports-1' },
-    { id: 'bein-sports-2', name: 'BEIN SPORTS 2', status: '7/24', url: 'https://trgooltv60.top/matches?id=bein-sports-2' },
-    { id: 'bein-sports-3', name: 'BEIN SPORTS 3', status: '7/24', url: 'https://trgooltv60.top/matches?id=bein-sports-3' },
-    { id: 's-sport', name: 'S SPORT', status: '7/24', url: 'https://trgooltv60.top/matches?id=s-sport' },
-    { id: 'trt-spor', name: 'TRT SPOR', status: '7/24', url: 'https://trgooltv60.top/matches?id=trt-spor' }
+    { id: 'bein-sports-1', name: 'BEIN SPORTS 1', status: '7/24', url: 'https://trgooltv61.top/matches?id=bein-sports-1' },
+    { id: 'bein-sports-2', name: 'BEIN SPORTS 2', status: '7/24', url: 'https://trgooltv61.top/matches?id=bein-sports-2' },
+    { id: 'bein-sports-3', name: 'BEIN SPORTS 3', status: '7/24', url: 'https://trgooltv61.top/matches?id=bein-sports-3' },
+    { id: 's-sport', name: 'S SPORT', status: '7/24', url: 'https://trgooltv61.top/matches?id=s-sport' },
+    { id: 'trt-spor', name: 'TRT SPOR', status: '7/24', url: 'https://trgooltv61.top/matches?id=trt-spor' }
   ]
 })

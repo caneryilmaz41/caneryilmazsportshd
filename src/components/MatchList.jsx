@@ -9,42 +9,48 @@ const MatchList = ({
   setLogoState 
 }) => {
   return (
-    <div className="divide-y divide-slate-700">
+    <div className="divide-y divide-slate-700/50">
       {matches.map((match) => {
         const teams = parseMatchTeams(match.name);
+        const isSelected = selectedMatch?.id === match.id;
         return (
           <button
             key={match.id}
             onClick={() => onMatchSelect(match)}
-            className={`w-full text-left p-3 hover:bg-slate-700 transition-colors ${
-              selectedMatch?.id === match.id
-                ? "bg-blue-600/20 border-l-4 border-blue-500"
-                : ""
+            className={`w-full text-left p-4 transition-all duration-300 relative group ${
+              isSelected
+                ? "bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-l-4 border-green-500 shadow-lg shadow-green-500/10"
+                : "hover:bg-slate-700/50 hover:translate-x-1"
             }`}
+            style={{ willChange: 'transform, background-color' }}
           >
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2.5">
               {/* Kategori ve Özel Etiket */}
               <div className="flex items-center gap-2 text-xs">
                 {match.category && (
-                  <span className="text-slate-400">{match.category}</span>
+                  <span className="px-2 py-0.5 rounded-full bg-slate-700/50 text-slate-300 font-medium">
+                    {match.category}
+                  </span>
                 )}
                 {match.special && (
-                  <span className="text-yellow-400 font-semibold animate-pulse">
-                    {match.special}
+                  <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-400 font-bold animate-pulse border border-yellow-500/30">
+                    ⭐ {match.special}
                   </span>
                 )}
               </div>
               
               {/* Saat ve Lig */}
-              <div className="text-xs text-slate-500">
-                {match.time} | {match.league}
+              <div className="flex items-center gap-2 text-xs">
+                <span className="text-green-400 font-semibold">🕒 {match.time}</span>
+                <span className="text-slate-500">|</span>
+                <span className="text-slate-400">{match.league}</span>
               </div>
               
               {/* Takımlar */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 flex-1">
+                <div className="flex items-center gap-2.5 flex-1">
                   {match.homeLogo ? (
-                    <img src={match.homeLogo} alt="Home" className="w-5 h-5 object-contain" />
+                    <img src={match.homeLogo} alt="Home" className="w-6 h-6 object-contain transition-transform duration-300 group-hover:scale-110" />
                   ) : teams[0] && (
                     <TeamLogo 
                       teamName={teams[0]} 
@@ -52,19 +58,19 @@ const MatchList = ({
                       setLogoState={setLogoState} 
                     />
                   )}
-                  <div className="text-white text-sm font-medium">
+                  <div className="text-white text-sm font-semibold">
                     {teams[0] || 'Takım 1'}
                   </div>
                 </div>
                 
-                <div className="text-slate-400 text-xs mx-2">VS</div>
+                <div className="px-3 py-1 rounded-full bg-slate-700/50 text-slate-300 text-xs font-bold">VS</div>
                 
-                <div className="flex items-center gap-2 flex-1 justify-end">
-                  <div className="text-white text-sm font-medium">
+                <div className="flex items-center gap-2.5 flex-1 justify-end">
+                  <div className="text-white text-sm font-semibold">
                     {teams[1] || 'Takım 2'}
                   </div>
                   {match.awayLogo ? (
-                    <img src={match.awayLogo} alt="Away" className="w-5 h-5 object-contain" />
+                    <img src={match.awayLogo} alt="Away" className="w-6 h-6 object-contain transition-transform duration-300 group-hover:scale-110" />
                   ) : teams[1] && (
                     <TeamLogo 
                       teamName={teams[1]} 
@@ -76,17 +82,21 @@ const MatchList = ({
               </div>
             </div>
 
-            {selectedMatch?.id === match.id && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            {isSelected && (
+              <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                <div className="relative">
+                  <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                  <div className="absolute inset-0 w-3 h-3 bg-green-400 rounded-full animate-ping"></div>
+                </div>
               </div>
             )}
           </button>
         );
       })}
       {matches.length === 0 && (
-        <div className="p-6 text-center text-slate-400 text-sm">
-          Henüz maç yok
+        <div className="p-8 text-center">
+          <div className="text-slate-500 text-4xl mb-3">⚽</div>
+          <div className="text-slate-400 text-sm">Henüz maç yok</div>
         </div>
       )}
     </div>

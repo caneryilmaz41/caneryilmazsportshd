@@ -34,24 +34,27 @@ function App() {
   }).length;
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
       <Header />
 
-      <div className="max-w-7xl mx-auto px-3 lg:px-6 pt-4 lg:pt-0">
-        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-3 lg:gap-4">
-          <div className="lg:col-span-2 space-y-3 lg:space-y-4">
-            <div className="bg-slate-800 rounded-lg overflow-hidden border border-green-500/30">
-              <VideoPlayer
-                selectedMatch={selectedMatch}
-                streamLoading={streamLoading}
-                logoState={logoState}
-                setLogoState={setLogoState}
-                toggleFullscreen={toggleFullscreen}
-              />
+      <div className="max-w-7xl mx-auto px-3 lg:px-6 pt-6 lg:pt-8">
+        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-4 lg:gap-6">
+          <div className="lg:col-span-2 space-y-4 lg:space-y-6">
+            <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-md rounded-2xl overflow-hidden border border-green-500/20 shadow-2xl shadow-green-500/10">
+              <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent pointer-events-none"></div>
+              <div className="relative">
+                <VideoPlayer
+                  selectedMatch={selectedMatch}
+                  streamLoading={streamLoading}
+                  logoState={logoState}
+                  setLogoState={setLogoState}
+                  toggleFullscreen={toggleFullscreen}
+                />
+              </div>
             </div>
           </div>
 
-          <div className="space-y-3 lg:space-y-4">
+          <div className="space-y-4 lg:space-y-6">
             <TabSelector
               activeTab={activeTab}
               onTabChange={handleTabChange}
@@ -59,11 +62,14 @@ function App() {
               channelsCount={filteredChannelsCount}
             />
 
-            <div className="bg-slate-800 rounded-lg border border-slate-600 overflow-hidden">
+            <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-700/50 overflow-hidden shadow-xl">
               {loading ? (
-                <div className="p-6 text-center">
-                  <div className="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                  <p className="text-slate-300 text-sm">Yükleniyor...</p>
+                <div className="p-8 text-center">
+                  <div className="relative inline-block">
+                    <div className="w-12 h-12 border-4 border-green-500/30 border-t-green-500 rounded-full animate-spin"></div>
+                    <div className="absolute inset-0 w-12 h-12 border-4 border-transparent border-t-emerald-400 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1s' }}></div>
+                  </div>
+                  <p className="text-slate-300 text-sm mt-4 font-medium">Yükleniyor...</p>
                 </div>
               ) : (
                 <div

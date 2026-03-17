@@ -1,6 +1,6 @@
 import * as cheerio from 'cheerio'
 
-const TRGOOL_DOMAIN = 'https://trgooltv60.top'
+const TRGOOL_DOMAIN = 'https://trgooltv61.top'
 
 export default async function handler(req, res) {
   try {

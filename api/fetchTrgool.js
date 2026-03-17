@@ -1,5 +1,5 @@
 const DATA_API = 'https://teletv3.top/load'
-const TRGOOL_DOMAIN = 'https://trgooltv60.top'
+const TRGOOL_DOMAIN = 'https://trgooltv61.top'
 
 export default async function handler(req, res) {
   try {

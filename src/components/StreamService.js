@@ -1,7 +1,7 @@
 // Trgooltv domain listesi
 const TRGOOL_DOMAINS = [
-  'https://trgooltv60.top',
   'https://trgooltv61.top',
+  'https://trgooltv60.top',
   'https://trgooltv59.top'
 ]
 
