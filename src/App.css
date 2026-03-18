@@ -4,13 +4,3 @@
   padding: 0;
 }
 
-@keyframes shimmer {
-  0% { background-position: -1000px 0; }
-  100% { background-position: 1000px 0; }
-}
-
-.animate-shimmer {
-  animation: shimmer 2s infinite linear;
-  background: linear-gradient(to right, transparent 0%, rgba(16, 185, 129, 0.1) 50%, transparent 100%);
-  background-size: 1000px 100%;
-}

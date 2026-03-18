@@ -17,12 +17,11 @@ const MatchList = ({
           <button
             key={match.id}
             onClick={() => onMatchSelect(match)}
-            className={`w-full text-left p-4 transition-all duration-300 relative group ${
+            className={`w-full text-left p-4 relative ${
               isSelected
-                ? "bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-l-4 border-green-500 shadow-lg shadow-green-500/10"
-                : "hover:bg-slate-700/50 hover:translate-x-1"
+                ? "bg-green-500/20 border-l-4 border-green-500"
+                : "hover:bg-slate-700/50"
             }`}
-            style={{ willChange: 'transform, background-color' }}
           >
             <div className="flex flex-col gap-2.5">
               {/* Kategori ve Özel Etiket */}
@@ -33,7 +32,7 @@ const MatchList = ({
                   </span>
                 )}
                 {match.special && (
-                  <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-400 font-bold animate-pulse border border-yellow-500/30">
+                  <span className="px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 font-bold border border-yellow-500/30">
                     ⭐ {match.special}
                   </span>
                 )}
@@ -50,7 +49,7 @@ const MatchList = ({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5 flex-1">
                   {match.homeLogo ? (
-                    <img src={match.homeLogo} alt="Home" className="w-6 h-6 object-contain transition-transform duration-300 group-hover:scale-110" />
+                    <img src={match.homeLogo} alt="Home" className="w-6 h-6 object-contain" />
                   ) : teams[0] && (
                     <TeamLogo 
                       teamName={teams[0]} 
@@ -70,7 +69,7 @@ const MatchList = ({
                     {teams[1] || 'Takım 2'}
                   </div>
                   {match.awayLogo ? (
-                    <img src={match.awayLogo} alt="Away" className="w-6 h-6 object-contain transition-transform duration-300 group-hover:scale-110" />
+                    <img src={match.awayLogo} alt="Away" className="w-6 h-6 object-contain" />
                   ) : teams[1] && (
                     <TeamLogo 
                       teamName={teams[1]} 
@@ -83,12 +82,7 @@ const MatchList = ({
             </div>
 
             {isSelected && (
-              <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                <div className="relative">
-                  <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                  <div className="absolute inset-0 w-3 h-3 bg-green-400 rounded-full animate-ping"></div>
-                </div>
-              </div>
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 w-3 h-3 bg-green-400 rounded-full" />
             )}
           </button>
         );
