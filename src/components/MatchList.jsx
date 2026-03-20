@@ -1,99 +1,96 @@
 import TeamLogo from './TeamLogo';
 import { parseMatchTeams } from '../utils/teamUtils';
 
-const MatchList = ({ 
-  matches, 
-  selectedMatch, 
-  onMatchSelect, 
-  logoState, 
-  setLogoState 
-}) => {
+const MatchList = ({ matches, selectedMatch, onMatchSelect, logoState, setLogoState }) => {
+  if (matches.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+        <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-800/80 text-3xl ring-1 ring-slate-600/50">
+          ⚽
+        </div>
+        <p className="text-sm font-medium text-slate-300">Henüz maç yok</p>
+        <p className="mt-1 text-xs text-slate-500">Yayın listesi güncellendiğinde burada görünür</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="divide-y divide-slate-700/50">
+    <ul className="space-y-2 p-2">
       {matches.map((match) => {
         const teams = parseMatchTeams(match.name);
         const isSelected = selectedMatch?.id === match.id;
         return (
-          <button
-            key={match.id}
-            onClick={() => onMatchSelect(match)}
-            className={`w-full text-left p-4 relative ${
-              isSelected
-                ? "bg-green-500/20 border-l-4 border-green-500"
-                : "hover:bg-slate-700/50"
-            }`}
-          >
-            <div className="flex flex-col gap-2.5">
-              {/* Kategori ve Özel Etiket */}
-              <div className="flex items-center gap-2 text-xs">
-                {match.category && (
-                  <span className="px-2 py-0.5 rounded-full bg-slate-700/50 text-slate-300 font-medium">
-                    {match.category}
-                  </span>
-                )}
-                {match.special && (
-                  <span className="px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 font-bold border border-yellow-500/30">
-                    ⭐ {match.special}
-                  </span>
-                )}
-              </div>
-              
-              {/* Saat ve Lig */}
-              <div className="flex items-center gap-2 text-xs">
-                <span className="text-green-400 font-semibold">🕒 {match.time}</span>
-                <span className="text-slate-500">|</span>
-                <span className="text-slate-400">{match.league}</span>
-              </div>
-              
-              {/* Takımlar */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5 flex-1">
-                  {match.homeLogo ? (
-                    <img src={match.homeLogo} alt="Home" className="w-6 h-6 object-contain" />
-                  ) : teams[0] && (
-                    <TeamLogo 
-                      teamName={teams[0]} 
-                      logoState={logoState} 
-                      setLogoState={setLogoState} 
-                    />
-                  )}
-                  <div className="text-white text-sm font-semibold">
-                    {teams[0] || 'Takım 1'}
-                  </div>
+          <li key={match.id}>
+            <button
+              type="button"
+              onClick={() => onMatchSelect(match)}
+              className={`group w-full rounded-xl border text-left transition-all duration-200 ${
+                isSelected
+                  ? 'border-green-500/50 bg-green-500/[0.12] shadow-[0_0_0_1px_rgba(34,197,94,0.2)] ring-1 ring-green-500/20'
+                  : 'border-slate-600/30 bg-slate-800/40 hover:border-slate-500/40 hover:bg-slate-700/35'
+              }`}
+            >
+              <div className="px-3 py-2.5">
+                <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                  {match.time ? (
+                    <span className="rounded-md bg-slate-900/60 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-green-400">
+                      {match.time}
+                    </span>
+                  ) : null}
+                  {match.league ? (
+                    <span className="truncate text-[10px] font-medium uppercase tracking-wide text-slate-500">
+                      {match.league}
+                    </span>
+                  ) : null}
+                  {match.category ? (
+                    <span className="rounded-md bg-slate-700/50 px-1.5 py-0.5 text-[9px] text-slate-400">{match.category}</span>
+                  ) : null}
+                  {match.special ? (
+                    <span className="rounded-md border border-amber-500/25 bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-semibold text-amber-400">
+                      ★ {match.special}
+                    </span>
+                  ) : null}
                 </div>
-                
-                <div className="px-3 py-1 rounded-full bg-slate-700/50 text-slate-300 text-xs font-bold">VS</div>
-                
-                <div className="flex items-center gap-2.5 flex-1 justify-end">
-                  <div className="text-white text-sm font-semibold">
-                    {teams[1] || 'Takım 2'}
-                  </div>
-                  {match.awayLogo ? (
-                    <img src={match.awayLogo} alt="Away" className="w-6 h-6 object-contain" />
-                  ) : teams[1] && (
-                    <TeamLogo 
-                      teamName={teams[1]} 
-                      logoState={logoState} 
-                      setLogoState={setLogoState} 
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
 
-            {isSelected && (
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 w-3 h-3 bg-green-400 rounded-full" />
-            )}
-          </button>
+                <div className="flex items-center gap-2">
+                  <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      {match.homeLogo ? (
+                        <img src={match.homeLogo} alt="" className="h-6 w-6 shrink-0 object-contain" />
+                      ) : teams[0] ? (
+                        <TeamLogo teamName={teams[0]} logoState={logoState} setLogoState={setLogoState} size="sm" />
+                      ) : (
+                        <span className="h-6 w-6 shrink-0 rounded-md bg-slate-700/50" />
+                      )}
+                      <span className="truncate text-[13px] font-semibold text-slate-100">{teams[0] || '—'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {match.awayLogo ? (
+                        <img src={match.awayLogo} alt="" className="h-6 w-6 shrink-0 object-contain" />
+                      ) : teams[1] ? (
+                        <TeamLogo teamName={teams[1]} logoState={logoState} setLogoState={setLogoState} size="sm" />
+                      ) : (
+                        <span className="h-6 w-6 shrink-0 rounded-md bg-slate-700/50" />
+                      )}
+                      <span className="truncate text-[13px] font-semibold text-slate-100">{teams[1] || '—'}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex shrink-0 flex-col items-center gap-1 pl-1">
+                    <span className="rounded-md bg-slate-900/50 px-2 py-0.5 text-[9px] font-bold text-slate-500">VS</span>
+                    {isSelected ? (
+                      <span className="flex h-2 w-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.7)]" />
+                    ) : (
+                      <span className="h-2 w-2 rounded-full bg-slate-600/50 opacity-0 transition-opacity group-hover:opacity-100" />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </button>
+          </li>
         );
       })}
-      {matches.length === 0 && (
-        <div className="p-8 text-center">
-          <div className="text-slate-500 text-4xl mb-3">⚽</div>
-          <div className="text-slate-400 text-sm">Henüz maç yok</div>
-        </div>
-      )}
-    </div>
+    </ul>
   );
 };
 

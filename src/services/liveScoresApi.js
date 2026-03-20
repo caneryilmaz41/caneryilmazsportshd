@@ -7,6 +7,7 @@ const IMPORTANT_LEAGUES = [
   { slug: 'ita.1', label: 'Serie A' },
   { slug: 'ger.1', label: 'Bundesliga' },
   { slug: 'fra.1', label: 'Ligue 1' },
+  { slug: 'tur.1', label: 'Süper Lig' },
   { slug: 'uefa.champions', label: 'UCL' },
 ];
 

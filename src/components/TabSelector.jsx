@@ -1,59 +1,37 @@
-const TabSelector = ({ 
-  activeTab, 
-  onTabChange, 
-  matchesCount, 
-  channelsCount 
-}) => {
+const TabSelector = ({ activeTab, onTabChange, matchesCount, channelsCount }) => {
+  const tabs = [
+    { id: 'matches', label: 'Maçlar', icon: '⚽', count: matchesCount },
+    { id: 'channels', label: 'Kanallar', icon: '📺', count: channelsCount },
+  ];
+
   return (
-    <div className="relative bg-slate-800/90 rounded-2xl border border-slate-700/50 p-1.5 shadow-lg">
-      <div className="flex relative">
-        <div
-          className={`absolute top-1 bottom-1 bg-green-500 rounded-xl ${
-            activeTab === "matches"
-              ? "left-1 right-1/2 mr-0.5"
-              : "left-1/2 right-1 ml-0.5"
-          }`}
-        ></div>
-
-        <button
-          onClick={() => onTabChange("matches")}
-          className={`relative flex-1 py-3.5 px-4 text-sm font-bold tracking-wide flex items-center justify-center gap-2.5 rounded-xl ${
-            activeTab === "matches"
-              ? "text-white"
-              : "text-slate-400 hover:text-slate-200"
-          }`}
-        >
-          <span className="text-xs lg:text-sm">⚽ MAÇLAR</span>
-          <span
-            className={`text-xs px-2 py-1 rounded-full font-semibold ${
-              activeTab === "matches"
-                ? "bg-white/20 text-white"
-                : "bg-slate-700/50 text-slate-400"
-            }`}
-          >
-            {matchesCount}
-          </span>
-        </button>
-
-        <button
-          onClick={() => onTabChange("channels")}
-          className={`relative flex-1 py-3.5 px-4 text-sm font-bold tracking-wide flex items-center justify-center gap-2.5 rounded-xl ${
-            activeTab === "channels"
-              ? "text-white"
-              : "text-slate-400 hover:text-slate-200"
-          }`}
-        >
-          <span className="text-xs lg:text-sm">📺 KANALLAR</span>
-          <span
-            className={`text-xs px-2 py-1 rounded-full font-semibold ${
-              activeTab === "channels"
-                ? "bg-white/20 text-white"
-                : "bg-slate-700/50 text-slate-400"
-            }`}
-          >
-            {channelsCount}
-          </span>
-        </button>
+    <div className="rounded-xl border border-slate-600/40 bg-slate-900/60 p-1 shadow-inner backdrop-blur-sm">
+      <div className="grid grid-cols-2 gap-1">
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => onTabChange(tab.id)}
+              className={`relative flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold transition-all duration-200 ${
+                isActive
+                  ? 'bg-gradient-to-b from-green-600 to-green-700 text-white shadow-md shadow-green-900/30 ring-1 ring-green-400/30'
+                  : 'text-slate-400 hover:bg-slate-800/80 hover:text-slate-200'
+              }`}
+            >
+              <span className="text-sm opacity-90">{tab.icon}</span>
+              <span className="tracking-wide">{tab.label}</span>
+              <span
+                className={`min-w-[1.25rem] rounded-md px-1.5 py-0.5 text-[10px] font-bold tabular-nums ${
+                  isActive ? 'bg-white/20 text-white' : 'bg-slate-700/60 text-slate-500'
+                }`}
+              >
+                {tab.count}
+              </span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

@@ -38,24 +38,14 @@ function App() {
     <div className="min-h-screen text-white">
       <Header />
 
-      <div className="max-w-7xl mx-auto px-3 lg:px-6 pt-6 lg:pt-8">
-        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-4 lg:gap-6">
-          <div className="lg:col-span-2 space-y-4 lg:space-y-6">
-            <div className="relative bg-slate-800/90 rounded-2xl overflow-hidden border border-green-500/20 shadow-lg">
-              <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent pointer-events-none" />
-              <div className="relative">
-                <VideoPlayer
-                  selectedMatch={selectedMatch}
-                  streamLoading={streamLoading}
-                  logoState={logoState}
-                  setLogoState={setLogoState}
-                  toggleFullscreen={toggleFullscreen}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4 lg:space-y-6">
+      <div className="mx-auto max-w-[1600px] px-3 pt-6 lg:px-6 lg:pt-8">
+        {/*
+          Mobil: önce oynatıcı, sonra maç/kanallar, en altta skorlar.
+          xl+: sol maç/kanallar | orta oynatıcı | sağ skorlar
+        */}
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(260px,300px)_minmax(0,1fr)_minmax(240px,300px)] xl:items-start xl:gap-5">
+          {/* Sol: sabit yükseklik + flex ile scroll her zaman çalışır */}
+          <aside className="order-2 flex h-[min(420px,52dvh)] min-h-0 flex-col gap-3 xl:order-none xl:h-[calc(100vh-5.5rem)] xl:max-h-[calc(100vh-5.5rem)] xl:sticky xl:top-4 xl:self-start">
             <TabSelector
               activeTab={activeTab}
               onTabChange={handleTabChange}
@@ -63,18 +53,27 @@ function App() {
               channelsCount={filteredChannelsCount}
             />
 
-            <div className="bg-slate-800/90 rounded-2xl border border-slate-600/50 overflow-hidden shadow-lg">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-600/45 bg-gradient-to-b from-slate-800/95 to-slate-900/90 shadow-xl ring-1 ring-white/[0.04]">
+              <div className="flex shrink-0 items-center justify-between border-b border-slate-600/40 bg-slate-900/40 px-3 py-2 backdrop-blur-sm">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                  {activeTab === 'matches' ? 'Canlı yayınlar' : 'TV kanalları'}
+                </span>
+                <span className="rounded-md bg-slate-800/80 px-2 py-0.5 text-[10px] font-bold tabular-nums text-slate-500">
+                  {activeTab === 'matches' ? matches.length : filteredChannelsCount}
+                </span>
+              </div>
+
               {loading ? (
-                <div className="p-8 text-center">
-                  <div className="w-10 h-10 border-2 border-green-500/50 border-t-green-500 rounded-full animate-spin mx-auto" />
-                  <p className="text-slate-300 text-sm mt-4 font-medium">Yükleniyor...</p>
+                <div className="flex flex-1 flex-col items-center justify-center gap-3 py-12">
+                  <div className="h-9 w-9 animate-spin rounded-full border-2 border-green-500/30 border-t-green-500" />
+                  <p className="text-xs font-medium text-slate-500">Liste yükleniyor…</p>
                 </div>
               ) : (
                 <div
-                  className="max-h-80 lg:max-h-96 overflow-y-auto"
-                  style={{ WebkitOverflowScrolling: "touch" }}
+                  className="stream-panel-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain"
+                  style={{ WebkitOverflowScrolling: 'touch' }}
                 >
-                  {activeTab === "matches" ? (
+                  {activeTab === 'matches' ? (
                     <MatchList
                       matches={matches}
                       selectedMatch={selectedMatch}
@@ -92,11 +91,28 @@ function App() {
                 </div>
               )}
             </div>
-          </div>
+          </aside>
+
+          <section className="order-1 min-w-0 xl:order-none">
+            <div className="relative overflow-hidden rounded-2xl border border-green-500/20 bg-slate-800/90 shadow-lg">
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent" />
+              <div className="relative">
+                <VideoPlayer
+                  selectedMatch={selectedMatch}
+                  streamLoading={streamLoading}
+                  logoState={logoState}
+                  setLogoState={setLogoState}
+                  toggleFullscreen={toggleFullscreen}
+                />
+              </div>
+            </div>
+          </section>
+
+          <aside className="order-3 flex min-h-0 h-[min(400px,50dvh)] flex-col xl:order-none xl:h-[calc(100vh-5.5rem)] xl:max-h-[calc(100vh-5.5rem)] xl:self-start xl:sticky xl:top-4">
+            <LiveScoresSlider variant="sidebar" />
+          </aside>
         </div>
       </div>
-
-      <LiveScoresSlider />
       <Footer />
     </div>
   );

@@ -28,3 +28,8 @@ body {
   background: #10b981;
   border-radius: 4px;
 }
+
+/* Maç/kanal paneli: kaydırma alanı net, titreme az */
+.stream-panel-scroll {
+  scrollbar-gutter: stable;
+}

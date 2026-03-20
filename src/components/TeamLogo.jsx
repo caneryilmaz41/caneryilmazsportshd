@@ -1,7 +1,14 @@
 import { useEffect } from 'react';
 import { fetchTeamLogo, getTeamInitials } from '../utils/teamUtils';
 
-const TeamLogo = ({ teamName, logoState, setLogoState }) => {
+const sizeClasses = {
+  sm: 'w-6 h-6',
+  md: 'w-10 h-10',
+};
+
+const TeamLogo = ({ teamName, logoState, setLogoState, size = 'md' }) => {
+  const box = sizeClasses[size] || sizeClasses.md;
+  const spinSize = size === 'sm' ? 'w-3 h-3' : 'w-5 h-5';
   const cleanName = (teamName || "").toLowerCase().trim();
   const initials = getTeamInitials(teamName || "");
   const logoData = logoState[cleanName];
@@ -35,15 +42,15 @@ const TeamLogo = ({ teamName, logoState, setLogoState }) => {
 
   if (!logoData || logoData.loading) {
     return (
-      <div className="w-10 h-10 flex items-center justify-center">
-        <div className="w-5 h-5 border border-green-400 border-t-transparent rounded-full animate-spin"></div>
+      <div className={`${box} flex shrink-0 items-center justify-center`}>
+        <div className={`${spinSize} rounded-full border border-green-400 border-t-transparent animate-spin`} />
       </div>
     );
   }
 
   if (logoData.url && !logoData.error) {
     return (
-      <div className="w-10 h-10 flex items-center justify-center">
+      <div className={`${box} flex shrink-0 items-center justify-center`}>
         <img
           src={logoData.url}
           alt={teamName || "Team"}
@@ -66,10 +73,12 @@ const TeamLogo = ({ teamName, logoState, setLogoState }) => {
   }
 
   return (
-    <div className="w-10 h-10 flex items-center justify-center bg-slate-700 rounded-full">
-      <span className="text-white text-lg">
-        ⚽
-      </span>
+    <div
+      className={`${box} flex shrink-0 items-center justify-center rounded-full bg-slate-700 ${
+        size === 'sm' ? 'text-sm' : 'text-lg'
+      }`}
+    >
+      <span className="text-white">⚽</span>
     </div>
   );
 };
