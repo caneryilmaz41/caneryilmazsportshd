@@ -1,9 +1,9 @@
 import * as cheerio from 'cheerio'
-
-const TRGOOL_DOMAIN = 'https://trgooltv61.top'
+import { getCachedWorkingTrgoolDomain } from '../trgoolDomains.js'
 
 export default async function handler(req, res) {
   try {
+    const TRGOOL_DOMAIN = await getCachedWorkingTrgoolDomain()
     // Ana sayfayı çek
     const response = await fetch(TRGOOL_DOMAIN, {
       headers: {

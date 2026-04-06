@@ -1,39 +1,27 @@
-// Trgooltv domain listesi - otomatik değişim için
-const TRGOOL_DOMAINS = [
-  'https://trgooltv61.top',
-  'https://trgooltv60.top',
-  'https://trgooltv62.top',
-  'https://trgooltv59.top'
-]
+import { getPrimaryTrgoolDomain } from '../../trgoolDomains.js'
+
 const DATA_API = 'https://teletv3.top/load'
 
-// Çalışan domain'i bul
-let activeDomain = TRGOOL_DOMAINS[0]
-
-const findWorkingDomain = async () => {
-  for (const domain of TRGOOL_DOMAINS) {
-    try {
-      const response = await fetch(`${domain}/matches?id=bein-sports-1`, { 
-        method: 'HEAD',
-        mode: 'no-cors'
-      })
-      activeDomain = domain
-      console.log('Active domain:', domain)
-      return domain
-    } catch (error) {
-      continue
+const resolveActiveDomain = async () => {
+  try {
+    const res = await fetch('/api/trgoolDomain')
+    if (res.ok) {
+      const data = await res.json()
+      if (data?.domain) return data.domain
     }
+  } catch {
+    /* Vite dev: /api yok; production dışı */
   }
-  return TRGOOL_DOMAINS[0]
+  return getPrimaryTrgoolDomain()
 }
+
+let activeDomain = getPrimaryTrgoolDomain()
 
 // Direkt PHP endpoint'lerinden çek
 export const scrapeMatches = async () => {
   try {
     console.log('Fetching matches and channels...')
-    
-    // Çalışan domain'i bul
-    await findWorkingDomain()
+    activeDomain = await resolveActiveDomain()
     
     const [matchesRes, channelsRes] = await Promise.all([
       fetch(`${DATA_API}/matches.php`),
@@ -43,7 +31,7 @@ export const scrapeMatches = async () => {
     if (matchesRes.ok && channelsRes.ok) {
       const matchesHtml = await matchesRes.text()
       const channelsHtml = await channelsRes.text()
-      
+
       console.log('Matches HTML length:', matchesHtml.length)
       console.log('Channels HTML length:', channelsHtml.length)
       console.log('Full matches HTML:', matchesHtml)
@@ -146,16 +134,19 @@ const parseChannels = (html) => {
 }
 
 // Fallback data
-export const getFallbackData = () => ({
-  matches: [
-    { id: 'bein-sports-1', name: 'Fenerbahçe - Galatasaray', time: '20:00', url: 'https://trgooltv61.top/matches?id=bein-sports-1' },
-    { id: 'bein-sports-2', name: 'Beşiktaş - Trabzonspor', time: '19:00', url: 'https://trgooltv61.top/matches?id=bein-sports-2' }
-  ],
-  channels: [
-    { id: 'bein-sports-1', name: 'BEIN SPORTS 1', status: '7/24', url: 'https://trgooltv61.top/matches?id=bein-sports-1' },
-    { id: 'bein-sports-2', name: 'BEIN SPORTS 2', status: '7/24', url: 'https://trgooltv61.top/matches?id=bein-sports-2' },
-    { id: 'bein-sports-3', name: 'BEIN SPORTS 3', status: '7/24', url: 'https://trgooltv61.top/matches?id=bein-sports-3' },
-    { id: 's-sport', name: 'S SPORT', status: '7/24', url: 'https://trgooltv61.top/matches?id=s-sport' },
-    { id: 'trt-spor', name: 'TRT SPOR', status: '7/24', url: 'https://trgooltv61.top/matches?id=trt-spor' }
-  ]
-})
+export const getFallbackData = () => {
+  const base = getPrimaryTrgoolDomain()
+  return {
+    matches: [
+      { id: 'bein-sports-1', name: 'Fenerbahçe - Galatasaray', time: '20:00', url: `${base}/matches?id=bein-sports-1` },
+      { id: 'bein-sports-2', name: 'Beşiktaş - Trabzonspor', time: '19:00', url: `${base}/matches?id=bein-sports-2` }
+    ],
+    channels: [
+      { id: 'bein-sports-1', name: 'BEIN SPORTS 1', status: '7/24', url: `${base}/matches?id=bein-sports-1` },
+      { id: 'bein-sports-2', name: 'BEIN SPORTS 2', status: '7/24', url: `${base}/matches?id=bein-sports-2` },
+      { id: 'bein-sports-3', name: 'BEIN SPORTS 3', status: '7/24', url: `${base}/matches?id=bein-sports-3` },
+      { id: 's-sport', name: 'S SPORT', status: '7/24', url: `${base}/matches?id=s-sport` },
+      { id: 'trt-spor', name: 'TRT SPOR', status: '7/24', url: `${base}/matches?id=trt-spor` }
+    ]
+  }
+}

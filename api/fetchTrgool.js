@@ -1,8 +1,10 @@
+import { getCachedWorkingTrgoolDomain } from '../trgoolDomains.js'
+
 const DATA_API = 'https://teletv3.top/load'
-const TRGOOL_DOMAIN = 'https://trgooltv61.top'
 
 export default async function handler(req, res) {
   try {
+    const TRGOOL_DOMAIN = await getCachedWorkingTrgoolDomain()
     const [matchesRes, channelsRes] = await Promise.all([
       fetch(`${DATA_API}/matches.php`, {
         headers: {
@@ -27,8 +29,8 @@ export default async function handler(req, res) {
     const matchesHtml = await matchesRes.text()
     const channelsHtml = await channelsRes.text()
 
-    const matches = parseMatches(matchesHtml)
-    const channels = parseChannels(channelsHtml)
+    const matches = parseMatches(matchesHtml, TRGOOL_DOMAIN)
+    const channels = parseChannels(channelsHtml, TRGOOL_DOMAIN)
 
     return res.json({ matches, channels, success: true })
 
@@ -43,7 +45,7 @@ export default async function handler(req, res) {
   }
 }
 
-function parseMatches(html) {
+function parseMatches(html, trgoolDomain) {
   const matches = []
   const regex = /onclick=["']changePlayer\(["']([^"']+)["']\)["'][^>]*>.*?<div class=["']match-name["']>([^<]+)<\/div>.*?<div class=["']match-time["']>([^<]+)<\/div>/gs
   
@@ -58,7 +60,7 @@ function parseMatches(html) {
         id,
         name,
         time: time || 'Canlı',
-        url: `${TRGOOL_DOMAIN}/matches?id=${id}`
+        url: `${trgoolDomain}/matches?id=${id}`
       })
     }
   }
@@ -66,7 +68,7 @@ function parseMatches(html) {
   return matches
 }
 
-function parseChannels(html) {
+function parseChannels(html, trgoolDomain) {
   const channels = []
   const regex = /onclick=["']changePlayer\(["']([^"']+)["']\)["'][^>]*>.*?<div class=["']match-name["']>([^<]+)<\/div>/gs
   
@@ -80,7 +82,7 @@ function parseChannels(html) {
         id,
         name,
         status: '7/24',
-        url: `${TRGOOL_DOMAIN}/matches?id=${id}`
+        url: `${trgoolDomain}/matches?id=${id}`
       })
     }
   }
