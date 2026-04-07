@@ -17,6 +17,8 @@ const resolveActiveDomain = async () => {
 
 export const getStreamUrl = async (match) => {
   const id = match?.id || 'bein-sports-1'
+  const domain = await resolveActiveDomain()
+  const iframeUrl = `${domain}/matches?id=${id}`
 
   // 1) Vercel API → m3u8
   try {
@@ -24,7 +26,7 @@ export const getStreamUrl = async (match) => {
     if (res.ok) {
       const data = await res.json()
       if (data?.embedUrl && data.success) {
-        return { url: data.embedUrl, type: 'hls' }
+        return { url: data.embedUrl, type: 'hls', iframeUrl }
       }
     }
   } catch {}
@@ -35,12 +37,11 @@ export const getStreamUrl = async (match) => {
     if (res.ok) {
       const data = await res.json()
       if (data?.deismackanal?.includes('m3u8')) {
-        return { url: data.deismackanal.replace(/edge\d+/g, 'edge3'), type: 'hls' }
+        return { url: data.deismackanal.replace(/edge\d+/g, 'edge3'), type: 'hls', iframeUrl }
       }
     }
   } catch {}
 
-  // 3) Fallback: trgool iframe
-  const domain = await resolveActiveDomain()
-  return { url: `${domain}/matches?id=${id}`, type: 'iframe' }
+  // 3) Fallback: iframe
+  return { url: iframeUrl, type: 'iframe', iframeUrl }
 }

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import TeamLogo from './TeamLogo';
 import HLSPlayer from './HLSPlayer';
 import { parseMatchTeams } from '../utils/teamUtils';
@@ -10,6 +11,13 @@ const VideoPlayer = ({
   setLogoState, 
   toggleFullscreen 
 }) => {
+  const [hlsFailed, setHlsFailed] = useState(false);
+
+  // Yeni maç/kanal seçildiğinde HLS hatasını sıfırla
+  useEffect(() => {
+    setHlsFailed(false);
+  }, [selectedMatch?.id, selectedMatch?.url]);
+
   if (!selectedMatch) {
     return (
       <div
@@ -54,7 +62,6 @@ const VideoPlayer = ({
   }
 
   const teams = parseMatchTeams(selectedMatch.name);
-  // Kanal kontrolü: vs, -, x gibi ayırıcılar yoksa ve kanal ismi gibi görünüyorsa
   const hasMatchSeparator = selectedMatch.name.includes(' vs ') || selectedMatch.name.includes(' - ') || selectedMatch.name.includes(' x ');
   const looksLikeChannel = selectedMatch.name.toLowerCase().includes('tv') || 
                           selectedMatch.name.toLowerCase().includes('spor') || 
@@ -62,23 +69,70 @@ const VideoPlayer = ({
                           selectedMatch.name.toLowerCase().includes('kanal');
   const isChannel = !hasMatchSeparator && (looksLikeChannel || (!teams[0] || !teams[1]));
 
+  // HLS kullan mı? streamType hls VE henüz başarısız olmadıysa
+  const useHls = selectedMatch.streamType === 'hls' && !hlsFailed;
+  // iframe URL: fallback için
+  const iframeUrl = selectedMatch.iframeUrl || selectedMatch.url;
+
+  const renderPlayer = () => {
+    if (streamLoading) {
+      return (
+        <div className="w-full h-full bg-slate-900 flex items-center justify-center">
+          <div className="flex items-center gap-8">
+            {!isChannel && teams[0] && (
+              <div className="animate-spin">
+                <TeamLogo teamName={teams[0]} logoState={logoState} setLogoState={setLogoState} />
+              </div>
+            )}
+            <div className="text-white text-lg font-medium">Yükleniyor...</div>
+            {!isChannel && teams[1] && (
+              <div className="animate-spin" style={{animationDirection: 'reverse'}}>
+                <TeamLogo teamName={teams[1]} logoState={logoState} setLogoState={setLogoState} />
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    if (useHls) {
+      return (
+        <HLSPlayer
+          key={selectedMatch.id || selectedMatch.url}
+          src={selectedMatch.url}
+          onError={(e) => console.error('HLS error:', e)}
+          onFatalError={() => setHlsFailed(true)}
+        />
+      );
+    }
+
+    return (
+      <iframe
+        key={`iframe-${selectedMatch.id}`}
+        title="Canlı yayın"
+        src={iframeUrl}
+        className="h-full w-full min-h-[200px] border-0 bg-black"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-modals allow-downloads"
+        allowFullScreen
+        referrerPolicy="no-referrer"
+        allow="autoplay; fullscreen; picture-in-picture; encrypted-media; display-capture"
+      />
+    );
+  };
+
   return (
     <div>
       <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-3">
         <div className="flex items-center justify-between">
-          {/* Sol taraf - Kategori ve Özel Etiket */}
           <div className="flex items-center gap-2">
             {selectedMatch.category && (
               <span className="text-xs text-green-100">{selectedMatch.category}</span>
             )}
             {selectedMatch.special && (
-              <span className="text-xs text-yellow-300 font-semibold">
-                {selectedMatch.special}
-              </span>
+              <span className="text-xs text-yellow-300 font-semibold">{selectedMatch.special}</span>
             )}
           </div>
           
-          {/* Orta - Takımlar veya Kanal */}
           <div className="flex items-center gap-4">
             {isChannel ? (
               <div className="flex items-center gap-2">
@@ -88,9 +142,7 @@ const VideoPlayer = ({
                   className="w-6 h-6 object-contain"
                   onError={(e) => e.target.style.display = 'none'}
                 />
-                <span className="text-white text-sm font-medium">
-                  {selectedMatch.name}
-                </span>
+                <span className="text-white text-sm font-medium">{selectedMatch.name}</span>
               </div>
             ) : (
               <>
@@ -99,45 +151,29 @@ const VideoPlayer = ({
                     {selectedMatch.homeLogo ? (
                       <img src={selectedMatch.homeLogo} alt="Home" className="w-6 h-6 object-contain" />
                     ) : (
-                      <TeamLogo 
-                        teamName={teams[0]} 
-                        logoState={logoState} 
-                        setLogoState={setLogoState} 
-                      />
+                      <TeamLogo teamName={teams[0]} logoState={logoState} setLogoState={setLogoState} />
                     )}
-                    <span className="text-white font-medium text-sm">
-                      {teams[0]}
-                    </span>
+                    <span className="text-white font-medium text-sm">{teams[0]}</span>
                   </div>
                 )}
                 
                 <div className="flex flex-col items-center gap-1">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                    <span className="text-xs text-green-100 font-medium">
-                      CANLI
-                    </span>
+                    <span className="text-xs text-green-100 font-medium">CANLI</span>
                   </div>
                   {selectedMatch.time && (
-                    <span className="text-xs text-green-100">
-                      {selectedMatch.time}
-                    </span>
+                    <span className="text-xs text-green-100">{selectedMatch.time}</span>
                   )}
                 </div>
                 
                 {teams[1] && (
                   <div className="flex items-center gap-2">
-                    <span className="text-white font-medium text-sm">
-                      {teams[1]}
-                    </span>
+                    <span className="text-white font-medium text-sm">{teams[1]}</span>
                     {selectedMatch.awayLogo ? (
                       <img src={selectedMatch.awayLogo} alt="Away" className="w-6 h-6 object-contain" />
                     ) : (
-                      <TeamLogo 
-                        teamName={teams[1]} 
-                        logoState={logoState} 
-                        setLogoState={setLogoState} 
-                      />
+                      <TeamLogo teamName={teams[1]} logoState={logoState} setLogoState={setLogoState} />
                     )}
                   </div>
                 )}
@@ -145,7 +181,6 @@ const VideoPlayer = ({
             )}
           </div>
           
-          {/* Sağ taraf - Lig bilgisi */}
           {selectedMatch.league && (
             <span className="text-xs text-green-100">{selectedMatch.league}</span>
           )}
@@ -156,7 +191,6 @@ const VideoPlayer = ({
         id="video-player"
         className="aspect-video relative bg-gradient-to-br from-slate-900 via-slate-800 to-green-900 p-3 rounded-lg group"
       >
-        {/* Logo: sağ alt, kontrol çubuğunun üstünde */}
         <div
           className="absolute z-30 pointer-events-none flex items-center justify-center rounded-lg shadow-xl border border-slate-600/50"
           style={{
@@ -175,57 +209,9 @@ const VideoPlayer = ({
           />
         </div>
         <div className="w-full h-full rounded-lg overflow-hidden border-2 border-green-500/30 relative">
-          {streamLoading ? (
-            <div className="w-full h-full bg-slate-900 flex items-center justify-center">
-              <div className="flex items-center gap-8">
-                {!isChannel && teams[0] && (
-                  <div className="animate-spin">
-                    <TeamLogo 
-                      teamName={teams[0]} 
-                      logoState={logoState} 
-                      setLogoState={setLogoState} 
-                    />
-                  </div>
-                )}
-                <div className="text-white text-lg font-medium">
-                  Yükleniyor...
-                </div>
-                {!isChannel && teams[1] && (
-                  <div className="animate-spin" style={{animationDirection: 'reverse'}}>
-                    <TeamLogo 
-                      teamName={teams[1]} 
-                      logoState={logoState} 
-                      setLogoState={setLogoState} 
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : (
-            selectedMatch.streamType === 'hls' ? (
-              <HLSPlayer
-                key={selectedMatch.id || selectedMatch.url}
-                src={selectedMatch.url}
-                onError={(e) => console.error('HLS error:', e)}
-              />
-            ) : (
-              <iframe
-                key={selectedMatch.id || selectedMatch.url}
-                title="Canlı yayın"
-                src={selectedMatch.url}
-                className="h-full w-full min-h-[200px] border-0 bg-black"
-                sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-modals allow-downloads"
-                allowFullScreen
-                referrerPolicy="no-referrer"
-                allow="autoplay; fullscreen; picture-in-picture; encrypted-media; display-capture"
-              />
-            )
-          )}
+          {renderPlayer()}
         </div>
 
-
-
-        {/* Modern Fullscreen butonu (eski buton stili tamamen kaldırıldı) */}
         <div className="absolute top-4 right-4 z-20 pointer-events-auto">
           <button
             onClick={toggleFullscreen}
@@ -234,12 +220,7 @@ const VideoPlayer = ({
             aria-label="Tam Ekran"
             type="button"
           >
-            <svg
-              className="w-5 h-5 sm:w-5 sm:h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="w-5 h-5 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
