@@ -1,4 +1,5 @@
 import TeamLogo from './TeamLogo';
+import HLSPlayer from './HLSPlayer';
 import { parseMatchTeams } from '../utils/teamUtils';
 import { getChannelLogoPath } from '../utils/channelUtils';
 
@@ -9,11 +10,6 @@ const VideoPlayer = ({
   setLogoState, 
   toggleFullscreen 
 }) => {
-  const openInNewTab = () => {
-    if (selectedMatch?.url) {
-      window.open(selectedMatch.url, '_blank', 'noopener,noreferrer')
-    }
-  }
   if (!selectedMatch) {
     return (
       <div
@@ -205,15 +201,16 @@ const VideoPlayer = ({
                 )}
               </div>
             </div>
-          ) : (
-            <iframe
+          ) : selectedMatch.url ? (
+            <HLSPlayer
+              key={selectedMatch.id || selectedMatch.url}
               src={selectedMatch.url}
-              className="w-full h-full"
-              frameBorder="0"
-              allowFullScreen
-              referrerPolicy="no-referrer"
-              allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+              onError={(e) => console.error('HLS error:', e)}
             />
+          ) : (
+            <div className="w-full h-full bg-slate-900 flex items-center justify-center">
+              <p className="text-slate-400 text-sm">Yayın bulunamadı. Lütfen başka bir kanal deneyin.</p>
+            </div>
           )}
         </div>
 

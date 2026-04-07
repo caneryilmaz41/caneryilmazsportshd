@@ -5,44 +5,23 @@ export const useStreamPlayer = () => {
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [streamLoading, setStreamLoading] = useState(false);
 
-
   const handleMatchSelect = async (match) => {
     setStreamLoading(true);
-    setSelectedMatch(match);
-    const streamUrl = await getStreamUrl(match);
-    setSelectedMatch({ ...match, url: streamUrl });
+    // URL'i temizle — eski trgool URL'i render edilmesin
+    setSelectedMatch({ ...match, url: null });
+    const url = await getStreamUrl(match);
+    setSelectedMatch({ ...match, url });
     setStreamLoading(false);
-  };  
+  };
 
   const toggleFullscreen = () => {
-    const playerElement = document.getElementById("video-player");
+    const el = document.getElementById("video-player");
     if (!document.fullscreenElement) {
-      if (playerElement.requestFullscreen) {
-        playerElement.requestFullscreen();
-      } else if (playerElement.webkitRequestFullscreen) {
-        playerElement.webkitRequestFullscreen();
-      } else if (playerElement.mozRequestFullScreen) {
-        playerElement.mozRequestFullScreen();
-      } else if (playerElement.msRequestFullscreen) {
-        playerElement.msRequestFullscreen();
-      }
+      (el?.requestFullscreen || el?.webkitRequestFullscreen || el?.msRequestFullscreen)?.call(el);
     } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      } else if (document.webkitExitFullscreen) {
-        document.webkitExitFullscreen();
-      } else if (document.mozCancelFullScreen) {
-        document.mozCancelFullScreen();
-      } else if (document.msExitFullscreen) {
-        document.msExitFullscreen();
-      }
+      (document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen)?.call(document);
     }
   };
 
-  return {
-    selectedMatch,
-    streamLoading,
-    handleMatchSelect,
-    toggleFullscreen
-  };
+  return { selectedMatch, streamLoading, handleMatchSelect, toggleFullscreen };
 };
