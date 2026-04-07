@@ -7,9 +7,9 @@ export const useStreamPlayer = () => {
 
   const handleMatchSelect = async (match) => {
     setStreamLoading(true);
-    setSelectedMatch({ ...match, url: null });
-    const url = await getStreamUrl(match);
-    setSelectedMatch({ ...match, url });
+    setSelectedMatch({ ...match, url: null, streamType: null });
+    const result = await getStreamUrl(match);
+    setSelectedMatch({ ...match, url: result.url, streamType: result.type });
     setStreamLoading(false);
   };
 
