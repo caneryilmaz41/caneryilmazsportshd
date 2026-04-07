@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;user-select:none}
+
+#wrap{position:relative;width:100vw;height:100vh;background:#000;cursor:default}
+video{width:100%;height:100%;object-fit:contain;background:#000}
+
+/* ── Top bar ── */
+.top-bar{
+  position:absolute;top:0;left:0;right:0;z-index:50;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;
+  background:linear-gradient(to bottom,rgba(0,0,0,.7),transparent);
+  opacity:0;transition:opacity .35s;
+}
+
+/* ── Bottom area ── */
+.bottom{
+  position:absolute;bottom:0;left:0;right:0;z-index:50;
+  background:linear-gradient(transparent,rgba(0,0,0,.8));
+  padding:0 16px 10px;opacity:0;transition:opacity .35s;
+}
+#wrap:hover .top-bar,#wrap:hover .bottom,
+#wrap.show-ctrl .top-bar,#wrap.show-ctrl .bottom{opacity:1}
+
+/* Logo top-left */
+.top-logo img{height:28px;display:block;filter:brightness(1.1)}
+
+/* Channel badge top-right */
+.top-channel{
+  color:#fff;font-size:15px;font-weight:700;letter-spacing:.5px;
+  text-shadow:0 1px 4px rgba(0,0,0,.6);
+}
+
+/* ── Progress bar ── */
+.progress-wrap{
+  width:100%;height:4px;background:rgba(255,255,255,.18);
+  border-radius:2px;cursor:pointer;margin-bottom:8px;position:relative;
+  transition:height .12s;
+}
+.progress-wrap:hover{height:5px}
+.progress-buf{position:absolute;top:0;left:0;height:100%;background:rgba(255,255,255,.12);border-radius:2px}
+.progress-bar{position:absolute;top:0;left:0;height:100%;background:#22c55e;border-radius:2px;min-width:0}
+.progress-thumb{
+  position:absolute;top:50%;right:0;transform:translate(50%,-50%) scale(0);
+  width:13px;height:13px;background:#22c55e;border-radius:50%;
+  box-shadow:0 0 6px rgba(34,197,94,.5);transition:transform .12s;
+}
+.progress-wrap:hover .progress-thumb{transform:translate(50%,-50%) scale(1)}
+
+/* ── Progress row (time + canli) ── */
+.progress-row{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-bottom:6px}
+.time-text{color:rgba(255,255,255,.7);font-size:12px;font-variant-numeric:tabular-nums}
+.canli-badge{
+  background:#dc2626;color:#fff;font-size:10px;font-weight:800;
+  letter-spacing:1px;padding:2px 8px;border-radius:3px;line-height:1.4;
+}
+
+/* ── Controls row ── */
+.ctrl-row{display:flex;align-items:center;justify-content:space-between}
+.ctrl-left{display:flex;align-items:center;gap:4px}
+.ctrl-right{display:flex;align-items:center;gap:4px}
+
+/* Buttons */
+.c-btn{
+  background:none;border:none;color:rgba(255,255,255,.85);cursor:pointer;
+  width:38px;height:38px;display:flex;align-items:center;justify-content:center;
+  border-radius:6px;transition:color .15s;flex-shrink:0;
+}
+.c-btn:hover{color:#fff}
+.c-btn svg{width:22px;height:22px}
+
+/* Volume slider */
+.vol-group{display:flex;align-items:center;gap:2px}
+.vol-slider{
+  -webkit-appearance:none;width:0;height:3px;
+  background:rgba(255,255,255,.25);border-radius:2px;
+  outline:none;cursor:pointer;transition:width .2s,opacity .2s;opacity:0;
+}
+.vol-group:hover .vol-slider{width:60px;opacity:1}
+.vol-slider::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;background:#fff;border-radius:50%;cursor:pointer}
+.vol-slider::-moz-range-thumb{width:11px;height:11px;background:#fff;border-radius:50%;cursor:pointer;border:none}
+
+/* ── Watermark ── */
+.watermark{
+  position:absolute;top:14px;left:18px;z-index:20;
+  pointer-events:none;opacity:.75;transition:opacity .3s;
+}
+.watermark img{height:26px;display:block}
+#wrap:hover .watermark{opacity:.35}
+
+/* ── Loading ── */
+.loader{
+  position:absolute;inset:0;z-index:60;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:#0a0a0a;transition:opacity .5s;
+}
+.loader.hidden{opacity:0;pointer-events:none}
+.loader-logo{height:48px;margin-bottom:20px;opacity:.85}
+.loader-spinner{
+  width:38px;height:38px;border-radius:50%;
+  border:2.5px solid rgba(34,197,94,.1);border-top-color:#22c55e;
+  animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader-text{color:#475569;font-size:12px;margin-top:14px;letter-spacing:.3px}
+
+/* ── Big play (center) ── */
+.big-play{
+  position:absolute;inset:0;z-index:40;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:opacity .25s;
+}
+.big-play.hidden{opacity:0;pointer-events:none}
+.big-play-icon{
+  width:60px;height:60px;border-radius:50%;
+  background:rgba(255,255,255,.12);backdrop-filter:blur(12px);
+  border:2px solid rgba(255,255,255,.2);
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .15s,background .15s;
+}
+.big-play:hover .big-play-icon{transform:scale(1.06);background:rgba(255,255,255,.18)}
+.big-play-icon svg{width:26px;height:26px;fill:#fff;margin-left:2px}
+
+/* ── Unmute ── */
+.unmute-bar{
+  position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:55;
+  display:flex;align-items:center;gap:6px;
+  background:rgba(0,0,0,.65);backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.08);border-radius:20px;
+  padding:6px 14px;cursor:pointer;transition:opacity .3s;
+}
+.unmute-bar.hidden{opacity:0;pointer-events:none}
+.unmute-bar svg{width:15px;height:15px;stroke:#22c55e;fill:none;stroke-width:2}
+.unmute-bar span{color:#cbd5e1;font-size:12px}
+
+/* ── Error ── */
+.error-box{
+  position:absolute;inset:0;z-index:60;
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  background:#0a0a0a;
+}
+.error-box.show{display:flex}
+.error-box p{color:#475569;font-size:14px}
+.error-box p+p{font-size:11px;margin-top:4px;opacity:.6}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <video id="v" playsinline></video>
+
+  <!-- Loading -->
+  <div class="loader" id="loader">
+    <img class="loader-logo" src="/logom.png" alt="">
+    <div class="loader-spinner"></div>
+    <div class="loader-text">Yayın yükleniyor…</div>
+  </div>
+
+  <!-- Big play -->
+  <div class="big-play hidden" id="bigPlay" onclick="togglePlay()">
+    <div class="big-play-icon"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+  </div>
+
+  <!-- Unmute -->
+  <div class="unmute-bar hidden" id="unmute" onclick="unmute()">
+    <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+    <span>Sesi açmak için tıklayın</span>
+  </div>
+
+  <!-- Watermark (always visible, fades on hover like TRT logo) -->
+  <div class="watermark"><img src="/logom.png" alt=""></div>
+
+  <!-- Top bar -->
+  <div class="top-bar" id="topBar"></div>
+
+  <!-- Bottom controls -->
+  <div class="bottom" id="bottom">
+    <!-- Progress row -->
+    <div class="progress-row">
+      <span class="time-text" id="timeText"></span>
+      <div class="canli-badge">CANLI</div>
+    </div>
+    <!-- Progress bar -->
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-buf" id="progressBuf"></div>
+      <div class="progress-bar" id="progressBar" style="width:100%">
+        <div class="progress-thumb"></div>
+      </div>
+    </div>
+    <!-- Controls -->
+    <div class="ctrl-row">
+      <div class="ctrl-left">
+        <button class="c-btn" onclick="togglePlay()" title="Oynat/Duraklat">
+          <svg id="iPlay" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+          <svg id="iPause" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <div class="vol-group">
+          <button class="c-btn" onclick="toggleMute()" title="Ses">
+            <svg id="iVolOn" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+            <svg id="iVolOff" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
+          </button>
+          <input type="range" class="vol-slider" id="volSlider" min="0" max="1" step="0.05" value="1" oninput="setVol(this.value)">
+        </div>
+      </div>
+      <div class="ctrl-right">
+        <button class="c-btn" onclick="pip()" title="Pencere içinde pencere">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 11h-8v6h8v-6zm4 8V4.98C23 3.88 22.1 3 21 3H3c-1.1 0-2 .88-2 1.98V19c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2zm-2 .02H3V4.97h18v14.05z"/></svg>
+        </button>
+        <button class="c-btn" onclick="toggleFS()" title="Tam ekran">
+          <svg id="iFS" viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+          <svg id="iFSx" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div class="error-box" id="error"><p>Yayın bulunamadı</p><p>Lütfen başka bir kanal deneyin</p></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script>
+const src=new URLSearchParams(location.search).get('src');
+const V=document.getElementById('v'),W=document.getElementById('wrap');
+const loader=document.getElementById('loader'),errEl=document.getElementById('error');
+const bigPlay=document.getElementById('bigPlay'),unmuteEl=document.getElementById('unmute');
+const pBar=document.getElementById('progressBar'),pBuf=document.getElementById('progressBuf');
+const timeText=document.getElementById('timeText');
+let hideT;
+
+function hide(){loader.classList.add('hidden')}
+function err(){hide();errEl.classList.add('show')}
+function fmt(s){const m=Math.floor(s/60),ss=Math.floor(s%60);return m+':'+(ss<10?'0':'')+ss}
+
+/* Icons */
+function ui(){
+  const playing=!V.paused;
+  document.getElementById('iPlay').style.display=playing?'block':'none';
+  document.getElementById('iPause').style.display=playing?'none':'block';
+  bigPlay.classList.toggle('hidden',playing);
+  const m=V.muted||V.volume===0;
+  document.getElementById('iVolOn').style.display=m?'none':'block';
+  document.getElementById('iVolOff').style.display=m?'block':'none';
+}
+
+/* Show/hide controls */
+function showC(){W.classList.add('show-ctrl');clearTimeout(hideT);hideT=setTimeout(()=>W.classList.remove('show-ctrl'),3500)}
+W.addEventListener('mousemove',showC);W.addEventListener('touchstart',showC,{passive:true});
+
+/* Play */
+function togglePlay(){V.paused?V.play().catch(()=>{}):V.pause();ui()}
+V.addEventListener('play',ui);V.addEventListener('pause',ui);
+V.addEventListener('click',togglePlay);
+
+/* Volume */
+function toggleMute(){V.muted=!V.muted;document.getElementById('volSlider').value=V.muted?0:V.volume;ui()}
+function setVol(v){V.volume=v;V.muted=v==0;ui()}
+function unmute(){V.muted=false;V.play().catch(()=>{});unmuteEl.classList.add('hidden');ui()}
+
+/* Time + progress */
+V.addEventListener('timeupdate',()=>{
+  if(V.duration&&isFinite(V.duration)){
+    pBar.style.width=(V.currentTime/V.duration*100)+'%';
+    timeText.textContent=fmt(V.currentTime);
+  }
+});
+V.addEventListener('progress',()=>{
+  if(V.buffered.length&&V.duration&&isFinite(V.duration)){
+    pBuf.style.width=(V.buffered.end(V.buffered.length-1)/V.duration*100)+'%';
+  }
+});
+document.getElementById('progressWrap').addEventListener('click',e=>{
+  if(!V.duration||!isFinite(V.duration))return;
+  const r=e.currentTarget.getBoundingClientRect();
+  V.currentTime=(e.clientX-r.left)/r.width*V.duration;
+});
+
+/* PiP */
+function pip(){document.pictureInPictureElement?document.exitPictureInPicture():V.requestPictureInPicture?.()}
+
+/* FS */
+function toggleFS(){document.fullscreenElement?document.exitFullscreen?.():W.requestFullscreen?.()}
+document.addEventListener('fullscreenchange',()=>{
+  const f=!!document.fullscreenElement;
+  document.getElementById('iFS').style.display=f?'none':'block';
+  document.getElementById('iFSx').style.display=f?'block':'none';
+});
+
+/* Autoplay sesli */
+function go(){
+  V.muted=false;
+  const p=V.play();
+  if(p)p.catch(()=>{V.muted=true;V.play().catch(()=>{});unmuteEl.classList.remove('hidden')});
+  ui();
+}
+
+/* HLS */
+if(!src)err();
+else if(Hls.isSupported()){
+  const h=new Hls({xhrSetup:x=>x.overrideMimeType('application/octet-stream')});
+  h.loadSource(src);h.attachMedia(V);
+  h.on(Hls.Events.MANIFEST_PARSED,()=>{hide();go()});
+  h.on(Hls.Events.ERROR,(e,d)=>{if(d.fatal){d.type===Hls.ErrorTypes.MEDIA_ERROR?h.recoverMediaError():err()}});
+}else if(V.canPlayType('application/vnd.apple.mpegurl')){
+  V.src=src;V.addEventListener('canplay',()=>{hide();go()},{once:true});V.addEventListener('error',err);
+}else err();
+</script>
+</body>
+</html>
