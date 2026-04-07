@@ -156,20 +156,7 @@ const VideoPlayer = ({
           )}
         </div>
 
-        <div className="absolute top-4 right-4 z-20 pointer-events-auto">
-          <button
-            onClick={toggleFullscreen}
-            className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-slate-950/60 border border-green-500/25 text-green-200 shadow-lg shadow-black/30 flex items-center justify-center"
-            title="Tam Ekran"
-            aria-label="Tam Ekran"
-            type="button"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-            </svg>
-          </button>
-        </div>
+
       </div>
     </div>
   );
