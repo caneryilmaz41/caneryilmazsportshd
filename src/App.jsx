@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Header from './components/Header';
+import PrayerCountdown from './components/PrayerCountdown';
 import Footer from './components/Footer';
 import VideoPlayer from './components/VideoPlayer';
 import TabSelector from './components/TabSelector';
@@ -37,6 +38,7 @@ function App() {
   return (
     <div className="min-h-screen text-white">
       <Header />
+      <PrayerCountdown />
 
       <div className="mx-auto max-w-[1600px] px-3 pt-6 lg:px-6 lg:pt-8">
         {/*
