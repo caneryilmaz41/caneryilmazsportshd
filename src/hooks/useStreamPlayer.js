@@ -7,7 +7,6 @@ export const useStreamPlayer = () => {
 
   const handleMatchSelect = async (match) => {
     setStreamLoading(true);
-    // URL'i temizle — eski trgool URL'i render edilmesin
     setSelectedMatch({ ...match, url: null });
     const url = await getStreamUrl(match);
     setSelectedMatch({ ...match, url });

@@ -8,9 +8,9 @@
  * Env yokken fallback numara: TRGOOL_HINT (varsayılan 62)
  */
 
-const DEFAULT_SCAN_HIGH = 72
-const DEFAULT_SCAN_LOW = 50
-const DEFAULT_HINT_N = 62
+const DEFAULT_SCAN_HIGH = 75
+const DEFAULT_SCAN_LOW = 55
+const DEFAULT_HINT_N = 63
 const BATCH_SIZE = 10
 const PICK_TTL_MS = 60_000
 const VERIFY_TIMEOUT_MS = 5000

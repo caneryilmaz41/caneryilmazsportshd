@@ -1,5 +1,4 @@
 import TeamLogo from './TeamLogo';
-import HLSPlayer from './HLSPlayer';
 import { parseMatchTeams } from '../utils/teamUtils';
 import { getChannelLogoPath } from '../utils/channelUtils';
 
@@ -201,16 +200,18 @@ const VideoPlayer = ({
                 )}
               </div>
             </div>
-          ) : selectedMatch.url ? (
-            <HLSPlayer
-              key={selectedMatch.id || selectedMatch.url}
-              src={selectedMatch.url}
-              onError={(e) => console.error('HLS error:', e)}
-            />
           ) : (
-            <div className="w-full h-full bg-slate-900 flex items-center justify-center">
-              <p className="text-slate-400 text-sm">Yayın bulunamadı. Lütfen başka bir kanal deneyin.</p>
-            </div>
+            <iframe
+              key={selectedMatch.id || selectedMatch.url}
+              title="Canlı yayın"
+              src={selectedMatch.url}
+              className="h-full w-full min-h-[200px] border-0 bg-black"
+              // allow-top-navigation YOK: site üst pencereyi ele geçiremesin, yayın kutuda kalsın
+              sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-modals allow-downloads"
+              allowFullScreen
+              referrerPolicy="no-referrer"
+              allow="autoplay; fullscreen; picture-in-picture; encrypted-media; display-capture"
+            />
           )}
         </div>
 
