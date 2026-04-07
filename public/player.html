@@ -283,13 +283,29 @@ document.getElementById('progressWrap').addEventListener('click',e=>{
 /* PiP */
 function pip(){document.pictureInPictureElement?document.exitPictureInPicture():V.requestPictureInPicture?.()}
 
-/* FS */
-function toggleFS(){document.fullscreenElement?document.exitFullscreen?.():W.requestFullscreen?.()}
-document.addEventListener('fullscreenchange',()=>{
-  const f=!!document.fullscreenElement;
+/* FS — iPhone/iOS + Android + Desktop */
+function isFS(){return !!(document.fullscreenElement||document.webkitFullscreenElement||document.webkitCurrentFullScreenElement)}
+function toggleFS(){
+  if(isFS()){
+    (document.exitFullscreen||document.webkitExitFullscreen||document.webkitCancelFullScreen)?.call(document);
+  } else {
+    // 1) Container fullscreen (desktop/android)
+    if(W.requestFullscreen) W.requestFullscreen();
+    else if(W.webkitRequestFullscreen) W.webkitRequestFullscreen();
+    // 2) iOS Safari: sadece video element fullscreen olabilir
+    else if(V.webkitEnterFullscreen) V.webkitEnterFullscreen();
+    else if(V.webkitRequestFullscreen) V.webkitRequestFullscreen();
+  }
+}
+function onFSChange(){
+  const f=isFS();
   document.getElementById('iFS').style.display=f?'none':'block';
   document.getElementById('iFSx').style.display=f?'block':'none';
-});
+}
+document.addEventListener('fullscreenchange',onFSChange);
+document.addEventListener('webkitfullscreenchange',onFSChange);
+V.addEventListener('webkitbeginfullscreen',()=>onFSChange());
+V.addEventListener('webkitendfullscreen',()=>onFSChange());
 
 /* Autoplay sesli */
 function go(){

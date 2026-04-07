@@ -20,10 +20,19 @@ export const useStreamPlayer = () => {
 
   const toggleFullscreen = () => {
     const el = document.getElementById("video-player");
-    if (!document.fullscreenElement) {
-      (el?.requestFullscreen || el?.webkitRequestFullscreen || el?.msRequestFullscreen)?.call(el);
-    } else {
-      (document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen)?.call(document);
+    const isFS = document.fullscreenElement || document.webkitFullscreenElement;
+    
+    if (isFS) {
+      (document.exitFullscreen || document.webkitExitFullscreen || document.webkitCancelFullScreen)?.call(document);
+    } else if (el) {
+      if (el.requestFullscreen) el.requestFullscreen();
+      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+      else {
+        // iOS: iframe içindeki video'yu fullscreen yap
+        const iframe = el.querySelector('iframe');
+        if (iframe?.requestFullscreen) iframe.requestFullscreen();
+        else if (iframe?.webkitRequestFullscreen) iframe.webkitRequestFullscreen();
+      }
     }
   };
 

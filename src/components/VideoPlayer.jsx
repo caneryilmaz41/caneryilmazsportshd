@@ -149,6 +149,8 @@ const VideoPlayer = ({
               src={playerSrc}
               className="h-full w-full min-h-[200px] border-0 bg-black"
               allowFullScreen
+              webkitallowfullscreen="true"
+              mozallowfullscreen="true"
               allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
             />
           )}
