@@ -2,6 +2,8 @@ import TeamLogo from './TeamLogo';
 import { parseMatchTeams } from '../utils/teamUtils';
 import { getChannelLogoPath } from '../utils/channelUtils';
 
+const PLAYER_UI_VERSION = 'android-ui-fix-2026-04-15';
+
 const VideoPlayer = ({ 
   selectedMatch, 
   streamLoading, 
@@ -52,7 +54,7 @@ const VideoPlayer = ({
 
   // HLS ise kendi player.html'imizi kullan, değilse trgool iframe
   const playerSrc = selectedMatch.streamType === 'hls'
-    ? `/player.html?src=${encodeURIComponent(selectedMatch.url || '')}`
+    ? `/player.html?ui=${encodeURIComponent(PLAYER_UI_VERSION)}&src=${encodeURIComponent(selectedMatch.url || '')}`
     : (selectedMatch.url || selectedMatch.iframeUrl || '');
   const isInvalidPlayerSrc =
     !playerSrc ||
@@ -131,6 +133,11 @@ const VideoPlayer = ({
         id="video-player"
         className="relative aspect-[16/10] sm:aspect-video bg-gradient-to-br from-slate-900 via-slate-800 to-green-900 p-2 sm:p-3 rounded-lg group"
       >
+        {selectedMatch.streamType !== 'hls' ? (
+          <div className="absolute left-3 top-3 z-20 rounded-md border border-amber-400/35 bg-amber-500/15 px-2 py-1 text-[10px] font-semibold text-amber-200">
+            Harici oynatici
+          </div>
+        ) : null}
 
         <div className="w-full h-full rounded-lg overflow-hidden border-2 border-green-500/30 relative">
           {streamLoading ? (

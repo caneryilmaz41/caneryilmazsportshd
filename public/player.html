@@ -162,8 +162,8 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
   .top-bar{padding:12px 14px}
   .bottom{padding:0 12px 12px}
   .progress-row{margin-bottom:7px}
-  .progress-wrap{height:5px;margin-bottom:10px}
-  .progress-wrap:hover{height:5px}
+  .progress-wrap{height:7px;margin-bottom:10px}
+  .progress-wrap:hover{height:7px}
   .progress-thumb{transform:translate(50%,-50%) scale(1);width:12px;height:12px}
   .c-btn{width:44px;height:44px;border-radius:12px}
   .c-btn svg{width:24px;height:24px}
@@ -178,7 +178,7 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
 
 @media (max-width: 520px){
   .bottom{padding:0 10px 10px}
-  .progress-wrap{height:5px}
+  .progress-wrap{height:8px}
   .c-btn{width:42px;height:42px}
   .c-btn svg{width:22px;height:22px}
   .canli-badge{display:none}
@@ -187,6 +187,58 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
   .watermark{bottom:66px;right:10px}
   .watermark img{height:24px}
 }
+
+/* Dar yukseklikli telefonlar: kompakt ama okunur kontrol */
+@media (max-height: 560px){
+  .top-bar{display:none}
+  .bottom{padding:0 10px 12px}
+  .progress-row{margin-bottom:6px}
+  .progress-wrap{height:8px;margin-bottom:8px}
+  .c-btn{width:42px;height:42px}
+  .c-btn svg{width:22px;height:22px}
+  .watermark{bottom:64px}
+  .watermark img{height:22px}
+}
+
+/* Android cihazlar: kontrol gorunurlugunu guclendir */
+body.is-android .bottom,
+body.is-android .top-bar{
+  transition:opacity .2s;
+}
+body.is-android #wrap.show-ctrl .bottom,
+body.is-android #wrap.show-ctrl .top-bar{
+  opacity:1 !important;
+}
+@media (pointer: coarse){
+  body.is-android .c-btn{
+    width:46px;
+    height:46px;
+  }
+  body.is-android .c-btn svg{
+    width:24px;
+    height:24px;
+  }
+  body.is-android .bottom{
+    padding-bottom:max(14px, env(safe-area-inset-bottom));
+  }
+}
+
+/* Android kompakt mod: yalnizca temel kontroller */
+body.is-android.compact-controls .top-bar{display:none}
+body.is-android.compact-controls .vol-slider,
+body.is-android.compact-controls .vol-group,
+body.is-android.compact-controls .canli-badge{display:none !important}
+body.is-android.compact-controls .ctrl-row{
+  justify-content:space-between;
+}
+body.is-android.compact-controls .ctrl-left,
+body.is-android.compact-controls .ctrl-right{
+  gap:4px;
+}
+body.is-android.compact-controls .watermark{
+  bottom:58px;
+}
+body.is-android.compact-controls #pipBtn{display:none}
 </style>
 </head>
 <body>
@@ -247,7 +299,7 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
         <div class="canli-badge">CANLI</div>
       </div>
       <div class="ctrl-right">
-        <button class="c-btn" onclick="pip()" title="Pencere içinde pencere">
+        <button id="pipBtn" class="c-btn" onclick="pip()" title="Pencere içinde pencere">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><rect x="11" y="10" width="9" height="6" rx="1" fill="currentColor" opacity=".3"/></svg>
         </button>
         <button class="c-btn" onclick="toggleFS()" title="Tam ekran">
@@ -271,6 +323,10 @@ const bigPlay=document.getElementById('bigPlay'),unmuteEl=document.getElementByI
 const pBar=document.getElementById('progressBar'),pBuf=document.getElementById('progressBuf');
 const timeText=document.getElementById('timeText');
 let hideT;
+const isAndroid=/android/i.test(navigator.userAgent||'');
+const isTouch=window.matchMedia('(pointer: coarse)').matches;
+if(isAndroid) document.body.classList.add('is-android');
+if(isAndroid && window.innerHeight <= 560) document.body.classList.add('compact-controls');
 
 function hide(){loader.classList.add('hidden')}
 function err(){hide();errEl.classList.add('show')}
@@ -289,11 +345,23 @@ function ui(){
 
 /* Show/hide controls */
 let lastX=0,lastY=0;
-function showC(){W.classList.add('show-ctrl');clearTimeout(hideT);hideT=setTimeout(()=>{if(!V.paused)W.classList.remove('show-ctrl')},3000)}
+function showC(){
+  W.classList.add('show-ctrl');
+  clearTimeout(hideT);
+  if(isAndroid || isTouch){
+    // Android/touch cihazlarda kontroller kaybolmasin.
+    return;
+  }
+  hideT=setTimeout(()=>{ if(!V.paused) W.classList.remove('show-ctrl'); },3000);
+}
 W.addEventListener('mousemove',e=>{
   if(Math.abs(e.clientX-lastX)>3||Math.abs(e.clientY-lastY)>3){lastX=e.clientX;lastY=e.clientY;showC()}
 });
 W.addEventListener('touchstart',showC,{passive:true});
+if(isAndroid||isTouch){
+  // Mobilde ilk acilista kontroller gorunur olsun.
+  showC();
+}
 
 /* Play */
 function togglePlay(){V.paused?V.play().catch(()=>{}):V.pause();ui()}
