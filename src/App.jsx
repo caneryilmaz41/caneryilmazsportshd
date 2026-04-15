@@ -17,6 +17,13 @@ import { useStreamPlayer } from './hooks/useStreamPlayer';
 function App() {
   const [activeTab, setActiveTab] = useState("matches");
   const [logoState, setLogoState] = useState({});
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    try {
+      return localStorage.getItem('onboardingDismissed') !== '1';
+    } catch {
+      return true;
+    }
+  });
   
   const { matches, channels, loading } = useStreamData();
   const {
@@ -27,6 +34,11 @@ function App() {
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
+  };
+
+  const dismissOnboarding = () => {
+    setShowOnboarding(false);
+    localStorage.setItem('onboardingDismissed', '1');
   };
 
   const filteredChannelsCount = channels.filter((channel) => {
@@ -67,6 +79,23 @@ function App() {
                   {activeTab === 'matches' ? matches.length : filteredChannelsCount}
                 </span>
               </div>
+
+              {activeTab === 'matches' ? (
+                <div className="shrink-0 border-b border-slate-700/35 bg-slate-900/30 px-2 py-2">
+                  {showOnboarding ? (
+                    <div className="mb-2 flex items-start justify-between gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 py-1.5">
+                      <p className="text-[11px] text-emerald-200">Bir maç seç, yayın player alanında hemen açılır.</p>
+                      <button
+                        type="button"
+                        onClick={dismissOnboarding}
+                        className="rounded px-1 text-[11px] text-emerald-300 hover:bg-emerald-500/20"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
 
               {loading ? (
                 <div className="flex flex-1 flex-col items-center justify-center gap-3 py-12">

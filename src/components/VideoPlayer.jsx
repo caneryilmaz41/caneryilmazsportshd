@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import TeamLogo from './TeamLogo';
 import { parseMatchTeams } from '../utils/teamUtils';
 import { getChannelLogoPath } from '../utils/channelUtils';
@@ -10,6 +11,12 @@ const VideoPlayer = ({
   logoState, 
   setLogoState
 }) => {
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    setReloadKey(0);
+  }, [selectedMatch?.id, selectedMatch?.url, selectedMatch?.streamType]);
+
   if (!selectedMatch) {
     return (
       <div>
@@ -66,17 +73,26 @@ const VideoPlayer = ({
   return (
     <div>
       <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-3 py-2.5 sm:px-4 sm:py-3">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 sm:flex-nowrap sm:justify-between">
-          <div className="flex min-w-0 items-center gap-2">
-            {selectedMatch.category && (
-              <span className="truncate text-[11px] sm:text-xs text-green-100">{selectedMatch.category}</span>
-            )}
-            {selectedMatch.special && (
-              <span className="truncate text-[11px] sm:text-xs text-yellow-300 font-semibold">{selectedMatch.special}</span>
+        <div className="space-y-2 sm:space-y-0">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-2">
+              {selectedMatch.category && (
+                <span className="truncate text-[10px] sm:text-xs text-green-100">{selectedMatch.category}</span>
+              )}
+              {selectedMatch.special && (
+                <span className="truncate rounded bg-black/15 px-1.5 py-0.5 text-[10px] sm:text-xs text-yellow-200 font-semibold">
+                  {selectedMatch.special}
+                </span>
+              )}
+            </div>
+            {selectedMatch.league && (
+              <span className="max-w-[45%] truncate text-right text-[10px] sm:max-w-[33%] sm:text-xs text-green-100">
+                {selectedMatch.league}
+              </span>
             )}
           </div>
-          
-          <div className="order-3 flex w-full items-center justify-center gap-3 sm:order-none sm:w-auto sm:gap-4">
+
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
             {isChannel ? (
               <div className="flex min-w-0 items-center gap-2">
                 <img 
@@ -85,7 +101,7 @@ const VideoPlayer = ({
                   className="w-6 h-6 object-contain"
                   onError={(e) => e.target.style.display = 'none'}
                 />
-                <span className="truncate text-white text-sm font-medium">{selectedMatch.name}</span>
+                <span className="truncate text-white text-base sm:text-sm font-semibold">{selectedMatch.name}</span>
               </div>
             ) : (
               <>
@@ -96,21 +112,23 @@ const VideoPlayer = ({
                     ) : (
                       <TeamLogo teamName={teams[0]} logoState={logoState} setLogoState={setLogoState} />
                     )}
-                    <span className="max-w-[110px] truncate text-white font-medium text-sm">{teams[0]}</span>
+                    <span className="max-w-[110px] truncate text-white font-semibold text-[14px] sm:text-sm">{teams[0]}</span>
                   </div>
                 )}
-                <div className="flex shrink-0 flex-col items-center gap-0.5 sm:gap-1">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                    <span className="text-[11px] sm:text-xs text-green-100 font-medium">CANLI</span>
+
+                <div className="flex shrink-0 flex-col items-center justify-center rounded-md bg-black/10 px-2 py-1">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 bg-red-300 rounded-full"></div>
+                    <span className="text-[10px] sm:text-xs text-green-100 font-semibold">CANLI</span>
                   </div>
                   {selectedMatch.time && (
-                    <span className="text-[11px] sm:text-xs text-green-100">{selectedMatch.time}</span>
+                    <span className="text-[10px] sm:text-xs text-green-100">{selectedMatch.time}</span>
                   )}
                 </div>
+
                 {teams[1] && (
                   <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
-                    <span className="max-w-[110px] truncate text-white font-medium text-sm">{teams[1]}</span>
+                    <span className="max-w-[110px] truncate text-white font-semibold text-[14px] sm:text-sm">{teams[1]}</span>
                     {selectedMatch.awayLogo ? (
                       <img src={selectedMatch.awayLogo} alt="Away" className="w-6 h-6 object-contain" />
                     ) : (
@@ -121,12 +139,6 @@ const VideoPlayer = ({
               </>
             )}
           </div>
-          
-          {selectedMatch.league && (
-            <span className="order-2 ml-auto max-w-[42%] truncate text-right text-[11px] sm:order-none sm:max-w-[33%] sm:text-xs text-green-100">
-              {selectedMatch.league}
-            </span>
-          )}
         </div>
       </div>
       
@@ -134,6 +146,13 @@ const VideoPlayer = ({
         id="video-player"
         className="relative aspect-video bg-gradient-to-br from-slate-900 via-slate-800 to-green-900 p-2 sm:p-3 rounded-lg group"
       >
+        <button
+          type="button"
+          onClick={() => setReloadKey((prev) => prev + 1)}
+          className="absolute right-3 top-3 z-20 rounded-md border border-slate-300/35 bg-slate-900/80 px-2 py-1 text-[10px] font-semibold text-slate-100 hover:bg-slate-800"
+        >
+          Yayını Yenile
+        </button>
         {isExternalPlayer ? (
           <div className="absolute left-3 top-3 z-20 rounded-md border border-amber-400/35 bg-amber-500/15 px-2 py-1 text-[10px] font-semibold text-amber-200">
             Harici oynatici
@@ -168,7 +187,7 @@ const VideoPlayer = ({
             </div>
           ) : (
             <iframe
-              key={selectedMatch.id || selectedMatch.url}
+              key={`${selectedMatch.id || selectedMatch.url}-${reloadKey}`}
               title="Canlı yayın"
               src={playerSrc}
               className="w-full h-full border-0 bg-black"
