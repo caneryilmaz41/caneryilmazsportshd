@@ -1,6 +1,7 @@
 import { getPrimaryTrgoolDomain } from '../../trgoolDomains.js'
 
 let cachedDomain = null
+const isHlsUrl = (url) => typeof url === 'string' && url.toLowerCase().includes('m3u8')
 
 const resolveActiveDomain = async () => {
   if (cachedDomain) return cachedDomain
@@ -25,7 +26,7 @@ export const getStreamUrl = async (match) => {
     const res = await fetch(`/api/resolvePlayer?id=${encodeURIComponent(id)}`)
     if (res.ok) {
       const data = await res.json()
-      if (data?.embedUrl && data.success) {
+      if (data?.embedUrl && data.success && isHlsUrl(data.embedUrl)) {
         return { url: data.embedUrl, type: 'hls', iframeUrl }
       }
     }
@@ -36,7 +37,7 @@ export const getStreamUrl = async (match) => {
     const res = await fetch(`https://teletv3.top/load/yayinlink.php?id=${encodeURIComponent(id)}`)
     if (res.ok) {
       const data = await res.json()
-      if (data?.deismackanal?.includes('m3u8')) {
+      if (isHlsUrl(data?.deismackanal)) {
         return { url: data.deismackanal.replace(/edge\d+/g, 'edge3'), type: 'hls', iframeUrl }
       }
     }

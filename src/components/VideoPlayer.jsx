@@ -52,8 +52,8 @@ const VideoPlayer = ({
 
   // HLS ise kendi player.html'imizi kullan, değilse trgool iframe
   const playerSrc = selectedMatch.streamType === 'hls'
-    ? `/player.html?src=${encodeURIComponent(selectedMatch.url)}`
-    : selectedMatch.url;
+    ? `/player.html?src=${encodeURIComponent(selectedMatch.url || '')}`
+    : (selectedMatch.url || selectedMatch.iframeUrl || '');
 
   return (
     <div>
