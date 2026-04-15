@@ -62,52 +62,52 @@ const VideoPlayer = ({
 
   return (
     <div>
-      <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+      <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-3 py-2.5 sm:px-4 sm:py-3">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 sm:flex-nowrap sm:justify-between">
+          <div className="flex min-w-0 items-center gap-2">
             {selectedMatch.category && (
-              <span className="text-xs text-green-100">{selectedMatch.category}</span>
+              <span className="truncate text-[11px] sm:text-xs text-green-100">{selectedMatch.category}</span>
             )}
             {selectedMatch.special && (
-              <span className="text-xs text-yellow-300 font-semibold">{selectedMatch.special}</span>
+              <span className="truncate text-[11px] sm:text-xs text-yellow-300 font-semibold">{selectedMatch.special}</span>
             )}
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="order-3 flex w-full items-center justify-center gap-3 sm:order-none sm:w-auto sm:gap-4">
             {isChannel ? (
-              <div className="flex items-center gap-2">
+              <div className="flex min-w-0 items-center gap-2">
                 <img 
                   src={getChannelLogoPath(selectedMatch.name)} 
                   alt="Kanal"
                   className="w-6 h-6 object-contain"
                   onError={(e) => e.target.style.display = 'none'}
                 />
-                <span className="text-white text-sm font-medium">{selectedMatch.name}</span>
+                <span className="truncate text-white text-sm font-medium">{selectedMatch.name}</span>
               </div>
             ) : (
               <>
                 {teams[0] && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
                     {selectedMatch.homeLogo ? (
                       <img src={selectedMatch.homeLogo} alt="Home" className="w-6 h-6 object-contain" />
                     ) : (
                       <TeamLogo teamName={teams[0]} logoState={logoState} setLogoState={setLogoState} />
                     )}
-                    <span className="text-white font-medium text-sm">{teams[0]}</span>
+                    <span className="max-w-[110px] truncate text-white font-medium text-sm">{teams[0]}</span>
                   </div>
                 )}
-                <div className="flex flex-col items-center gap-1">
+                <div className="flex shrink-0 flex-col items-center gap-0.5 sm:gap-1">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                    <span className="text-xs text-green-100 font-medium">CANLI</span>
+                    <span className="text-[11px] sm:text-xs text-green-100 font-medium">CANLI</span>
                   </div>
                   {selectedMatch.time && (
-                    <span className="text-xs text-green-100">{selectedMatch.time}</span>
+                    <span className="text-[11px] sm:text-xs text-green-100">{selectedMatch.time}</span>
                   )}
                 </div>
                 {teams[1] && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-white font-medium text-sm">{teams[1]}</span>
+                  <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+                    <span className="max-w-[110px] truncate text-white font-medium text-sm">{teams[1]}</span>
                     {selectedMatch.awayLogo ? (
                       <img src={selectedMatch.awayLogo} alt="Away" className="w-6 h-6 object-contain" />
                     ) : (
@@ -120,14 +120,16 @@ const VideoPlayer = ({
           </div>
           
           {selectedMatch.league && (
-            <span className="text-xs text-green-100">{selectedMatch.league}</span>
+            <span className="order-2 ml-auto max-w-[42%] truncate text-right text-[11px] sm:order-none sm:max-w-[33%] sm:text-xs text-green-100">
+              {selectedMatch.league}
+            </span>
           )}
         </div>
       </div>
       
       <div
         id="video-player"
-        className="aspect-video relative bg-gradient-to-br from-slate-900 via-slate-800 to-green-900 p-3 rounded-lg group"
+        className="relative aspect-[16/10] sm:aspect-video bg-gradient-to-br from-slate-900 via-slate-800 to-green-900 p-2 sm:p-3 rounded-lg group"
       >
 
         <div className="w-full h-full rounded-lg overflow-hidden border-2 border-green-500/30 relative">
@@ -159,7 +161,7 @@ const VideoPlayer = ({
               key={selectedMatch.id || selectedMatch.url}
               title="Canlı yayın"
               src={playerSrc}
-              className="h-full w-full min-h-[200px] border-0 bg-black"
+              className="h-full w-full min-h-[230px] sm:min-h-[260px] border-0 bg-black"
               allowFullScreen
               webkitallowfullscreen="true"
               mozallowfullscreen="true"

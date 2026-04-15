@@ -155,6 +155,38 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
 .error-box.show{display:flex}
 .error-box p{color:#475569;font-size:14px}
 .error-box p+p{font-size:11px;margin-top:4px;opacity:.6}
+
+/* ── Android / mobile responsive tuning ── */
+@media (max-width: 900px){
+  #wrap{cursor:default}
+  .top-bar{padding:12px 14px}
+  .bottom{padding:0 12px 12px}
+  .progress-row{margin-bottom:7px}
+  .progress-wrap{height:5px;margin-bottom:10px}
+  .progress-wrap:hover{height:5px}
+  .progress-thumb{transform:translate(50%,-50%) scale(1);width:12px;height:12px}
+  .c-btn{width:44px;height:44px;border-radius:12px}
+  .c-btn svg{width:24px;height:24px}
+  .ctrl-left,.ctrl-right{gap:2px}
+  .canli-badge{font-size:10px;padding:2px 7px}
+  .time-text{font-size:12px}
+  .vol-slider{width:52px;opacity:1}
+  .vol-group:hover .vol-slider{width:52px;opacity:1}
+  .watermark{bottom:72px;right:12px}
+  .watermark img{height:28px}
+}
+
+@media (max-width: 520px){
+  .bottom{padding:0 10px 10px}
+  .progress-wrap{height:5px}
+  .c-btn{width:42px;height:42px}
+  .c-btn svg{width:22px;height:22px}
+  .canli-badge{display:none}
+  .vol-slider{width:44px}
+  .vol-group:hover .vol-slider{width:44px}
+  .watermark{bottom:66px;right:10px}
+  .watermark img{height:24px}
+}
 </style>
 </head>
 <body>
