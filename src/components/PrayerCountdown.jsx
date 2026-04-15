@@ -191,24 +191,24 @@ const PrayerCountdown = () => {
         ))}
       </div>
 
-      <div className="mx-2 mb-2 rounded-lg border border-slate-700/40 bg-slate-800/60 p-2 sm:mx-auto sm:max-w-xl">
+      <div className="mx-2 mb-2 rounded-xl border border-emerald-500/20 bg-gradient-to-br from-slate-800/80 to-slate-900/90 p-2.5 shadow-[0_8px_24px_rgba(15,23,42,0.35)] sm:mx-auto sm:max-w-xl">
         <div className="flex items-center justify-between gap-2">
           <div>
-            <p className="text-[11px] font-semibold text-slate-200">🧭 Kıble Bulucu</p>
-            <p className="text-[10px] text-slate-400">{qiblaStatus}</p>
+            <p className="text-[11px] font-semibold text-slate-100">🧭 Kıble Bulucu</p>
+            <p className="text-[10px] text-slate-400 leading-tight">{qiblaStatus}</p>
           </div>
           <button
             type="button"
             onClick={enableQiblaFinder}
-            className="rounded-md border border-emerald-500/40 bg-emerald-500/15 px-2 py-1 text-[10px] font-semibold text-emerald-300 hover:bg-emerald-500/25"
+            className="rounded-lg border border-emerald-500/45 bg-emerald-500/15 px-2.5 py-1 text-[10px] font-semibold text-emerald-200 transition hover:bg-emerald-500/25"
           >
             Kıbleyi Bul
           </button>
         </div>
 
         {qiblaBearing != null ? (
-          <div className="mt-2 flex items-center gap-3">
-            <div className="relative h-16 w-16 shrink-0 rounded-full border border-slate-500/50 bg-slate-900/80">
+          <div className="mt-2.5 flex items-center gap-3">
+            <div className="relative h-16 w-16 shrink-0 rounded-full border border-slate-500/45 bg-slate-950/85">
               <div className="absolute left-1/2 top-1 h-2 w-0.5 -translate-x-1/2 bg-slate-300" />
               <div
                 className={`absolute left-1/2 top-1/2 h-6 w-0.5 -translate-x-1/2 -translate-y-full origin-bottom ${isAligned ? 'bg-emerald-400' : 'bg-amber-300'}`}
@@ -224,9 +224,18 @@ const PrayerCountdown = () => {
               <p className="text-[11px] text-slate-300">
                 {heading == null ? 'Pusula bekleniyor...' : `Cihaz Yönü: ${heading.toFixed(1)}°`}
               </p>
-              <p className={`text-[11px] font-medium ${isAligned ? 'text-emerald-300' : 'text-amber-300'}`}>
-                {isAligned ? 'Kıble yönüne hizalandınız' : 'Telefonu yavaşça çevirerek oku yukarı alın'}
-              </p>
+              {isAligned ? (
+                <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                  <span className="rounded-full border border-emerald-400/40 bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-200">
+                    Kıble burası
+                  </span>
+                  <span className="text-[10px] font-medium text-emerald-300">Allah kabul etsin</span>
+                </div>
+              ) : (
+                <p className="text-[11px] font-medium text-amber-300">
+                  Telefonu yavaşça çevirerek oku yukarı alın
+                </p>
+              )}
             </div>
           </div>
         ) : null}
