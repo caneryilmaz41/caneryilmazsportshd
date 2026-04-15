@@ -19,8 +19,7 @@ function App() {
   const {
     selectedMatch,
     streamLoading,
-    handleMatchSelect,
-    toggleFullscreen
+    handleMatchSelect
   } = useStreamPlayer();
 
   const handleTabChange = (tab) => {
@@ -104,7 +103,6 @@ function App() {
                   streamLoading={streamLoading}
                   logoState={logoState}
                   setLogoState={setLogoState}
-                  toggleFullscreen={toggleFullscreen}
                 />
               </div>
             </div>

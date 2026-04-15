@@ -33,3 +33,12 @@ body {
 .stream-panel-scroll {
   scrollbar-gutter: stable;
 }
+
+/* Yatay maç slider'ında temiz görünüm */
+.hide-scrollbar {
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}

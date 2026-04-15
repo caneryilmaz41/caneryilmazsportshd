@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import TeamLogo from './TeamLogo';
 import { parseMatchTeams } from '../utils/teamUtils';
 import { getChannelLogoPath } from '../utils/channelUtils';
@@ -7,37 +6,38 @@ const VideoPlayer = ({
   selectedMatch, 
   streamLoading, 
   logoState, 
-  setLogoState, 
-  toggleFullscreen 
+  setLogoState
 }) => {
   if (!selectedMatch) {
     return (
-      <div
-        className="relative aspect-video flex flex-col justify-center text-center overflow-hidden rounded-lg"
-        style={{
-          backgroundImage:
-            'linear-gradient(135deg, rgba(15,23,42,0.95), rgba(30,41,59,0.9)), url("https://images.unsplash.com/photo-1574629810360-7efbbe195018?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80")',
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
-        <div className="relative z-10 p-4 lg:p-12">
-          <div className="mb-4 lg:mb-8">
-            <img src="/logom.png" alt="Logo" className="h-10 lg:h-24 mx-auto opacity-90" />
+      <div>
+        <div
+          className="relative aspect-video flex flex-col justify-center text-center overflow-hidden rounded-lg"
+          style={{
+            backgroundImage:
+              'linear-gradient(135deg, rgba(15,23,42,0.95), rgba(30,41,59,0.9)), url("https://images.unsplash.com/photo-1574629810360-7efbbe195018?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80")',
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
+          <div className="relative z-10 p-4 lg:p-12">
+            <div className="mb-4 lg:mb-8">
+              <img src="/logom.png" alt="Logo" className="h-10 lg:h-24 mx-auto opacity-90" />
+            </div>
+            <h2 className="text-lg lg:text-3xl font-light mb-3 lg:mb-6 text-white tracking-wide">
+              YAYIN BAŞLIYOR
+            </h2>
+            <div className="w-16 lg:w-24 h-0.5 bg-gradient-to-r from-transparent via-green-400 to-transparent mx-auto mb-4 lg:mb-8"></div>
+            <div className="inline-flex items-center gap-2 bg-black/30 border border-green-500/30 px-3 lg:px-4 py-1.5 lg:py-2 rounded-full mb-3 lg:mb-6">
+              <div className="w-1.5 lg:w-2 h-1.5 lg:h-2 bg-red-500 rounded-full"></div>
+              <span className="text-green-400 font-medium text-xs lg:text-sm tracking-wider">CANLI</span>
+            </div>
+            <p className="text-slate-300 text-xs lg:text-base font-light tracking-wide opacity-80 px-2">
+              Bir maç veya kanal seçin
+            </p>
           </div>
-          <h2 className="text-lg lg:text-3xl font-light mb-3 lg:mb-6 text-white tracking-wide">
-            YAYIN BAŞLIYOR
-          </h2>
-          <div className="w-16 lg:w-24 h-0.5 bg-gradient-to-r from-transparent via-green-400 to-transparent mx-auto mb-4 lg:mb-8"></div>
-          <div className="inline-flex items-center gap-2 bg-black/30 border border-green-500/30 px-3 lg:px-4 py-1.5 lg:py-2 rounded-full mb-3 lg:mb-6">
-            <div className="w-1.5 lg:w-2 h-1.5 lg:h-2 bg-red-500 rounded-full"></div>
-            <span className="text-green-400 font-medium text-xs lg:text-sm tracking-wider">CANLI</span>
-          </div>
-          <p className="text-slate-300 text-xs lg:text-base font-light tracking-wide opacity-80 px-2">
-            Bir maç veya kanal seçin
-          </p>
+          <div className="absolute inset-0 bg-gradient-to-t from-green-500/5 to-transparent pointer-events-none"></div>
         </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-green-500/5 to-transparent pointer-events-none"></div>
       </div>
     );
   }
