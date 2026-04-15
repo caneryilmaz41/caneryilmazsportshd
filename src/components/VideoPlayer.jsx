@@ -54,6 +54,11 @@ const VideoPlayer = ({
   const playerSrc = selectedMatch.streamType === 'hls'
     ? `/player.html?src=${encodeURIComponent(selectedMatch.url || '')}`
     : (selectedMatch.url || selectedMatch.iframeUrl || '');
+  const isInvalidPlayerSrc =
+    !playerSrc ||
+    playerSrc === '/' ||
+    playerSrc === window.location.pathname ||
+    playerSrc === window.location.href;
 
   return (
     <div>
@@ -140,6 +145,13 @@ const VideoPlayer = ({
                     <TeamLogo teamName={teams[1]} logoState={logoState} setLogoState={setLogoState} />
                   </div>
                 )}
+              </div>
+            </div>
+          ) : isInvalidPlayerSrc ? (
+            <div className="w-full h-full bg-slate-900 flex items-center justify-center text-center px-4">
+              <div>
+                <p className="text-sm text-slate-200 font-medium">Yayın adresi alınamadı</p>
+                <p className="text-xs text-slate-400 mt-1">Lütfen başka bir maç veya kanal seçin</p>
               </div>
             </div>
           ) : (

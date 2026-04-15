@@ -8,14 +8,24 @@ export const useStreamPlayer = () => {
   const handleMatchSelect = async (match) => {
     setStreamLoading(true);
     setSelectedMatch({ ...match, url: null, streamType: null, iframeUrl: null });
-    const result = await getStreamUrl(match);
-    setSelectedMatch({
-      ...match,
-      url: result.url,
-      streamType: result.type,
-      iframeUrl: result.iframeUrl
-    });
-    setStreamLoading(false);
+    try {
+      const result = await getStreamUrl(match);
+      setSelectedMatch({
+        ...match,
+        url: result?.url || match.url || null,
+        streamType: result?.type || 'iframe',
+        iframeUrl: result?.iframeUrl || match.url || null
+      });
+    } catch {
+      setSelectedMatch({
+        ...match,
+        url: match.url || null,
+        streamType: 'iframe',
+        iframeUrl: match.url || null
+      });
+    } finally {
+      setStreamLoading(false);
+    }
   };
 
   const toggleFullscreen = () => {
