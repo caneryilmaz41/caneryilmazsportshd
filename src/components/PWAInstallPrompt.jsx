@@ -8,9 +8,6 @@ const PWAInstallPrompt = () => {
   const [isDismissed, setIsDismissed] = useState(false);
 
   useEffect(() => {
-    const dismissedInSession = window.sessionStorage.getItem('pwaPromptDismissed') === '1';
-    setIsDismissed(dismissedInSession);
-
     const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
     setIsInstalled(Boolean(standalone));
     setIsIos(/iphone|ipad|ipod/i.test(window.navigator.userAgent));
@@ -42,7 +39,6 @@ const PWAInstallPrompt = () => {
   };
 
   const handleDismiss = () => {
-    window.sessionStorage.setItem('pwaPromptDismissed', '1');
     setIsDismissed(true);
   };
 
@@ -64,7 +60,7 @@ const PWAInstallPrompt = () => {
       </div>
 
       <div className="flex items-start gap-3">
-        <img src="/logom.png" alt="CanerYilmaz Sports" className="h-9 w-9 rounded-lg ring-1 ring-emerald-400/35 object-contain bg-slate-800/60" />
+        <img src="/cy.jpg" alt="CanerYilmaz Sports" className="h-9 w-9 rounded-lg ring-1 ring-emerald-400/35 object-cover bg-slate-800/60" />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-slate-100">CanerYilmaz Sports</p>
           {isIos && !deferredPrompt ? (
