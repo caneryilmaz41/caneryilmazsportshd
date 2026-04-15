@@ -10,9 +10,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icons/icon-192.svg', 'icons/icon-maskable.svg'],
       manifest: {
-        name: 'CanerYilmazSportsHD',
-        short_name: 'SportsHD',
-        description: 'Canli mac ve spor yayin platformu',
+        name: 'CanerYilmaz Sports',
+        short_name: 'CanerYilmaz',
+        description: 'CanerYilmaz Sports canli mac ve spor yayin platformu',
         theme_color: '#0f172a',
         background_color: '#0f172a',
         display: 'standalone',
