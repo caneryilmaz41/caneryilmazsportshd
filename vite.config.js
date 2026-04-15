@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icons/icon-192.svg', 'icons/icon-maskable.svg'],
+      includeAssets: ['icons/icon-192.svg', 'icons/icon-maskable.svg', 'logom.png'],
       manifest: {
         name: 'CanerYilmaz Sports',
         short_name: 'CanerYilmaz',
@@ -20,6 +20,12 @@ export default defineConfig({
         scope: '/',
         start_url: '/',
         icons: [
+          {
+            src: '/logom.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
           {
             src: '/icons/icon-192.svg',
             sizes: '192x192',
