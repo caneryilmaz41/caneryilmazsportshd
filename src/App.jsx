@@ -8,6 +8,8 @@ import MatchList from './components/MatchList';
 import ChannelList from './components/ChannelList';
 import LiveScoresSlider from './components/LiveScoresSlider';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
+import AppSplashScreen from './components/AppSplashScreen';
+import StandaloneRefreshButton from './components/StandaloneRefreshButton';
 
 import { useStreamData } from './hooks/useStreamData';
 import { useStreamPlayer } from './hooks/useStreamPlayer';
@@ -37,6 +39,7 @@ function App() {
 
   return (
     <div className="min-h-screen text-white">
+      <AppSplashScreen />
       <Header />
       <PrayerCountdown />
 
@@ -116,6 +119,7 @@ function App() {
       </div>
       <Footer />
       <PWAInstallPrompt />
+      <StandaloneRefreshButton />
     </div>
   );
 }

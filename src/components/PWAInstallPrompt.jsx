@@ -60,16 +60,16 @@ const PWAInstallPrompt = () => {
       </div>
 
       <div className="flex items-start gap-3">
-        <img src="/cy.jpg" alt="CanerYilmaz Sports" className="h-9 w-9 rounded-lg ring-1 ring-emerald-400/35 object-cover bg-slate-800/60" />
+        <img src="/cy.jpg" alt="caneryılmazsports" className="h-9 w-9 rounded-lg ring-1 ring-emerald-400/35 object-cover bg-slate-800/60" />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-slate-100">CanerYilmaz Sports</p>
+          <p className="text-sm font-semibold text-slate-100">caneryılmazsports</p>
           {isIos && !deferredPrompt ? (
             <p className="mt-1 text-xs text-slate-300">
-              Ana ekrana ekleyin, uygulama gibi hizli ve tam ekran acilsin.
+              Ana ekrana ekleyin, uygulama gibi tam ekran acilsin.
             </p>
           ) : (
             <p className="mt-1 text-xs text-slate-300">
-              Ana ekrana ekleyin, uygulama gibi hizli ve tam ekran acilsin.
+              Ana ekrana ekleyin, uygulama gibi tam ekran acilsin.
             </p>
           )}
         </div>

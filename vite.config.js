@@ -8,11 +8,11 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icons/icon-192.svg', 'icons/icon-maskable.svg', 'logom.png'],
+      includeAssets: ['cy.jpg', 'logom.png'],
       manifest: {
-        name: 'CanerYilmaz Sports',
-        short_name: 'CanerYilmaz',
-        description: 'CanerYilmaz Sports canli mac ve spor yayin platformu',
+        name: 'caneryılmazsports',
+        short_name: 'caneryılmazsports',
+        description: 'caneryılmazsports canli mac ve spor yayin platformu',
         theme_color: '#0f172a',
         background_color: '#0f172a',
         display: 'standalone',
@@ -21,21 +21,15 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: '/logom.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any maskable'
-          },
-          {
-            src: '/icons/icon-192.svg',
+            src: '/cy.jpg',
             sizes: '192x192',
-            type: 'image/svg+xml',
+            type: 'image/jpeg',
             purpose: 'any'
           },
           {
-            src: '/icons/icon-maskable.svg',
+            src: '/cy.jpg',
             sizes: '512x512',
-            type: 'image/svg+xml',
+            type: 'image/jpeg',
             purpose: 'any maskable'
           }
         ]
