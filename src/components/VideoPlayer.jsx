@@ -61,6 +61,7 @@ const VideoPlayer = ({
     playerSrc === '/' ||
     playerSrc === window.location.pathname ||
     playerSrc === window.location.href;
+  const isExternalPlayer = selectedMatch.streamType !== 'hls';
 
   return (
     <div>
@@ -131,15 +132,17 @@ const VideoPlayer = ({
       
       <div
         id="video-player"
-        className="relative aspect-[16/10] sm:aspect-video bg-gradient-to-br from-slate-900 via-slate-800 to-green-900 p-2 sm:p-3 rounded-lg group"
+        className="relative aspect-video bg-gradient-to-br from-slate-900 via-slate-800 to-green-900 p-2 sm:p-3 rounded-lg group"
       >
-        {selectedMatch.streamType !== 'hls' ? (
+        {isExternalPlayer ? (
           <div className="absolute left-3 top-3 z-20 rounded-md border border-amber-400/35 bg-amber-500/15 px-2 py-1 text-[10px] font-semibold text-amber-200">
             Harici oynatici
           </div>
         ) : null}
 
-        <div className="w-full h-full rounded-lg overflow-hidden border-2 border-green-500/30 relative">
+        <div
+          className="w-full h-full rounded-lg relative overflow-hidden border-2 border-green-500/30"
+        >
           {streamLoading ? (
             <div className="w-full h-full bg-slate-900 flex items-center justify-center">
               <div className="flex items-center gap-8">
@@ -168,7 +171,7 @@ const VideoPlayer = ({
               key={selectedMatch.id || selectedMatch.url}
               title="Canlı yayın"
               src={playerSrc}
-              className="h-full w-full min-h-[230px] sm:min-h-[260px] border-0 bg-black"
+              className="w-full h-full border-0 bg-black"
               allowFullScreen
               webkitallowfullscreen="true"
               mozallowfullscreen="true"

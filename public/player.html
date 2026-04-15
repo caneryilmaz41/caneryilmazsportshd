@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%}
 body{background:#000;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;user-select:none}
 
-#wrap{position:relative;width:100vw;height:100vh;background:#000;cursor:none}
+#wrap{position:relative;width:100%;height:100%;background:#000;cursor:none}
 #wrap.show-ctrl{cursor:default}
 video{width:100%;height:100%;object-fit:contain;background:#000}
 
@@ -205,6 +206,9 @@ body.is-android .bottom,
 body.is-android .top-bar{
   transition:opacity .2s;
 }
+body.is-android .bottom{
+  bottom:0;
+}
 body.is-android #wrap.show-ctrl .bottom,
 body.is-android #wrap.show-ctrl .top-bar{
   opacity:1 !important;
@@ -239,6 +243,12 @@ body.is-android.compact-controls .watermark{
   bottom:58px;
 }
 body.is-android.compact-controls #pipBtn{display:none}
+
+/* Kucuk ekranli Android'lerde kontrolleri daha da yukari cikar */
+@media (max-width: 430px){
+  body.is-android .bottom{bottom:0}
+  body.is-android .watermark{bottom:80px}
+}
 </style>
 </head>
 <body>
