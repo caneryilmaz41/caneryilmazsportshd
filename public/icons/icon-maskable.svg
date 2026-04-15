@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="CanerYilmazSportsHD Maskable Icon">
+  <rect width="512" height="512" rx="128" fill="#0b1220" />
+  <circle cx="256" cy="256" r="176" fill="#10b981" opacity="0.2" />
+  <path d="M256 124a132 132 0 1 1 0 264 132 132 0 0 1 0-264Zm0 28a104 104 0 1 0 0 208 104 104 0 0 0 0-208Z" fill="#10b981"/>
+  <path d="M170 206h172v20H170zm0 80h172v20H170z" fill="#e2e8f0"/>
+  <circle cx="256" cy="256" r="30" fill="#e2e8f0"/>
+</svg>
