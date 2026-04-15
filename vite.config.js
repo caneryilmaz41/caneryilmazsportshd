@@ -36,6 +36,10 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,jpg,jpeg,webp,json}'],
+        // player.html?src=... istekleri app-shell fallback'e dusmemeli.
+        navigateFallbackDenylist: [/^\/player\.html/],
+        // Query param ile gelen player URL'lerinde precache eslesmesini bozma.
+        ignoreURLParametersMatching: [/^src$/, /^utm_/, /^fbclid$/],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/api\.aladhan\.com\/.*/i,
