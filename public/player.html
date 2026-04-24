@@ -253,7 +253,7 @@ body.is-android.compact-controls #pipBtn{display:none}
 </head>
 <body>
 <div id="wrap">
-  <video id="v" playsinline></video>
+  <video id="v" playsinline muted></video>
 
   <!-- Loading -->
   <div class="loader" id="loader">
@@ -429,11 +429,12 @@ document.addEventListener('webkitfullscreenchange',onFSChange);
 V.addEventListener('webkitbeginfullscreen',()=>onFSChange());
 V.addEventListener('webkitendfullscreen',()=>onFSChange());
 
-/* Autoplay sesli */
+/* Autoplay: tarayıcı genelde sessiz olmadan play()’e izin vermez (NotAllowedError) */
 function go(){
-  V.muted=false;
-  const p=V.play();
-  if(p)p.catch(()=>{V.muted=true;V.play().catch(()=>{});unmuteEl.classList.remove('hidden')});
+  V.muted = true;
+  unmuteEl.classList.remove('hidden');
+  const p = V.play();
+  if (p) p.catch(function () { unmuteEl.classList.remove('hidden') });
   ui();
 }
 

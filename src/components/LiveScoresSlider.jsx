@@ -12,6 +12,7 @@ const STANDINGS_LEAGUES = [
 ];
 
 const LEAGUE_META = {
+  'Süper Lig': { country: 'TÜRKİYE', flag: '🇹🇷' },
   'Premier League': { country: 'İNGİLTERE', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
   LaLiga: { country: 'İSPANYA', flag: '🇪🇸' },
   'La Liga': { country: 'İSPANYA', flag: '🇪🇸' },

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import TeamLogo from './TeamLogo';
 import { parseMatchTeams } from '../utils/teamUtils';
-import { getChannelLogoPath } from '../utils/channelUtils';
+import { SPLASH_BG } from './AppSplashScreen';
+import ChannelLogoImg from './ChannelLogoImg';
 
 const PLAYER_UI_VERSION = 'android-ui-fix-2026-04-15';
 
@@ -68,8 +69,6 @@ const VideoPlayer = ({
     playerSrc === '/' ||
     playerSrc === window.location.pathname ||
     playerSrc === window.location.href;
-  const isExternalPlayer = selectedMatch.streamType !== 'hls';
-
   return (
     <div>
       <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-3 py-2.5 sm:px-4 sm:py-3">
@@ -95,12 +94,9 @@ const VideoPlayer = ({
           <div className="flex items-center justify-between gap-2 sm:gap-4">
             {isChannel ? (
               <div className="flex min-w-0 items-center gap-2">
-                <img 
-                  src={getChannelLogoPath(selectedMatch.name)} 
-                  alt="Kanal"
-                  className="w-6 h-6 object-contain"
-                  onError={(e) => e.target.style.display = 'none'}
-                />
+                <div className="h-6 w-6 shrink-0">
+                  <ChannelLogoImg channelName={selectedMatch.name} className="h-6 w-6 object-contain" />
+                </div>
                 <span className="truncate text-white text-base sm:text-sm font-semibold">{selectedMatch.name}</span>
               </div>
             ) : (
@@ -109,6 +105,8 @@ const VideoPlayer = ({
                   <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
                     {selectedMatch.homeLogo ? (
                       <img src={selectedMatch.homeLogo} alt="Home" className="w-6 h-6 object-contain" />
+                    ) : streamLoading ? (
+                      <div className="h-6 w-6 shrink-0 rounded-md bg-slate-600/30" />
                     ) : (
                       <TeamLogo teamName={teams[0]} logoState={logoState} setLogoState={setLogoState} />
                     )}
@@ -131,6 +129,8 @@ const VideoPlayer = ({
                     <span className="max-w-[110px] truncate text-white font-semibold text-[14px] sm:text-sm">{teams[1]}</span>
                     {selectedMatch.awayLogo ? (
                       <img src={selectedMatch.awayLogo} alt="Away" className="w-6 h-6 object-contain" />
+                    ) : streamLoading ? (
+                      <div className="h-6 w-6 shrink-0 rounded-md bg-slate-600/30" />
                     ) : (
                       <TeamLogo teamName={teams[1]} logoState={logoState} setLogoState={setLogoState} />
                     )}
@@ -153,29 +153,50 @@ const VideoPlayer = ({
         >
           Yayını Yenile
         </button>
-        {isExternalPlayer ? (
-          <div className="absolute left-3 top-3 z-20 rounded-md border border-amber-400/35 bg-amber-500/15 px-2 py-1 text-[10px] font-semibold text-amber-200">
-            Harici oynatici
-          </div>
-        ) : null}
-
         <div
           className="w-full h-full rounded-lg relative overflow-hidden border-2 border-green-500/30"
         >
           {streamLoading ? (
-            <div className="w-full h-full bg-slate-900 flex items-center justify-center">
-              <div className="flex items-center gap-8">
-                {!isChannel && teams[0] && (
-                  <div className="animate-spin">
-                    <TeamLogo teamName={teams[0]} logoState={logoState} setLogoState={setLogoState} />
+            <div
+              className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden"
+              style={{
+                backgroundImage: SPLASH_BG,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
+            >
+              <div className="absolute inset-0 bg-slate-950/50 pointer-events-none" />
+              <div className="relative z-10 w-full max-w-sm px-5 text-center">
+                <div className="rounded-2xl border border-white/12 bg-slate-900/55 px-6 py-6 shadow-2xl backdrop-blur-sm">
+                  <img
+                    src="/logom.png"
+                    alt=""
+                    className="mx-auto h-9 w-auto object-contain opacity-[0.97] sm:h-11"
+                    decoding="async"
+                  />
+                  {isChannel ? (
+                    <div className="mt-4 flex flex-col items-center gap-1.5">
+                      <div className="flex items-center justify-center gap-2.5">
+                        <div className="h-8 w-8 shrink-0">
+                          <ChannelLogoImg channelName={selectedMatch.name} className="h-8 w-8 object-contain" />
+                        </div>
+                        <span className="line-clamp-2 text-left text-sm font-semibold text-slate-100">
+                          {selectedMatch.name}
+                        </span>
+                      </div>
+                    </div>
+                  ) : teams[0] || teams[1] ? (
+                    <p className="mt-4 line-clamp-2 text-sm font-semibold text-slate-100">
+                      {[teams[0], teams[1]].filter(Boolean).join(' — ')}
+                    </p>
+                  ) : null}
+                  <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-400/90">Yayın açılıyor</p>
+                  <div className="mt-3 h-0.5 w-36 max-w-full overflow-hidden rounded-full bg-slate-800/90">
+                    <div className="relative h-full w-full">
+                      <div className="stream-open-shine" />
+                    </div>
                   </div>
-                )}
-                <div className="text-white text-lg font-medium">Yükleniyor...</div>
-                {!isChannel && teams[1] && (
-                  <div className="animate-spin" style={{animationDirection: 'reverse'}}>
-                    <TeamLogo teamName={teams[1]} logoState={logoState} setLogoState={setLogoState} />
-                  </div>
-                )}
+                </div>
               </div>
             </div>
           ) : isInvalidPlayerSrc ? (

@@ -1,4 +1,5 @@
 import { getCachedWorkingTrgoolDomain } from '../trgoolDomains.js'
+import { trgoolChannelEmbedUrl } from '../src/utils/trgoolEmbedUrl.js'
 
 const DATA_API = 'https://teletv3.top/load'
 
@@ -60,7 +61,7 @@ function parseMatches(html, trgoolDomain) {
         id,
         name,
         time: time || 'Canlı',
-        url: `${trgoolDomain}/matches?id=${id}`
+        url: trgoolChannelEmbedUrl(trgoolDomain, id) || `${trgoolDomain}/channel.html?id=${id}`
       })
     }
   }
@@ -82,7 +83,7 @@ function parseChannels(html, trgoolDomain) {
         id,
         name,
         status: '7/24',
-        url: `${trgoolDomain}/matches?id=${id}`
+        url: trgoolChannelEmbedUrl(trgoolDomain, id) || `${trgoolDomain}/channel.html?id=${id}`
       })
     }
   }

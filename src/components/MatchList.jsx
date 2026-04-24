@@ -1,8 +1,58 @@
 import TeamLogo from './TeamLogo';
 import { parseMatchTeams } from '../utils/teamUtils';
 
-const MatchList = ({ matches, selectedMatch, onMatchSelect, logoState, setLogoState }) => {
+const MatchList = ({
+  matches,
+  totalMatchesCount,
+  sourceMatchTotal = 0,
+  searchQuery = "",
+  onClearSearch,
+  selectedMatch,
+  onMatchSelect,
+  logoState,
+  setLogoState,
+}) => {
+  const fullCount = totalMatchesCount ?? matches.length;
+  const hasSearch = Boolean((searchQuery || "").trim());
+  const isSearchEmpty = matches.length === 0 && fullCount > 0 && hasSearch;
+  const noPlayableHlsInSource =
+    !hasSearch &&
+    matches.length === 0 &&
+    fullCount === 0 &&
+    sourceMatchTotal > 0;
+
   if (matches.length === 0) {
+    if (isSearchEmpty) {
+      return (
+        <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
+          <p className="text-sm font-medium text-slate-300">Aramaya uyan maç yok</p>
+          <p className="mt-1 text-xs text-slate-500">Takım veya lig adını değiştirip tekrar dene</p>
+          {onClearSearch ? (
+            <button
+              type="button"
+              onClick={onClearSearch}
+              className="mt-3 rounded-lg border border-slate-600/50 bg-slate-800/60 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-700/50"
+            >
+              Aramayı temizle
+            </button>
+          ) : null}
+        </div>
+      );
+    }
+    if (noPlayableHlsInSource) {
+      return (
+        <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+          <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-800/80 text-3xl ring-1 ring-slate-600/50">
+            ⚽
+          </div>
+          <p className="text-sm font-medium text-slate-300">Oynatıcıda açılan yayın yok</p>
+          <p className="mt-1 text-xs text-slate-500">
+            Sadece uygulama içi oynatıcıda (HLS) açılanlar listelenir; tarayıcıda açılan / iframe yolu kalan maçlar
+            burada gösterilmez.
+          </p>
+        </div>
+      );
+    }
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
         <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-800/80 text-3xl ring-1 ring-slate-600/50">

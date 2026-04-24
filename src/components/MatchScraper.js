@@ -1,4 +1,5 @@
 import { getPrimaryTrgoolDomain } from '../../trgoolDomains.js'
+import { trgoolChannelEmbedUrl } from '../utils/trgoolEmbedUrl.js'
 
 const DATA_API = 'https://teletv3.top/load'
 
@@ -95,7 +96,7 @@ const parseMatches = (html) => {
         category: categoryMatch ? categoryMatch[1].trim() : '',
         special: specialMatch ? specialMatch[1].trim() : null,
         type: typeMatch ? typeMatch[1] : '',
-        url: `${activeDomain}/matches?id=${id}`
+        url: trgoolChannelEmbedUrl(activeDomain, id) || `${activeDomain}/channel.html?id=${id}`
       })
     }
   }
@@ -124,7 +125,7 @@ const parseChannels = (html) => {
         id,
         name: homeMatch[1].trim(),
         status: '7/24',
-        url: `${activeDomain}/matches?id=${id}`
+        url: trgoolChannelEmbedUrl(activeDomain, id) || `${activeDomain}/channel.html?id=${id}`
       })
     }
   }
@@ -136,17 +137,18 @@ const parseChannels = (html) => {
 // Fallback data
 export const getFallbackData = () => {
   const base = getPrimaryTrgoolDomain()
+  const w = (id) => trgoolChannelEmbedUrl(base, id) || `${base}/channel.html?id=${id}`
   return {
     matches: [
-      { id: 'bein-sports-1', name: 'Fenerbahçe - Galatasaray', time: '20:00', url: `${base}/matches?id=bein-sports-1` },
-      { id: 'bein-sports-2', name: 'Beşiktaş - Trabzonspor', time: '19:00', url: `${base}/matches?id=bein-sports-2` }
+      { id: 'bein-sports-1', name: 'Fenerbahçe - Galatasaray', time: '20:00', url: w('bein-sports-1') },
+      { id: 'bein-sports-2', name: 'Beşiktaş - Trabzonspor', time: '19:00', url: w('bein-sports-2') }
     ],
     channels: [
-      { id: 'bein-sports-1', name: 'BEIN SPORTS 1', status: '7/24', url: `${base}/matches?id=bein-sports-1` },
-      { id: 'bein-sports-2', name: 'BEIN SPORTS 2', status: '7/24', url: `${base}/matches?id=bein-sports-2` },
-      { id: 'bein-sports-3', name: 'BEIN SPORTS 3', status: '7/24', url: `${base}/matches?id=bein-sports-3` },
-      { id: 's-sport', name: 'S SPORT', status: '7/24', url: `${base}/matches?id=s-sport` },
-      { id: 'trt-spor', name: 'TRT SPOR', status: '7/24', url: `${base}/matches?id=trt-spor` }
+      { id: 'bein-sports-1', name: 'BEIN SPORTS 1', status: '7/24', url: w('bein-sports-1') },
+      { id: 'bein-sports-2', name: 'BEIN SPORTS 2', status: '7/24', url: w('bein-sports-2') },
+      { id: 'bein-sports-3', name: 'BEIN SPORTS 3', status: '7/24', url: w('bein-sports-3') },
+      { id: 's-sport', name: 'S SPORT', status: '7/24', url: w('s-sport') },
+      { id: 'trt-spor', name: 'TRT SPOR', status: '7/24', url: w('trt-spor') }
     ]
   }
 }

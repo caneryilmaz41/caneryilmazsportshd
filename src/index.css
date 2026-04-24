@@ -4,9 +4,16 @@
 
 body {
   margin: 0;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
   background-attachment: fixed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stream-open-shine {
+    animation: none;
+    opacity: 0.35;
+  }
 }
 
 * {
@@ -41,4 +48,54 @@ body {
 
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+/* Yayın açılırken tek, hafif ilerleme çizgisi (GPU: transform) */
+@keyframes stream-shine {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
+}
+
+.stream-open-shine {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 42%;
+  border-radius: 9999px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(52, 211, 153, 0.45),
+    transparent
+  );
+  animation: stream-shine 1.55s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Alt kayan şerit: Tailwind v4’te config animasyonu bazen yüklenmiyor; saf CSS = kesin çalışır */
+@keyframes news-ticker-marquee {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.news-ticker-animate {
+  backface-visibility: hidden;
+  align-items: center;
+  animation: news-ticker-marquee 22s linear infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .news-ticker-animate {
+    animation: none;
+  }
 }

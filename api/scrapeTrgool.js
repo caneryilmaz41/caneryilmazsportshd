@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio'
 import { getCachedWorkingTrgoolDomain } from '../trgoolDomains.js'
+import { trgoolChannelEmbedUrl } from '../src/utils/trgoolEmbedUrl.js'
 
 export default async function handler(req, res) {
   try {
@@ -34,7 +35,7 @@ export default async function handler(req, res) {
         const item = {
           id: idMatch[1],
           name,
-          url: `${TRGOOL_DOMAIN}/matches?id=${idMatch[1]}`
+          url: trgoolChannelEmbedUrl(TRGOOL_DOMAIN, idMatch[1]) || `${TRGOOL_DOMAIN}/channel.html?id=${idMatch[1]}`
         }
 
         // Eğer time varsa maç, yoksa kanal

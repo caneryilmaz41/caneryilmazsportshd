@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { scrapeMatches, getFallbackData } from '../components/MatchScraper';
+import { belgeselChannels } from '../data/belgeselChannels';
 
 export const useStreamData = () => {
   const [matches, setMatches] = useState([]);
@@ -43,5 +44,5 @@ export const useStreamData = () => {
     return () => clearInterval(interval);
   }, []);
 
-  return { matches, channels, loading };
+  return { matches, channels, belgeselChannels, loading };
 };

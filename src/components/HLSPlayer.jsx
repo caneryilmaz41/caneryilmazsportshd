@@ -9,8 +9,9 @@ const HLSPlayer = ({ src, onFatalError }) => {
     const video = videoRef.current
     if (!video || !src) return
 
-    // Safari native HLS
+    // Safari native HLS (sessiz autoplay – tarayıcı sesli zorunlu play’e izin vermez)
     if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.muted = true
       video.src = src
       video.play().catch(() => {})
       return
@@ -30,6 +31,7 @@ const HLSPlayer = ({ src, onFatalError }) => {
     hls.attachMedia(video)
 
     hls.on(Hls.Events.MANIFEST_PARSED, () => {
+      video.muted = true
       video.play().catch(() => {})
     })
 

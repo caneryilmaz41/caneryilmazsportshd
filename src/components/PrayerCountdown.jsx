@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
+import { fetchAladhanTimings, PRAYER_NAMES as NAMES } from '../services/prayerTimesAladhan.js';
 
-const NAMES = ['İmsak', 'Güneş', 'Öğle', 'İkindi', 'Akşam', 'Yatsı'];
-const KEYS = ['Imsak', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 const KAABA = { lat: 21.4225, lng: 39.8262 };
 
 function toRad(deg) {
@@ -26,19 +25,6 @@ function calculateQiblaBearing(lat, lng) {
   return normalizeDeg(toDeg(Math.atan2(y, x)));
 }
 
-function fmtDate(d) {
-  return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
-}
-
-async function fetchTimes(date) {
-  const res = await fetch(
-    `https://api.aladhan.com/v1/timings/${fmtDate(date)}?latitude=40.7654&longitude=29.9408&method=13`
-  );
-  const data = await res.json();
-  const t = data.data.timings;
-  return KEYS.map(k => t[k]);
-}
-
 function toSec(timeStr) {
   const [h, m] = timeStr.split(':').map(Number);
   return h * 3600 + m * 60;
@@ -58,8 +44,8 @@ const PrayerCountdown = () => {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    fetchTimes(today).then(setTodayTimes).catch(() => {});
-    fetchTimes(tomorrow).then(t => setTomorrowImsak(t[0])).catch(() => {});
+    fetchAladhanTimings(today).then(setTodayTimes).catch(() => {});
+    fetchAladhanTimings(tomorrow).then((t) => setTomorrowImsak(t[0])).catch(() => {});
   }, []);
 
   useEffect(() => {
