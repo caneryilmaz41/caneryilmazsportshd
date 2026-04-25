@@ -18,6 +18,44 @@ const resolveActiveDomain = async () => {
 
 let activeDomain = getPrimaryTrgoolDomain()
 
+const formatTwoDigits = (value) => String(value).padStart(2, '0')
+
+const normalizeMatchTime = (rawTime, specialTag) => {
+  const value = (rawTime || '').trim()
+  if (!value) return value
+
+  // Kaynakta "GÜNÜN MAÇI" satırlarında 10:00, 10:01 gibi placeholder saatler dönebiliyor.
+  if (specialTag && /^10:0\d$/.test(value)) {
+    return 'Canlı'
+  }
+
+  const withMinutes = value.match(/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i)
+  if (withMinutes) {
+    let hour = Number(withMinutes[1])
+    const minute = withMinutes[2]
+    const meridiem = withMinutes[3]?.toUpperCase()
+
+    if (meridiem === 'AM') {
+      hour = hour === 12 ? 0 : hour
+      return `${formatTwoDigits(hour)}:${minute}`
+    }
+    if (meridiem === 'PM') {
+      hour = hour === 12 ? 12 : hour + 12
+      return `${formatTwoDigits(hour)}:${minute}`
+    }
+
+    return `${formatTwoDigits(hour)}:${minute}`
+  }
+
+  const onlyHour = value.match(/^(\d{1,2})$/)
+  if (onlyHour) {
+    const hour = Number(onlyHour[1])
+    return `${formatTwoDigits(hour)}:00`
+  }
+
+  return value
+}
+
 // Direkt PHP endpoint'lerinden çek
 export const scrapeMatches = async () => {
   try {
@@ -86,15 +124,16 @@ const parseMatches = (html) => {
     const typeMatch = content.match(/data-matchtype="([^"]+)"/)
     
     if (homeMatch && awayMatch && eventMatch) {
+      const special = specialMatch ? specialMatch[1].trim() : null
       matches.push({
         id,
         name: `${homeMatch[1].trim()} - ${awayMatch[1].trim()}`,
         homeLogo: homeLogoMatch ? homeLogoMatch[1] : null,
         awayLogo: awayLogoMatch ? awayLogoMatch[1] : null,
-        time: eventMatch[1].trim(),
+        time: normalizeMatchTime(eventMatch[1], special),
         league: eventMatch[2].trim(),
         category: categoryMatch ? categoryMatch[1].trim() : '',
-        special: specialMatch ? specialMatch[1].trim() : null,
+        special,
         type: typeMatch ? typeMatch[1] : '',
         url: trgoolChannelEmbedUrl(activeDomain, id) || `${activeDomain}/channel.html?id=${id}`
       })
