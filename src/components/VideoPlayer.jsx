@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import TeamLogo from './TeamLogo';
 import { parseMatchTeams } from '../utils/teamUtils';
 import { SPLASH_BG } from './AppSplashScreen';
@@ -10,9 +10,36 @@ const VideoPlayer = ({
   selectedMatch, 
   streamLoading, 
   logoState, 
-  setLogoState
+  setLogoState,
+  playerMatches = [],
+  onRailMatchSelect
 }) => {
   const [reloadKey, setReloadKey] = useState(0);
+  const railPayload = useMemo(
+    () =>
+      (playerMatches || []).map((m) => ({
+        id: m.id,
+        name: m.name,
+        league: m.league || '',
+        time: m.time || '',
+        homeLogo: m.homeLogo || '',
+        awayLogo: m.awayLogo || '',
+      })),
+    [playerMatches]
+  );
+
+  useEffect(() => {
+    const onMessage = (event) => {
+      const data = event?.data;
+      if (!data || data.type !== 'player:select-match') return;
+      if (!data.id || typeof onRailMatchSelect !== 'function') return;
+      const picked = (playerMatches || []).find((m) => m.id === data.id);
+      if (picked) onRailMatchSelect(picked);
+    };
+
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [onRailMatchSelect, playerMatches]);
 
   useEffect(() => {
     setReloadKey(0);
@@ -62,7 +89,7 @@ const VideoPlayer = ({
 
   // HLS ise kendi player.html'imizi kullan, değilse trgool iframe
   const playerSrc = selectedMatch.streamType === 'hls'
-    ? `/player.html?ui=${encodeURIComponent(PLAYER_UI_VERSION)}&src=${encodeURIComponent(selectedMatch.url || '')}`
+    ? `/player.html?ui=${encodeURIComponent(PLAYER_UI_VERSION)}&src=${encodeURIComponent(selectedMatch.url || '')}&rail=${encodeURIComponent(JSON.stringify(railPayload))}&selected=${encodeURIComponent(selectedMatch.id || '')}`
     : (selectedMatch.url || selectedMatch.iframeUrl || '');
   const isInvalidPlayerSrc =
     !playerSrc ||

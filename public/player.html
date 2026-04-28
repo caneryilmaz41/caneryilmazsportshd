@@ -73,6 +73,65 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
 .ctrl-row{display:flex;align-items:center;justify-content:space-between}
 .ctrl-left{display:flex;align-items:center;gap:4px}
 .ctrl-right{display:flex;align-items:center;gap:4px}
+.matches-wrap{position:relative}
+.matches-btn{
+  display:inline-flex;align-items:center;gap:5px;
+  min-width:84px;width:auto;padding:0 10px;height:34px;
+  font-size:12px;font-weight:700;color:#b7f7cf;
+  border:1px solid rgba(34,197,94,.38);border-radius:9px;
+  background:rgba(2,6,23,.78);
+}
+.matches-btn svg{width:14px;height:14px}
+.matches-panel{
+  position:absolute;right:0;bottom:44px;width:min(96vw,860px);
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:16px;
+  background:linear-gradient(90deg,rgba(8,12,10,.92),rgba(15,24,14,.9),rgba(8,12,10,.92));
+  padding:12px;
+  box-shadow:0 12px 28px rgba(0,0,0,.38);
+  opacity:0;transform:translateY(8px) scale(.98);pointer-events:none;
+  transition:opacity .16s ease,transform .16s ease;
+  will-change:opacity,transform;
+}
+.matches-panel.open{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+.matches-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.matches-head strong{font-size:34px;line-height:1;color:#fff}
+.matches-count{font-size:10px;font-weight:700;color:#bbf7d0;background:rgba(34,197,94,.18);padding:2px 7px;border-radius:999px}
+.matches-rail{position:relative;padding:0 30px}
+.matches-list{
+  display:flex;gap:10px;overflow-x:auto;padding-bottom:2px;
+  scroll-behavior:smooth;
+}
+.matches-list::-webkit-scrollbar{display:none}
+.matches-list{scrollbar-width:none}
+.m-item{
+  min-width:150px;max-width:200px;text-align:left;border-radius:10px;
+  border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);
+  color:#fff;padding:10px 10px;cursor:pointer;
+}
+.m-item.active{border-color:rgba(52,211,153,.8);background:rgba(16,185,129,.24)}
+.m-logos{display:flex;align-items:center;gap:6px;margin-bottom:7px}
+.m-logo{
+  width:20px;height:20px;border-radius:6px;object-fit:contain;background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);padding:2px;
+}
+.m-sep{font-size:10px;color:#94a3b8}
+.m-item-title{
+  font-size:12px;font-weight:700;line-height:1.28;display:-webkit-box;
+  -webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.m-item-meta{margin-top:4px;display:flex;justify-content:space-between;gap:6px}
+.m-item-meta span{font-size:10px;color:#cbd5e1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m-item-meta .t{color:#86efac;font-weight:700}
+.rail-nav{
+  position:absolute;top:50%;transform:translateY(-50%);
+  width:26px;height:26px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.55);
+  color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+.rail-nav svg{width:14px;height:14px}
+.rail-nav.prev{left:0}
+.rail-nav.next{right:0}
 
 /* Buttons */
 .c-btn{
@@ -168,6 +227,9 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
   .progress-thumb{transform:translate(50%,-50%) scale(1);width:12px;height:12px}
   .c-btn{width:44px;height:44px;border-radius:12px}
   .c-btn svg{width:24px;height:24px}
+  .matches-btn{height:40px;min-width:84px}
+  .matches-panel{width:min(94vw,700px);bottom:50px}
+  .matches-head strong{font-size:30px}
   .ctrl-left,.ctrl-right{gap:2px}
   .canli-badge{font-size:10px;padding:2px 7px}
   .time-text{font-size:12px}
@@ -182,6 +244,16 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
   .progress-wrap{height:8px}
   .c-btn{width:42px;height:42px}
   .c-btn svg{width:22px;height:22px}
+  .matches-btn{height:38px;min-width:76px;padding:0 8px;font-size:11px}
+  .matches-btn svg{width:13px;height:13px}
+  .matches-panel{width:min(94vw,350px);bottom:48px}
+  .matches-head strong{font-size:24px}
+  .matches-rail{padding:0 24px}
+  .m-item{min-width:132px;max-width:165px;padding:8px}
+  .m-logo{width:18px;height:18px;border-radius:5px}
+  .m-logos{gap:5px;margin-bottom:6px}
+  .rail-nav{width:22px;height:22px}
+  .rail-nav svg{width:12px;height:12px}
   .canli-badge{display:none}
   .vol-slider{width:44px}
   .vol-group:hover .vol-slider{width:44px}
@@ -309,6 +381,29 @@ body.is-android.compact-controls #pipBtn{display:none}
         <div class="canli-badge">CANLI</div>
       </div>
       <div class="ctrl-right">
+        <div class="matches-wrap" id="matchesWrap" style="display:none">
+          <button id="matchesBtn" class="c-btn matches-btn" type="button" title="Maçlar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 7h18M3 12h18M3 17h18" stroke-linecap="round"/>
+            </svg>
+            <span>Maçlar</span>
+          </button>
+          <div class="matches-panel" id="matchesPanel">
+            <div class="matches-head">
+              <strong>Maçlar</strong>
+              <span class="matches-count" id="matchesCount"></span>
+            </div>
+            <div class="matches-rail">
+              <button type="button" class="rail-nav prev" id="mPrev" aria-label="Maçları sola kaydır">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <div class="matches-list" id="matchesList"></div>
+              <button type="button" class="rail-nav next" id="mNext" aria-label="Maçları sağa kaydır">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
         <button id="pipBtn" class="c-btn" onclick="pip()" title="Pencere içinde pencere">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><rect x="11" y="10" width="9" height="6" rx="1" fill="currentColor" opacity=".3"/></svg>
         </button>
@@ -327,11 +422,20 @@ body.is-android.compact-controls #pipBtn{display:none}
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <script>
 const src=new URLSearchParams(location.search).get('src');
+const selectedId=new URLSearchParams(location.search).get('selected')||'';
+const railRaw=new URLSearchParams(location.search).get('rail');
 const V=document.getElementById('v'),W=document.getElementById('wrap');
 const loader=document.getElementById('loader'),errEl=document.getElementById('error');
 const bigPlay=document.getElementById('bigPlay'),unmuteEl=document.getElementById('unmute');
 const pBar=document.getElementById('progressBar'),pBuf=document.getElementById('progressBuf');
 const timeText=document.getElementById('timeText');
+const matchesWrap=document.getElementById('matchesWrap');
+const matchesBtn=document.getElementById('matchesBtn');
+const matchesPanel=document.getElementById('matchesPanel');
+const matchesList=document.getElementById('matchesList');
+const matchesCount=document.getElementById('matchesCount');
+const mPrev=document.getElementById('mPrev');
+const mNext=document.getElementById('mNext');
 let hideT;
 const isAndroid=/android/i.test(navigator.userAgent||'');
 const isTouch=window.matchMedia('(pointer: coarse)').matches;
@@ -371,6 +475,87 @@ W.addEventListener('touchstart',showC,{passive:true});
 if(isAndroid||isTouch){
   // Mobilde ilk acilista kontroller gorunur olsun.
   showC();
+}
+
+/* Matches menu in controls */
+let railData=[];
+try{
+  railData=JSON.parse(decodeURIComponent(railRaw||'[]'));
+  if(!Array.isArray(railData)) railData=[];
+}catch(_e){railData=[]}
+function closeMatches(){matchesPanel.classList.remove('open')}
+function toggleMatches(e){
+  if(e) e.stopPropagation();
+  matchesPanel.classList.toggle('open');
+}
+function makeItem(item){
+  const b=document.createElement('button');
+  b.type='button';
+  b.className='m-item'+(item.id===selectedId?' active':'');
+  const logos=document.createElement('div');
+  logos.className='m-logos';
+  if(item.homeLogo){
+    const h=document.createElement('img');
+    h.className='m-logo';
+    h.src=String(item.homeLogo);
+    h.alt='';
+    h.loading='lazy';
+    h.decoding='async';
+    logos.appendChild(h);
+  }
+  if(item.homeLogo && item.awayLogo){
+    const sep=document.createElement('span');
+    sep.className='m-sep';
+    sep.textContent='vs';
+    logos.appendChild(sep);
+  }
+  if(item.awayLogo){
+    const a=document.createElement('img');
+    a.className='m-logo';
+    a.src=String(item.awayLogo);
+    a.alt='';
+    a.loading='lazy';
+    a.decoding='async';
+    logos.appendChild(a);
+  }
+  if(logos.childNodes.length) b.appendChild(logos);
+
+  const title=document.createElement('div');
+  title.className='m-item-title';
+  title.textContent=String(item.name||'Canli yayin');
+  b.appendChild(title);
+
+  const meta=document.createElement('div');
+  meta.className='m-item-meta';
+  const lg=document.createElement('span');
+  lg.textContent=String(item.league||'Yayin');
+  const tm=document.createElement('span');
+  tm.className='t';
+  tm.textContent=String(item.time||'CANLI');
+  meta.appendChild(lg);
+  meta.appendChild(tm);
+  b.appendChild(meta);
+
+  b.addEventListener('click',function(ev){
+    ev.stopPropagation();
+    window.parent.postMessage({type:'player:select-match',id:item.id},'*');
+    closeMatches();
+  });
+  return b;
+}
+if(railData.length){
+  matchesWrap.style.display='block';
+  matchesCount.textContent=railData.length+' yayin';
+  const frag=document.createDocumentFragment();
+  railData.forEach(function(item){ if(item&&item.id) frag.appendChild(makeItem(item)); });
+  matchesList.appendChild(frag);
+  matchesBtn.addEventListener('click',toggleMatches);
+  W.addEventListener('click',closeMatches);
+  matchesPanel.addEventListener('click',function(e){e.stopPropagation()});
+  if(mPrev&&mNext){
+    mPrev.addEventListener('click',function(e){e.stopPropagation();matchesList.scrollBy({left:-220,behavior:'smooth'})});
+    mNext.addEventListener('click',function(e){e.stopPropagation();matchesList.scrollBy({left:220,behavior:'smooth'})});
+  }
 }
 
 /* Play */

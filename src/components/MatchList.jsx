@@ -45,11 +45,8 @@ const MatchList = ({
           <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-800/80 text-3xl ring-1 ring-slate-600/50">
             ⚽
           </div>
-          <p className="text-sm font-medium text-slate-300">Oynatıcıda açılan yayın yok</p>
-          <p className="mt-1 text-xs text-slate-500">
-            Sadece uygulama içi oynatıcıda (HLS) açılanlar listelenir; tarayıcıda açılan / iframe yolu kalan maçlar
-            burada gösterilmez.
-          </p>
+          <p className="text-sm font-medium text-slate-300">Şu an uygun canlı maç bulunamadı</p>
+          <p className="mt-1 text-xs text-slate-500">Birazdan tekrar kontrol ederek yeni yayınları görebilirsin</p>
         </div>
       );
     }
