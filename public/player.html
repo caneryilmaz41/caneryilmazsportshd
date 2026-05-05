@@ -422,6 +422,7 @@ body.is-android.compact-controls #pipBtn{display:none}
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <script>
 const src=new URLSearchParams(location.search).get('src');
+const fallback=new URLSearchParams(location.search).get('fallback');
 const selectedId=new URLSearchParams(location.search).get('selected')||'';
 const railRaw=new URLSearchParams(location.search).get('rail');
 const V=document.getElementById('v'),W=document.getElementById('wrap');
@@ -443,7 +444,15 @@ if(isAndroid) document.body.classList.add('is-android');
 if(isAndroid && window.innerHeight <= 560) document.body.classList.add('compact-controls');
 
 function hide(){loader.classList.add('hidden')}
-function err(){hide();errEl.classList.add('show')}
+function err(){
+  hide();
+  if(fallback && /^https?:\/\//i.test(fallback) && !/\/player\.html/i.test(fallback)){
+    // HLS acilmazsa otomatik olarak iframe kaynagina don.
+    location.replace(fallback);
+    return;
+  }
+  errEl.classList.add('show');
+}
 function fmt(s){const m=Math.floor(s/60),ss=Math.floor(s%60);return m+':'+(ss<10?'0':'')+ss}
 
 /* Icons */

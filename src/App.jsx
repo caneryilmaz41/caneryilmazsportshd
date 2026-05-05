@@ -1,15 +1,18 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import Header from './components/Header';
 import PrayerCountdown from './components/PrayerCountdown';
 import Footer from './components/Footer';
 import VideoPlayer from './components/VideoPlayer';
 import MatchList from './components/MatchList';
+import ChannelList from './components/ChannelList';
 import LiveScoresSlider from './components/LiveScoresSlider';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import AppSplashScreen from './components/AppSplashScreen';
 import StandaloneRefreshButton from './components/StandaloneRefreshButton';
 import NewsTicker from './components/NewsTicker';
 import ScrollToTopButton from './components/ScrollToTopButton';
+import TabSelector from './components/TabSelector';
+import ChannelHeaderSlider from './components/ChannelHeaderSlider';
 
 import { useStreamData } from './hooks/useStreamData';
 import { useStreamPlayer } from './hooks/useStreamPlayer';
@@ -17,9 +20,12 @@ import { useRecentPicks } from './hooks/useRecentPicks';
 import { parseMatchTeams } from './utils/teamUtils';
 import RecentPicks from './components/RecentPicks';
 import { useHlsMatchList } from './hooks/useHlsMatchList';
+import { getFilteredChannels } from './utils/channelFilter';
 
 function App() {
   const [matchSearch, setMatchSearch] = useState("");
+  const [channelKind, setChannelKind] = useState('tv');
+  const [activeTab, setActiveTab] = useState('matches');
   const [logoState, setLogoState] = useState({});
   const [showOnboarding, setShowOnboarding] = useState(() => {
     try {
@@ -29,13 +35,31 @@ function App() {
     }
   });
   
-  const { matches, loading } = useStreamData();
+  const { matches, channels, belgeselChannels, loading } = useStreamData();
   const { hlsMatches } = useHlsMatchList(matches);
+  const visibleMatches = useMemo(() => {
+    // HLS probe boş dönerse liste tamamen kaybolmasın; ham maçları fallback göster.
+    return hlsMatches.length > 0 ? hlsMatches : matches;
+  }, [hlsMatches, matches]);
+  const safeChannels = useMemo(() => {
+    const merged = [...(channels || []), ...(belgeselChannels || [])];
+    return getFilteredChannels(merged);
+  }, [channels, belgeselChannels]);
+
+  const tvSliderChannels = useMemo(() => getFilteredChannels(channels || []), [channels]);
+  const belgeselSliderChannels = useMemo(
+    () => getFilteredChannels(belgeselChannels || []),
+    [belgeselChannels]
+  );
+  const headerSliderChannels = useMemo(
+    () => (channelKind === 'tv' ? tvSliderChannels : belgeselSliderChannels),
+    [channelKind, tvSliderChannels, belgeselSliderChannels]
+  );
 
   const filteredMatches = useMemo(() => {
     const q = matchSearch.trim().toLowerCase();
-    if (!q) return hlsMatches;
-    return hlsMatches.filter((m) => {
+    if (!q) return visibleMatches;
+    return visibleMatches.filter((m) => {
       const name = m.name?.toLowerCase() || "";
       const league = m.league?.toLowerCase() || "";
       const cat = m.category?.toLowerCase() || "";
@@ -50,7 +74,17 @@ function App() {
         t1.includes(q)
       );
     });
-  }, [hlsMatches, matchSearch]);
+  }, [visibleMatches, matchSearch]);
+  const filteredChannels = useMemo(() => {
+    const q = matchSearch.trim().toLowerCase();
+    if (!q) return safeChannels;
+    return safeChannels.filter((c) => {
+      const name = c.name?.toLowerCase() || "";
+      const status = c.status?.toLowerCase() || "";
+      const cat = c.category?.toLowerCase() || "";
+      return name.includes(q) || status.includes(q) || cat.includes(q);
+    });
+  }, [safeChannels, matchSearch]);
   const {
     selectedMatch,
     streamLoading,
@@ -63,6 +97,10 @@ function App() {
     addPick({ id: m.id, name: m.name, kind: 'match' });
     handleMatchSelect(m);
   };
+  const selectChannel = (c) => {
+    addPick({ id: c.id, name: c.name, kind: 'channel' });
+    handleMatchSelect(c);
+  };
 
   const dismissOnboarding = () => {
     setShowOnboarding(false);
@@ -71,14 +109,14 @@ function App() {
 
   const listPanelLoading = loading;
   const playerRailMatches = useMemo(() => {
-    const source = filteredMatches.length > 0 ? filteredMatches : hlsMatches;
+    const source = filteredMatches.length > 0 ? filteredMatches : visibleMatches;
     if (!source.length) return [];
 
     const selectedId = selectedMatch?.id;
     const selectedItem = selectedId ? source.find((m) => m.id === selectedId) : null;
     const rest = source.filter((m) => m.id !== selectedId).slice(0, 7);
     return selectedItem ? [selectedItem, ...rest] : source.slice(0, 8);
-  }, [filteredMatches, hlsMatches, selectedMatch]);
+  }, [filteredMatches, visibleMatches, selectedMatch]);
 
   return (
     <div className="min-h-screen pb-9 text-white antialiased sm:pb-10">
@@ -87,6 +125,20 @@ function App() {
       <PrayerCountdown />
 
       <div className="mx-auto max-w-[1600px] px-3 pt-4 lg:px-6 lg:pt-6">
+        <div className="mb-4 -mx-3 sm:mx-0 lg:-mx-6 lg:mb-5">
+          <ChannelHeaderSlider
+            channels={headerSliderChannels}
+            selectedMatch={selectedMatch}
+            onSelect={(c) => {
+              setActiveTab('channels');
+              selectChannel(c);
+            }}
+            channelKind={channelKind}
+            onChannelKind={setChannelKind}
+            showKindTabs={belgeselSliderChannels.length > 0}
+            loading={loading}
+          />
+        </div>
         {/*
           Mobil: seçim yokken oynatıcı yok; maç/kanal seçilince oynatıcı üstte, liste altında.
           xl+: sol maç/kanallar | orta oynatıcı | sağ skorlar (seçim yokken de orta panel boş/placeholder)
@@ -97,16 +149,26 @@ function App() {
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-600/45 bg-gradient-to-b from-slate-800/95 to-slate-900/90 shadow-xl ring-1 ring-white/[0.04]">
               <div className="flex shrink-0 items-center justify-between border-b border-slate-600/40 bg-slate-900/40 px-3 py-2 backdrop-blur-sm">
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                  Canlı yayınlar
+                  {activeTab === 'matches' ? 'Canlı maçlar' : 'Canlı kanallar'}
                 </span>
                 <span className="rounded-md bg-slate-800/80 px-2 py-0.5 text-[10px] font-bold tabular-nums text-slate-500">
-                  {matchSearch.trim()
-                    ? `${filteredMatches.length}/${hlsMatches.length}`
-                    : hlsMatches.length}
+                  {activeTab === 'matches'
+                    ? (matchSearch.trim()
+                      ? `${filteredMatches.length}/${visibleMatches.length}`
+                      : visibleMatches.length)
+                    : (matchSearch.trim()
+                      ? `${filteredChannels.length}/${safeChannels.length}`
+                      : safeChannels.length)}
                 </span>
               </div>
 
               <div className="shrink-0 space-y-2 border-b border-slate-700/35 bg-slate-900/30 px-2 py-2">
+                <TabSelector
+                  activeTab={activeTab}
+                  onTabChange={setActiveTab}
+                  matchesCount={visibleMatches.length}
+                  channelsCount={safeChannels.length}
+                />
                 {showOnboarding ? (
                   <div className="flex items-start justify-between gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 py-1.5">
                     <p className="text-[11px] text-emerald-200">Bir maç seç, yayın player alanında hemen açılır.</p>
@@ -158,23 +220,41 @@ function App() {
                   className="stream-panel-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain"
                   style={{ WebkitOverflowScrolling: 'touch' }}
                 >
-                  <RecentPicks
-                    kind="match"
-                    recent={recent}
-                    list={hlsMatches}
-                    onPick={selectMatch}
-                  />
-                  <MatchList
-                    matches={filteredMatches}
-                    totalMatchesCount={hlsMatches.length}
-                    sourceMatchTotal={matches.length}
-                    searchQuery={matchSearch}
-                    onClearSearch={() => setMatchSearch("")}
-                    selectedMatch={selectedMatch}
-                    onMatchSelect={selectMatch}
-                    logoState={logoState}
-                    setLogoState={setLogoState}
-                  />
+                  {activeTab === 'matches' ? (
+                    <>
+                      <RecentPicks
+                        kind="match"
+                        recent={recent}
+                        list={visibleMatches}
+                        onPick={selectMatch}
+                      />
+                      <MatchList
+                        matches={filteredMatches}
+                        totalMatchesCount={visibleMatches.length}
+                        sourceMatchTotal={matches.length}
+                        searchQuery={matchSearch}
+                        onClearSearch={() => setMatchSearch("")}
+                        selectedMatch={selectedMatch}
+                        onMatchSelect={selectMatch}
+                        logoState={logoState}
+                        setLogoState={setLogoState}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <RecentPicks
+                        kind="channel"
+                        recent={recent}
+                        list={safeChannels}
+                        onPick={selectChannel}
+                      />
+                      <ChannelList
+                        channels={filteredChannels}
+                        selectedMatch={selectedMatch}
+                        onChannelSelect={selectChannel}
+                      />
+                    </>
+                  )}
                 </div>
               )}
             </div>

@@ -89,7 +89,7 @@ const VideoPlayer = ({
 
   // HLS ise kendi player.html'imizi kullan, değilse trgool iframe
   const playerSrc = selectedMatch.streamType === 'hls'
-    ? `/player.html?ui=${encodeURIComponent(PLAYER_UI_VERSION)}&src=${encodeURIComponent(selectedMatch.url || '')}&rail=${encodeURIComponent(JSON.stringify(railPayload))}&selected=${encodeURIComponent(selectedMatch.id || '')}`
+    ? `/player.html?ui=${encodeURIComponent(PLAYER_UI_VERSION)}&src=${encodeURIComponent(selectedMatch.url || '')}&fallback=${encodeURIComponent(selectedMatch.iframeUrl || '')}&rail=${encodeURIComponent(JSON.stringify(railPayload))}&selected=${encodeURIComponent(selectedMatch.id || '')}`
     : (selectedMatch.url || selectedMatch.iframeUrl || '');
   const isInvalidPlayerSrc =
     !playerSrc ||

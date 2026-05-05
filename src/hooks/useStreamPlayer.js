@@ -7,7 +7,14 @@ export const useStreamPlayer = () => {
 
   const handleMatchSelect = async (match) => {
     setStreamLoading(true);
-    setSelectedMatch({ ...match, url: null, streamType: null, iframeUrl: null });
+    // Çözümleme gecikirse kullanıcı boş ekran görmesin: mevcut URL ile hemen aç.
+    const fallbackUrl = match?.url || null;
+    setSelectedMatch({
+      ...match,
+      url: fallbackUrl,
+      streamType: fallbackUrl ? 'iframe' : null,
+      iframeUrl: fallbackUrl,
+    });
     try {
       const result = await getStreamUrl(match);
       setSelectedMatch({

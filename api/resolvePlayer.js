@@ -1,6 +1,30 @@
 import { getCachedWorkingTrgoolDomain } from '../trgoolDomains.js'
 
 const TIMEOUT = 10_000
+const M3U8_PROBE_MS = 8000
+
+/**
+ * teletv3 bazen ölü / 404 playlist döner; HLS patlayınca player.html tam TrGool sayfasına düşer.
+ * Kaynak seçerken manifest’in gerçekten açıldığını doğrula.
+ */
+async function verifyM3u8Reachable(url) {
+  if (!url || typeof url !== 'string') return false
+  const u = url.trim().replace(/edge\d+/g, 'edge3')
+  if (!/^https?:\/\//i.test(u)) return false
+  try {
+    let res = await fetch(u, { method: 'HEAD', redirect: 'follow', signal: AbortSignal.timeout(M3U8_PROBE_MS) })
+    if (res.ok) return true
+    res = await fetch(u, {
+      method: 'GET',
+      redirect: 'follow',
+      signal: AbortSignal.timeout(M3U8_PROBE_MS),
+      headers: { Range: 'bytes=0-8191' },
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
 
 function extractM3u8List(html) {
   if (!html || typeof html !== 'string') return []
@@ -8,19 +32,6 @@ function extractM3u8List(html) {
   const m = html.match(re)
   if (!m) return []
   return [...new Set(m.map((u) => u.replace(/&amp;/g, '&').replace(/\\u0026/g, '&').trim()))]
-}
-
-function pickBestM3u8(candidates) {
-  if (!candidates.length) return null
-  const scored = candidates.map((u) => ({
-    u,
-    s:
-      (u.includes('edge') ? 3 : 0) +
-      (u.includes('live') || u.includes('hls') ? 2 : 0) +
-      (u.startsWith('https:') ? 1 : 0),
-  }))
-  scored.sort((a, b) => b.s - a.s)
-  return scored[0].u
 }
 
 const htmlHeaders = {
@@ -62,8 +73,23 @@ async function tryM3u8FromTrgoolPages(id) {
       all.push(...extractM3u8List(pr.value))
     }
   }
-  const best = pickBestM3u8(all)
-  return best ? best.replace(/edge\d+/g, 'edge3') : null
+  const uniq = [...new Set(all)]
+  if (!uniq.length) return null
+  const scored = uniq.map((raw) => {
+    const n = raw.replace(/edge\d+/g, 'edge3')
+    return {
+      u: n,
+      s:
+        (n.includes('edge') ? 3 : 0) +
+        (n.includes('live') || n.includes('hls') ? 2 : 0) +
+        (n.startsWith('https:') ? 1 : 0),
+    }
+  })
+  scored.sort((a, b) => b.s - a.s)
+  for (const { u } of scored) {
+    if (await verifyM3u8Reachable(u)) return u
+  }
+  return null
 }
 
 export default async function handler(req, res) {
@@ -81,7 +107,7 @@ export default async function handler(req, res) {
   let teletvNonM3u8 = null
   let cinemaNonM3u8 = null
 
-  // 1. teletv3
+  // 1. teletv3 (playlist ölüyse atla → cinema / trgool-html)
   try {
     const r = await fetch(
       `https://teletv3.top/load/yayinlink.php?id=${encodeURIComponent(id)}`,
@@ -92,9 +118,10 @@ export default async function handler(req, res) {
       const raw = data?.deismackanal
       if (typeof raw === 'string' && raw.includes('m3u8')) {
         const url = raw.replace(/edge\d+/g, 'edge3')
-        return res.json({ embedUrl: url, type: 'hls', source: 'teletv3', success: true })
-      }
-      if (typeof raw === 'string' && /^https?:\/\//i.test(raw.trim())) {
+        if (await verifyM3u8Reachable(url)) {
+          return res.json({ embedUrl: url, type: 'hls', source: 'teletv3', success: true })
+        }
+      } else if (typeof raw === 'string' && /^https?:\/\//i.test(raw.trim())) {
         teletvNonM3u8 = raw.trim()
       }
     }
@@ -126,16 +153,18 @@ export default async function handler(req, res) {
       if (data?.URL) {
         const u = String(data.URL)
         if (u.includes('m3u8')) {
-          return res.json({ embedUrl: u.replace(/edge\d+/g, 'edge3'), type: 'hls', source: 'cinema', success: true })
-        }
-        if (/^https?:\/\//i.test(u)) {
+          const url = u.replace(/edge\d+/g, 'edge3')
+          if (await verifyM3u8Reachable(url)) {
+            return res.json({ embedUrl: url, type: 'hls', source: 'cinema', success: true })
+          }
+        } else if (/^https?:\/\//i.test(u)) {
           cinemaNonM3u8 = u
         }
       }
     }
   } catch {}
 
-  // 3. trgool sayfa HTML'inden m3u8 (iframe yerine HLS)
+  // 3. trgool sayfa HTML'inden m3u8 — adaylar içinden erişilebilir olanı seç
   try {
     const fromTrgool = await tryM3u8FromTrgoolPages(id)
     if (fromTrgool) {

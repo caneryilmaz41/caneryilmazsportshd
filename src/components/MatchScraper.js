@@ -2,16 +2,27 @@ import { getPrimaryTrgoolDomain } from '../../trgoolDomains.js'
 import { trgoolChannelEmbedUrl } from '../utils/trgoolEmbedUrl.js'
 
 const DATA_API = 'https://teletv3.top/load'
+const FALLBACK_API_ORIGIN = 'https://caneryilmazsportshd.vercel.app'
+
+const getApiBaseCandidates = () => {
+  const envBase = (import.meta.env.VITE_PUBLIC_API_ORIGIN || '').trim().replace(/\/$/, '')
+  const out = ['']
+  if (envBase) out.push(envBase)
+  if (!out.includes(FALLBACK_API_ORIGIN)) out.push(FALLBACK_API_ORIGIN)
+  return out
+}
 
 const resolveActiveDomain = async () => {
-  try {
-    const res = await fetch('/api/trgoolDomain')
-    if (res.ok) {
-      const data = await res.json()
-      if (data?.domain) return data.domain
+  for (const base of getApiBaseCandidates()) {
+    try {
+      const res = await fetch(`${base}/api/trgoolDomain`)
+      if (res.ok) {
+        const data = await res.json()
+        if (data?.domain) return data.domain
+      }
+    } catch {
+      /* local /api veya fallback origin cevap vermezse sıradaki aday */
     }
-  } catch {
-    /* Vite dev: /api yok; production dışı */
   }
   return getPrimaryTrgoolDomain()
 }

@@ -1,16 +1,16 @@
 /**
- * trgooltv{N}.top — numara taranır; env yokken varsayılan olarak 85 değil,
- * makul bir "ipucu" (62) kullanılır. Sadece HTTP 200 yetmez; sayfada gerçek
- * Trgool içeriği (changePlayer / single-match vb.) aranır.
+ * trgooltv{N}.top — numara taranır; env yokken "ipucu" ile güncel kanon siteye
+ * öncelik verilir (birden fazla ayna yanıt verebiliyor; yüksek numara her
+ * zaman doğru olmayabilir).
  *
  * Sabitlemek için: TRGOOL_DOMAIN veya VITE_TRGOOL_DOMAIN
  * Aralık: TRGOOL_SCAN_HIGH / TRGOOL_SCAN_LOW (veya VITE_*)
- * Env yokken fallback numara: TRGOOL_HINT (varsayılan 62)
+ * Env yokken fallback numara: TRGOOL_HINT / VITE_TRGOOL_HINT
  */
 
-const DEFAULT_SCAN_HIGH = 75
-const DEFAULT_SCAN_LOW = 55
-const DEFAULT_HINT_N = 63
+const DEFAULT_SCAN_HIGH = 85
+const DEFAULT_SCAN_LOW = 50
+const DEFAULT_HINT_N = 68
 const BATCH_SIZE = 10
 const PICK_TTL_MS = 60_000
 const VERIFY_TIMEOUT_MS = 5000
@@ -100,7 +100,21 @@ export async function getCachedWorkingTrgoolDomain(fetchImpl = fetch) {
   return domain
 }
 
+function pickWinnerN(winners, hintN) {
+  if (!winners.length) return null
+  if (winners.length === 1) return winners[0]
+  return winners.reduce((best, n) =>
+    Math.abs(n - hintN) < Math.abs(best - hintN) ? n : best
+  )
+}
+
 export async function pickWorkingTrgoolDomain(fetchImpl = fetch) {
+  const hintN = getHintN()
+  const hinted = buildTrgoolUrl(hintN)
+  if (await probeTrgoolMatchPage(hinted, fetchImpl, PROBE_TIMEOUT_MS)) {
+    return hinted
+  }
+
   const { high, low } = getScanRange()
 
   for (let batchTop = high; batchTop >= low; batchTop -= BATCH_SIZE) {
@@ -118,7 +132,7 @@ export async function pickWorkingTrgoolDomain(fetchImpl = fetch) {
 
     const winners = outcomes.map((o, i) => (o !== null ? nums[i] : null)).filter((x) => x !== null)
     if (winners.length > 0) {
-      const best = Math.max(...winners)
+      const best = pickWinnerN(winners, hintN)
       return buildTrgoolUrl(best)
     }
   }

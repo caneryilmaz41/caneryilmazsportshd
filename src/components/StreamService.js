@@ -1,64 +1,95 @@
 import { getPrimaryTrgoolDomain } from '../../trgoolDomains.js'
-import { trgoolChannelEmbedUrl, isStreamPageOnTrgoolDomain } from '../utils/trgoolEmbedUrl.js'
+import { trgoolChannelEmbedUrl } from '../utils/trgoolEmbedUrl.js'
 
 let cachedDomain = null
+const FALLBACK_API_ORIGIN = 'https://caneryilmazsportshd.vercel.app'
 const isHlsUrl = (url) => typeof url === 'string' && url.toLowerCase().includes('m3u8')
 const isHttpUrl = (u) => typeof u === 'string' && /^https?:\/\//i.test(u.trim())
 
-/** Harici oynatıcı sayfaları iframe'de açma; trgool kabuğunda aynı id ile oynat */
-function resolveIframePage(candidateHttpUrl, domain, id) {
-  const shell = trgoolChannelEmbedUrl(domain, id) || `${String(domain).replace(/\/$/, '')}/channel.html?id=${encodeURIComponent(String(id))}`
-  if (!candidateHttpUrl || !isHttpUrl(candidateHttpUrl) || isHlsUrl(candidateHttpUrl)) {
-    return { pageUrl: shell, usedShell: true }
-  }
-  if (isStreamPageOnTrgoolDomain(candidateHttpUrl, domain)) {
-    return { pageUrl: String(candidateHttpUrl).trim(), usedShell: false }
-  }
-  return { pageUrl: shell, usedShell: true }
+function getApiBaseCandidates() {
+  const envBase = (import.meta.env.VITE_PUBLIC_API_ORIGIN || '').trim().replace(/\/$/, '')
+  const out = ['']
+  if (envBase) out.push(envBase)
+  if (!out.includes(FALLBACK_API_ORIGIN)) out.push(FALLBACK_API_ORIGIN)
+  return out
 }
 
 const resolveActiveDomain = async () => {
   if (cachedDomain) return cachedDomain
-  try {
-    const res = await fetch('/api/trgoolDomain')
-    if (res.ok) {
-      const data = await res.json()
-      if (data?.domain) { cachedDomain = data.domain; return cachedDomain }
-    }
-  } catch {}
+  for (const base of getApiBaseCandidates()) {
+    try {
+      const res = await fetch(`${base}/api/trgoolDomain`)
+      if (res.ok) {
+        const data = await res.json()
+        if (data?.domain) { cachedDomain = data.domain; return cachedDomain }
+      }
+    } catch {}
+  }
   cachedDomain = getPrimaryTrgoolDomain()
   return cachedDomain
+}
+
+async function resolveFromApi(id) {
+  for (const base of getApiBaseCandidates()) {
+    try {
+      const res = await fetch(`${base}/api/resolvePlayer?id=${encodeURIComponent(id)}`)
+      if (!res.ok) continue
+      const data = await res.json()
+      if (data?.embedUrl && data.success) return data
+    } catch {}
+  }
+  return null
+}
+
+const toHttps = (u) => (typeof u === 'string' ? u.trim().replace(/^http:\/\//i, 'https://') : u)
+
+const M3U8_PROBE_MS = 8000
+
+/** Yerel /api yokken teletv3 ölü m3u8 döndüğünde HLS+hata+TrGool düşüşünü engeller */
+async function verifyM3u8ReachableBrowser(url) {
+  const u = url.trim().replace(/edge\d+/g, 'edge3')
+  if (!/^https?:\/\//i.test(u)) return false
+  try {
+    let res = await fetch(u, { method: 'HEAD', redirect: 'follow', signal: AbortSignal.timeout(M3U8_PROBE_MS) })
+    if (res.ok) return true
+    res = await fetch(u, {
+      method: 'GET',
+      redirect: 'follow',
+      signal: AbortSignal.timeout(M3U8_PROBE_MS),
+      headers: { Range: 'bytes=0-8191' },
+    })
+    return res.ok
+  } catch {
+    return false
+  }
 }
 
 export const getStreamUrl = async (match) => {
   const id = match?.id || 'bein-sports-1'
   const domain = await resolveActiveDomain()
-  const embedPageUrl = trgoolChannelEmbedUrl(domain, id) || `${domain}/channel.html?id=${id}`
+  const embedPageUrl =
+    trgoolChannelEmbedUrl(domain, id) ||
+    `${String(domain).replace(/\/$/, '')}/channel.html?id=${encodeURIComponent(String(id))}`
 
   if (match?.hlsUrl && isHlsUrl(String(match.hlsUrl))) {
     return {
-      url: String(match.hlsUrl).trim().replace(/edge\d+/g, 'edge3'),
+      url: toHttps(String(match.hlsUrl)).replace(/edge\d+/g, 'edge3'),
       type: 'hls',
       iframeUrl: embedPageUrl,
     }
   }
 
-  // 1) Vercel API → m3u8 veya (HTTP ise) trgool ile aynı host değilse kabuk URL
-  try {
-    const res = await fetch(`/api/resolvePlayer?id=${encodeURIComponent(id)}`)
-    if (res.ok) {
-      const data = await res.json()
-      if (data?.embedUrl && data.success) {
-        if (isHlsUrl(data.embedUrl)) {
-          return { url: data.embedUrl, type: 'hls', iframeUrl: embedPageUrl }
-        }
-        if (isHttpUrl(data.embedUrl)) {
-          const { pageUrl } = resolveIframePage(data.embedUrl, domain, id)
-          return { url: pageUrl, type: 'iframe', iframeUrl: pageUrl }
-        }
-      }
+  // 1) API (local proxy or fallback origin) → m3u8 veya iframe
+  const apiData = await resolveFromApi(id)
+  if (apiData?.embedUrl) {
+    if (isHlsUrl(apiData.embedUrl)) {
+      return { url: toHttps(apiData.embedUrl), type: 'hls', iframeUrl: embedPageUrl }
     }
-  } catch {}
+    if (isHttpUrl(apiData.embedUrl)) {
+      // HTTP cevap /matches vb. olabilir; iframe'de yalnızca channel.html (embedPageUrl)
+      return { url: embedPageUrl, type: 'iframe', iframeUrl: embedPageUrl }
+    }
+  }
 
   // 2) Client-side teletv3 → m3u8 veya harici oynatıcı sayfası
   try {
@@ -67,11 +98,14 @@ export const getStreamUrl = async (match) => {
       const data = await res.json()
       const link = data?.deismackanal
       if (isHlsUrl(link)) {
-        return { url: String(link).replace(/edge\d+/g, 'edge3'), type: 'hls', iframeUrl: embedPageUrl }
+        const playlist = toHttps(String(link)).replace(/edge\d+/g, 'edge3')
+        if (await verifyM3u8ReachableBrowser(playlist)) {
+          return { url: playlist, type: 'hls', iframeUrl: embedPageUrl }
+        }
+        return { url: embedPageUrl, type: 'iframe', iframeUrl: embedPageUrl }
       }
       if (isHttpUrl(link) && !isHlsUrl(link)) {
-        const { pageUrl } = resolveIframePage(String(link).trim(), domain, id)
-        return { url: pageUrl, type: 'iframe', iframeUrl: pageUrl }
+        return { url: embedPageUrl, type: 'iframe', iframeUrl: embedPageUrl }
       }
     }
   } catch {}
