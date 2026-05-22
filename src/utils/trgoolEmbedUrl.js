@@ -2,6 +2,11 @@
  * trgool sitelerinde tam sayfa (/matches) yerine yalnızca oynatıcı / iframe dostu
  * channel.html kullanılır; aksi halde sitede header/nav iç içe açılır.
  */
+export function isTrgoolSiteUrl(url) {
+  if (!url || typeof url !== 'string') return false;
+  return /trgooltv\d*\.top/i.test(url.trim());
+}
+
 export function trgoolChannelEmbedUrl(domain, id) {
   if (!domain || id == null || id === '') return null;
   const b = String(domain).replace(/\/$/, '');

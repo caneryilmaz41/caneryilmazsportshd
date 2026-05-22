@@ -7,28 +7,27 @@ export const useStreamPlayer = () => {
 
   const handleMatchSelect = async (match) => {
     setStreamLoading(true);
-    // Çözümleme gecikirse kullanıcı boş ekran görmesin: mevcut URL ile hemen aç.
-    const fallbackUrl = match?.url || null;
+    // TrGool channel.html'i önce yükleme — tam site iframe'de açılıyordu.
     setSelectedMatch({
       ...match,
-      url: fallbackUrl,
-      streamType: fallbackUrl ? 'iframe' : null,
-      iframeUrl: fallbackUrl,
+      url: null,
+      streamType: null,
+      iframeUrl: null,
     });
     try {
       const result = await getStreamUrl(match);
       setSelectedMatch({
         ...match,
-        url: result?.url || match.url || null,
-        streamType: result?.type || 'iframe',
-        iframeUrl: result?.iframeUrl || match.url || null
+        url: result?.url || null,
+        streamType: result?.type || 'hls',
+        iframeUrl: result?.iframeUrl || null,
       });
     } catch {
       setSelectedMatch({
         ...match,
-        url: match.url || null,
-        streamType: 'iframe',
-        iframeUrl: match.url || null
+        url: null,
+        streamType: 'hls',
+        iframeUrl: null,
       });
     } finally {
       setStreamLoading(false);

@@ -3,6 +3,7 @@ import TeamLogo from './TeamLogo';
 import { parseMatchTeams } from '../utils/teamUtils';
 import { SPLASH_BG } from './AppSplashScreen';
 import ChannelLogoImg from './ChannelLogoImg';
+import { isTrgoolSiteUrl } from '../utils/trgoolEmbedUrl';
 
 const PLAYER_UI_VERSION = 'android-ui-fix-2026-04-15';
 
@@ -87,10 +88,11 @@ const VideoPlayer = ({
                           selectedMatch.name.toLowerCase().includes('kanal');
   const isChannel = !hasMatchSeparator && (looksLikeChannel || (!teams[0] || !teams[1]));
 
-  // HLS ise kendi player.html'imizi kullan, değilse trgool iframe
-  const playerSrc = selectedMatch.streamType === 'hls'
-    ? `/player.html?ui=${encodeURIComponent(PLAYER_UI_VERSION)}&src=${encodeURIComponent(selectedMatch.url || '')}&fallback=${encodeURIComponent(selectedMatch.iframeUrl || '')}&rail=${encodeURIComponent(JSON.stringify(railPayload))}&selected=${encodeURIComponent(selectedMatch.id || '')}`
-    : (selectedMatch.url || selectedMatch.iframeUrl || '');
+  const hlsSrc = selectedMatch.url && !isTrgoolSiteUrl(selectedMatch.url) ? selectedMatch.url : '';
+  const useOwnPlayer = selectedMatch.streamType === 'hls' && hlsSrc;
+  const playerSrc = useOwnPlayer
+    ? `/player.html?ui=${encodeURIComponent(PLAYER_UI_VERSION)}&src=${encodeURIComponent(hlsSrc)}&rail=${encodeURIComponent(JSON.stringify(railPayload))}&selected=${encodeURIComponent(selectedMatch.id || '')}`
+    : '';
   const isInvalidPlayerSrc =
     !playerSrc ||
     playerSrc === '/' ||

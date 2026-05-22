@@ -104,10 +104,15 @@ export default async function handler(req, res) {
     Accept: 'text/html,application/json,*/*',
   }
 
-  let teletvNonM3u8 = null
-  let cinemaNonM3u8 = null
+  // 1. trgool HTML (güncel domain; teletv3 ölü playlist verebiliyor)
+  try {
+    const fromTrgool = await tryM3u8FromTrgoolPages(id)
+    if (fromTrgool) {
+      return res.json({ embedUrl: fromTrgool, type: 'hls', source: 'trgool-html', success: true })
+    }
+  } catch {}
 
-  // 1. teletv3 (playlist ölüyse atla → cinema / trgool-html)
+  // 2. teletv3
   try {
     const r = await fetch(
       `https://teletv3.top/load/yayinlink.php?id=${encodeURIComponent(id)}`,
@@ -121,13 +126,11 @@ export default async function handler(req, res) {
         if (await verifyM3u8Reachable(url)) {
           return res.json({ embedUrl: url, type: 'hls', source: 'teletv3', success: true })
         }
-      } else if (typeof raw === 'string' && /^https?:\/\//i.test(raw.trim())) {
-        teletvNonM3u8 = raw.trim()
       }
     }
   } catch {}
 
-  // 2. streamsport365
+  // 3. streamsport365
   try {
     const r = await fetch('https://streamsport365.com/cinema', {
       method: 'POST',
@@ -157,33 +160,10 @@ export default async function handler(req, res) {
           if (await verifyM3u8Reachable(url)) {
             return res.json({ embedUrl: url, type: 'hls', source: 'cinema', success: true })
           }
-        } else if (/^https?:\/\//i.test(u)) {
-          cinemaNonM3u8 = u
         }
       }
     }
   } catch {}
-
-  // 3. trgool sayfa HTML'inden m3u8 — adaylar içinden erişilebilir olanı seç
-  try {
-    const fromTrgool = await tryM3u8FromTrgoolPages(id)
-    if (fromTrgool) {
-      return res.json({ embedUrl: fromTrgool, type: 'hls', source: 'trgool-html', success: true })
-    }
-  } catch {}
-
-  // 4. en son: harici oynatıcı URL (istemci kabuğa alır)
-  if (teletvNonM3u8) {
-    return res.json({
-      embedUrl: teletvNonM3u8,
-      type: 'iframe',
-      success: true,
-      source: 'teletv3-embed',
-    })
-  }
-  if (cinemaNonM3u8) {
-    return res.json({ embedUrl: cinemaNonM3u8, type: 'iframe', success: true, source: 'cinema-embed' })
-  }
 
   return res.json({ embedUrl: null, success: false })
 }

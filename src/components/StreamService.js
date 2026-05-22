@@ -1,10 +1,5 @@
-import { getPrimaryTrgoolDomain } from '../../trgoolDomains.js'
-import { trgoolChannelEmbedUrl } from '../utils/trgoolEmbedUrl.js'
-
-let cachedDomain = null
 const FALLBACK_API_ORIGIN = 'https://caneryilmazsportshd.vercel.app'
 const isHlsUrl = (url) => typeof url === 'string' && url.toLowerCase().includes('m3u8')
-const isHttpUrl = (u) => typeof u === 'string' && /^https?:\/\//i.test(u.trim())
 
 function getApiBaseCandidates() {
   const envBase = (import.meta.env.VITE_PUBLIC_API_ORIGIN || '').trim().replace(/\/$/, '')
@@ -14,28 +9,13 @@ function getApiBaseCandidates() {
   return out
 }
 
-const resolveActiveDomain = async () => {
-  if (cachedDomain) return cachedDomain
-  for (const base of getApiBaseCandidates()) {
-    try {
-      const res = await fetch(`${base}/api/trgoolDomain`)
-      if (res.ok) {
-        const data = await res.json()
-        if (data?.domain) { cachedDomain = data.domain; return cachedDomain }
-      }
-    } catch {}
-  }
-  cachedDomain = getPrimaryTrgoolDomain()
-  return cachedDomain
-}
-
 async function resolveFromApi(id) {
   for (const base of getApiBaseCandidates()) {
     try {
       const res = await fetch(`${base}/api/resolvePlayer?id=${encodeURIComponent(id)}`)
       if (!res.ok) continue
       const data = await res.json()
-      if (data?.embedUrl && data.success) return data
+      if (data?.embedUrl && data.success && isHlsUrl(data.embedUrl)) return data
     } catch {}
   }
   return null
@@ -66,50 +46,39 @@ async function verifyM3u8ReachableBrowser(url) {
 
 export const getStreamUrl = async (match) => {
   const id = match?.id || 'bein-sports-1'
-  const domain = await resolveActiveDomain()
-  const embedPageUrl =
-    trgoolChannelEmbedUrl(domain, id) ||
-    `${String(domain).replace(/\/$/, '')}/channel.html?id=${encodeURIComponent(String(id))}`
+
+  const returnHls = async (rawUrl, { probe = true } = {}) => {
+    const playlist = toHttps(String(rawUrl)).replace(/edge\d+/g, 'edge3')
+    if (!probe || (await verifyM3u8ReachableBrowser(playlist))) {
+      return { url: playlist, type: 'hls', iframeUrl: null }
+    }
+    return null
+  }
 
   if (match?.hlsUrl && isHlsUrl(String(match.hlsUrl))) {
-    return {
-      url: toHttps(String(match.hlsUrl)).replace(/edge\d+/g, 'edge3'),
-      type: 'hls',
-      iframeUrl: embedPageUrl,
-    }
+    const ok = await returnHls(match.hlsUrl, { probe: false })
+    if (ok) return ok
   }
 
-  // 1) API (local proxy or fallback origin) → m3u8 veya iframe
+  // 1) API (sunucuda doğrulanmış m3u8) — tarayıcıda tekrar probe etme (CORS)
   const apiData = await resolveFromApi(id)
-  if (apiData?.embedUrl) {
-    if (isHlsUrl(apiData.embedUrl)) {
-      return { url: toHttps(apiData.embedUrl), type: 'hls', iframeUrl: embedPageUrl }
-    }
-    if (isHttpUrl(apiData.embedUrl)) {
-      // HTTP cevap /matches vb. olabilir; iframe'de yalnızca channel.html (embedPageUrl)
-      return { url: embedPageUrl, type: 'iframe', iframeUrl: embedPageUrl }
-    }
+  if (apiData?.embedUrl && isHlsUrl(apiData.embedUrl)) {
+    const ok = await returnHls(apiData.embedUrl, { probe: false })
+    if (ok) return ok
   }
 
-  // 2) Client-side teletv3 → m3u8 veya harici oynatıcı sayfası
+  // 2) Client-side teletv3 (ölü linkleri elemek için probe)
   try {
     const res = await fetch(`https://teletv3.top/load/yayinlink.php?id=${encodeURIComponent(id)}`)
     if (res.ok) {
       const data = await res.json()
       const link = data?.deismackanal
       if (isHlsUrl(link)) {
-        const playlist = toHttps(String(link)).replace(/edge\d+/g, 'edge3')
-        if (await verifyM3u8ReachableBrowser(playlist)) {
-          return { url: playlist, type: 'hls', iframeUrl: embedPageUrl }
-        }
-        return { url: embedPageUrl, type: 'iframe', iframeUrl: embedPageUrl }
-      }
-      if (isHttpUrl(link) && !isHlsUrl(link)) {
-        return { url: embedPageUrl, type: 'iframe', iframeUrl: embedPageUrl }
+        const ok = await returnHls(link, { probe: true })
+        if (ok) return ok
       }
     }
   } catch {}
 
-  // 3) Fallback: yalnız oynatıcı sayfası (matches değil)
-  return { url: embedPageUrl, type: 'iframe', iframeUrl: embedPageUrl }
+  return { url: null, type: 'hls', iframeUrl: null }
 }
