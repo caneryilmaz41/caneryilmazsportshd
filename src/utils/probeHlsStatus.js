@@ -6,8 +6,9 @@ import { getStreamUrl } from '../components/StreamService';
  */
 export async function matchPlaysInAppHlsPlayer(id) {
   try {
-    const r = await getStreamUrl({ id: id ?? '' });
-    return r?.type === 'hls';
+    if (!id) return false;
+    const r = await getStreamUrl({ id });
+    return r?.type === 'hls' && typeof r?.url === 'string' && r.url.toLowerCase().includes('m3u8');
   } catch {
     return false;
   }

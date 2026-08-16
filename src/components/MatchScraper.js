@@ -1,7 +1,10 @@
 import { getPrimaryTrgoolDomain } from '../../trgoolDomains.js'
 import { trgoolChannelEmbedUrl } from '../utils/trgoolEmbedUrl.js'
+import {
+  resolveWorkingTeletvBase,
+  teletvLoadUrl,
+} from '../../teletvHosts.js'
 
-const DATA_API = 'https://teletv3.top/load'
 const FALLBACK_API_ORIGIN = 'https://caneryilmazsportshd.vercel.app'
 
 const getApiBaseCandidates = () => {
@@ -67,73 +70,84 @@ const normalizeMatchTime = (rawTime, specialTag) => {
   return value
 }
 
-// Direkt PHP endpoint'lerinden çek
+const extractMatchId = (tagOpen) => {
+  const m = tagOpen.match(/href=["']matches\?id=([^"']+)["']/i)
+  return m ? m[1].trim() : null
+}
+
+/** class / href sırası değişse de yakala */
+const MATCH_ANCHOR_RE =
+  /<a\b[^>]*\bclass=["'][^"']*\bsingle-match\b[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi
+
 export const scrapeMatches = async () => {
   try {
     console.log('Fetching matches and channels...')
     activeDomain = await resolveActiveDomain()
-    
+    const dataBase = await resolveWorkingTeletvBase()
+
     const [matchesRes, channelsRes] = await Promise.all([
-      fetch(`${DATA_API}/matches.php`),
-      fetch(`${DATA_API}/channels.php`)
+      fetch(teletvLoadUrl(dataBase, 'matches.php')),
+      fetch(teletvLoadUrl(dataBase, 'channels.php')),
     ])
 
     if (matchesRes.ok && channelsRes.ok) {
       const matchesHtml = await matchesRes.text()
       const channelsHtml = await channelsRes.text()
 
+      console.log('Data host:', dataBase)
       console.log('Matches HTML length:', matchesHtml.length)
       console.log('Channels HTML length:', channelsHtml.length)
-      console.log('Full matches HTML:', matchesHtml)
-      console.log('Full channels HTML:', channelsHtml)
-      
+
       const matches = parseMatches(matchesHtml)
       const channels = parseChannels(channelsHtml)
-      
+
       console.log(`Final: ${matches.length} matches, ${channels.length} channels`)
-      
-      return { matches, channels }
+
+      if (matches.length > 0 || channels.length > 0) {
+        return { matches, channels }
+      }
     }
   } catch (error) {
     console.error('Scrape error:', error)
   }
-  
+
+  // Sunucu tarafı parse (Vercel) — tarayıcıdan teletv engelliyse
+  for (const base of getApiBaseCandidates()) {
+    try {
+      const res = await fetch(`${base}/api/fetchTrgool`)
+      if (!res.ok) continue
+      const data = await res.json()
+      if (data?.success && (data.matches?.length > 0 || data.channels?.length > 0)) {
+        return { matches: data.matches || [], channels: data.channels || [] }
+      }
+    } catch {
+      /* sıradaki */
+    }
+  }
+
   console.log('Using fallback data')
   return getFallbackData()
 }
 
-
 const parseMatches = (html) => {
   const matches = []
-  
-
-  const aTagRegex = /<a[^>]*class="single-match[^"]*"[^>]*href="matches\?id=([^"]+)"[^>]*>([\s\S]*?)<\/a>/g
-  
   let aMatch
-  while ((aMatch = aTagRegex.exec(html)) !== null) {
-    const id = aMatch[1]
-    const content = aMatch[2]
-    
-    // Takım logoları
+  MATCH_ANCHOR_RE.lastIndex = 0
+  while ((aMatch = MATCH_ANCHOR_RE.exec(html)) !== null) {
+    const tagOpen = aMatch[0].slice(0, aMatch[0].indexOf('>') + 1)
+    const id = extractMatchId(tagOpen)
+    const content = aMatch[1]
+    if (!id) continue
+
     const homeLogoMatch = content.match(/<img[^>]*src="([^"]+)"[^>]*alt="Home"/)
     const awayLogoMatch = content.match(/<img[^>]*src="([^"]+)"[^>]*alt="Away"/)
-    
-    // Takım isimleri
     const homeMatch = content.match(/<div class="home">([^<]+)<\/div>/)
     const awayMatch = content.match(/<div class="away">([^<]+)<\/div>/)
-    
-    // Saat ve lig bilgisi
     const eventMatch = content.match(/<div class="event">\s*([^<|]+)\s*\|\s*([^<]+)<\/div>/)
-    
-    // Kategori (Futbol TR, Basketbol vb.)
     const categoryMatch = content.match(/<div class="date">\s*([^<\s]+)/)
-    
-    // Özel etiket (GÜNÜN MAÇI vb.)
     const specialMatch = content.match(/<span class="colorling">([^<]+)<\/span>/)
-    
-    // data-matchtype
-    const typeMatch = content.match(/data-matchtype="([^"]+)"/)
-    
+    const typeMatch = tagOpen.match(/data-matchtype="([^"]+)"/)
+
     if (homeMatch && awayMatch && eventMatch) {
       const special = specialMatch ? specialMatch[1].trim() : null
       matches.push({
@@ -146,59 +160,51 @@ const parseMatches = (html) => {
         category: categoryMatch ? categoryMatch[1].trim() : '',
         special,
         type: typeMatch ? typeMatch[1] : '',
-        url: trgoolChannelEmbedUrl(activeDomain, id) || `${activeDomain}/channel.html?id=${id}`
+        url: trgoolChannelEmbedUrl(activeDomain, id) || `${activeDomain}/channel.html?id=${id}`,
       })
     }
   }
-  
+
   console.log(`Parsed ${matches.length} matches`)
   return matches
 }
 
-// HTML'den kanalları parse et
 const parseChannels = (html) => {
   const channels = []
-  
-  // <a> tag'lerini bul
-  const aTagRegex = /<a[^>]*class="single-match[^"]*"[^>]*href="matches\?id=([^"]+)"[^>]*>([\s\S]*?)<\/a>/g
-  
+  MATCH_ANCHOR_RE.lastIndex = 0
   let aMatch
-  while ((aMatch = aTagRegex.exec(html)) !== null) {
-    const id = aMatch[1]
-    const content = aMatch[2]
-    
-    // İçerikten home çek
+  while ((aMatch = MATCH_ANCHOR_RE.exec(html)) !== null) {
+    const tagOpen = aMatch[0].slice(0, aMatch[0].indexOf('>') + 1)
+    const id = extractMatchId(tagOpen)
+    const content = aMatch[1]
+    if (!id) continue
+
     const homeMatch = content.match(/<div class="home">([^<]+)<\/div>/)
-    
     if (homeMatch) {
       channels.push({
         id,
         name: homeMatch[1].trim(),
         status: '7/24',
-        url: trgoolChannelEmbedUrl(activeDomain, id) || `${activeDomain}/channel.html?id=${id}`
+        url: trgoolChannelEmbedUrl(activeDomain, id) || `${activeDomain}/channel.html?id=${id}`,
       })
     }
   }
-  
+
   console.log(`Parsed ${channels.length} channels`)
   return channels
 }
 
-// Fallback data
 export const getFallbackData = () => {
   const base = getPrimaryTrgoolDomain()
   const w = (id) => trgoolChannelEmbedUrl(base, id) || `${base}/channel.html?id=${id}`
   return {
-    matches: [
-      { id: 'bein-sports-1', name: 'Fenerbahçe - Galatasaray', time: '20:00', url: w('bein-sports-1') },
-      { id: 'bein-sports-2', name: 'Beşiktaş - Trabzonspor', time: '19:00', url: w('bein-sports-2') }
-    ],
+    matches: [],
     channels: [
       { id: 'bein-sports-1', name: 'BEIN SPORTS 1', status: '7/24', url: w('bein-sports-1') },
       { id: 'bein-sports-2', name: 'BEIN SPORTS 2', status: '7/24', url: w('bein-sports-2') },
       { id: 'bein-sports-3', name: 'BEIN SPORTS 3', status: '7/24', url: w('bein-sports-3') },
       { id: 's-sport', name: 'S SPORT', status: '7/24', url: w('s-sport') },
-      { id: 'trt-spor', name: 'TRT SPOR', status: '7/24', url: w('trt-spor') }
-    ]
+      { id: 'trt-spor', name: 'TRT SPOR', status: '7/24', url: w('trt-spor') },
+    ],
   }
 }

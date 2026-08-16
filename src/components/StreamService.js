@@ -1,3 +1,9 @@
+import {
+  getPrimaryTeletvBase,
+  resolveWorkingTeletvBase,
+  teletvLoadUrl,
+} from '../../teletvHosts.js'
+
 const FALLBACK_API_ORIGIN = 'https://caneryilmazsportshd.vercel.app'
 const isHlsUrl = (url) => typeof url === 'string' && url.toLowerCase().includes('m3u8')
 
@@ -25,7 +31,7 @@ const toHttps = (u) => (typeof u === 'string' ? u.trim().replace(/^http:\/\//i, 
 
 const M3U8_PROBE_MS = 8000
 
-/** Yerel /api yokken teletv3 ölü m3u8 döndüğünde HLS+hata+TrGool düşüşünü engeller */
+/** Yerel /api yokken ölü m3u8 döndüğünde HLS hata döngüsünü engeller */
 async function verifyM3u8ReachableBrowser(url) {
   const u = url.trim().replace(/edge\d+/g, 'edge3')
   if (!/^https?:\/\//i.test(u)) return false
@@ -45,7 +51,10 @@ async function verifyM3u8ReachableBrowser(url) {
 }
 
 export const getStreamUrl = async (match) => {
-  const id = match?.id || 'bein-sports-1'
+  const id = match?.id
+  if (!id) {
+    return { url: null, type: 'hls', iframeUrl: null }
+  }
 
   const returnHls = async (rawUrl, { probe = true } = {}) => {
     const playlist = toHttps(String(rawUrl)).replace(/edge\d+/g, 'edge3')
@@ -60,22 +69,28 @@ export const getStreamUrl = async (match) => {
     if (ok) return ok
   }
 
-  // 1) API (sunucuda doğrulanmış m3u8) — tarayıcıda tekrar probe etme (CORS)
+  // 1) API (sunucuda id’ye özel m3u8) — tarayıcıda tekrar probe etme (CORS)
   const apiData = await resolveFromApi(id)
   if (apiData?.embedUrl && isHlsUrl(apiData.embedUrl)) {
     const ok = await returnHls(apiData.embedUrl, { probe: false })
     if (ok) return ok
   }
 
-  // 2) Client-side teletv3 (ölü linkleri elemek için probe)
+  // 2) Client-side teletv yayinlink (çalışan ayna)
   try {
-    const res = await fetch(`https://teletv3.top/load/yayinlink.php?id=${encodeURIComponent(id)}`)
+    let dataBase = getPrimaryTeletvBase()
+    try {
+      dataBase = await resolveWorkingTeletvBase()
+    } catch {}
+    const res = await fetch(teletvLoadUrl(dataBase, `yayinlink.php?id=${encodeURIComponent(id)}`))
     if (res.ok) {
       const data = await res.json()
-      const link = data?.deismackanal
+      const link = typeof data?.deismackanal === 'string' ? data.deismackanal.trim() : null
       if (isHlsUrl(link)) {
         const ok = await returnHls(link, { probe: true })
         if (ok) return ok
+        // Probe CORS yüzünden fail olabilir; id’ye özel linki yine dene
+        return { url: toHttps(link).replace(/edge\d+/g, 'edge3'), type: 'hls', iframeUrl: null }
       }
     }
   } catch {}

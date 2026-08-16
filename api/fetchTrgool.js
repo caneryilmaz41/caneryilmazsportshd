@@ -1,26 +1,27 @@
 import { getCachedWorkingTrgoolDomain } from '../trgoolDomains.js'
 import { trgoolChannelEmbedUrl } from '../src/utils/trgoolEmbedUrl.js'
-
-const DATA_API = 'https://teletv3.top/load'
+import { resolveWorkingTeletvBase, teletvLoadUrl } from '../teletvHosts.js'
 
 export default async function handler(req, res) {
   try {
     const TRGOOL_DOMAIN = await getCachedWorkingTrgoolDomain()
+    const dataBase = await resolveWorkingTeletvBase()
+
     const [matchesRes, channelsRes] = await Promise.all([
-      fetch(`${DATA_API}/matches.php`, {
+      fetch(teletvLoadUrl(dataBase, 'matches.php'), {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          'Referer': TRGOOL_DOMAIN,
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-        }
+          Referer: TRGOOL_DOMAIN,
+          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        },
       }),
-      fetch(`${DATA_API}/channels.php`, {
+      fetch(teletvLoadUrl(dataBase, 'channels.php'), {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          'Referer': TRGOOL_DOMAIN,
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-        }
-      })
+          Referer: TRGOOL_DOMAIN,
+          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        },
+      }),
     ])
 
     if (!matchesRes.ok || !channelsRes.ok) {
@@ -33,60 +34,91 @@ export default async function handler(req, res) {
     const matches = parseMatches(matchesHtml, TRGOOL_DOMAIN)
     const channels = parseChannels(channelsHtml, TRGOOL_DOMAIN)
 
-    return res.json({ matches, channels, success: true })
-
+    return res.json({ matches, channels, success: true, dataHost: dataBase })
   } catch (error) {
     console.error('Fetch error:', error)
-    return res.status(500).json({ 
-      matches: [], 
-      channels: [], 
+    return res.status(500).json({
+      matches: [],
+      channels: [],
       success: false,
-      error: error.message
+      error: error.message,
     })
   }
 }
 
+const MATCH_ANCHOR_RE =
+  /<a\b[^>]*\bclass=["'][^"']*\bsingle-match\b[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi
+
+function extractMatchId(tagOpen) {
+  const m = tagOpen.match(/href=["']matches\?id=([^"']+)["']/i)
+  return m ? m[1].trim() : null
+}
+
 function parseMatches(html, trgoolDomain) {
   const matches = []
-  const regex = /onclick=["']changePlayer\(["']([^"']+)["']\)["'][^>]*>.*?<div class=["']match-name["']>([^<]+)<\/div>.*?<div class=["']match-time["']>([^<]+)<\/div>/gs
-  
+  MATCH_ANCHOR_RE.lastIndex = 0
   let match
-  while ((match = regex.exec(html)) !== null) {
-    const id = match[1]
-    const name = match[2].trim()
-    const time = match[3].trim()
-    
-    if (id && name) {
+  while ((match = MATCH_ANCHOR_RE.exec(html)) !== null) {
+    const tagOpen = match[0].slice(0, match[0].indexOf('>') + 1)
+    const id = extractMatchId(tagOpen)
+    const content = match[1]
+    if (!id) continue
+
+    const homeMatch = content.match(/<div class="home">([^<]+)<\/div>/)
+    const awayMatch = content.match(/<div class="away">([^<]+)<\/div>/)
+    const eventMatch = content.match(/<div class="event">\s*([^<|]+)\s*\|\s*([^<]+)<\/div>/)
+    const timeOnly = content.match(/<div class=["']match-time["']>([^<]+)<\/div>/)
+    const nameOnly = content.match(/<div class=["']match-name["']>([^<]+)<\/div>/)
+
+    if (homeMatch && awayMatch) {
+      const time = eventMatch ? eventMatch[1].trim() : 'Canlı'
+      const league = eventMatch ? eventMatch[2].trim() : ''
       matches.push({
         id,
-        name,
+        name: `${homeMatch[1].trim()} - ${awayMatch[1].trim()}`,
         time: time || 'Canlı',
-        url: trgoolChannelEmbedUrl(trgoolDomain, id) || `${trgoolDomain}/channel.html?id=${id}`
+        league,
+        url: trgoolChannelEmbedUrl(trgoolDomain, id) || `${trgoolDomain}/channel.html?id=${id}`,
+      })
+      continue
+    }
+
+    // Eski trgool ana sayfa formatı
+    if (nameOnly) {
+      matches.push({
+        id,
+        name: nameOnly[1].trim(),
+        time: timeOnly ? timeOnly[1].trim() : 'Canlı',
+        url: trgoolChannelEmbedUrl(trgoolDomain, id) || `${trgoolDomain}/channel.html?id=${id}`,
       })
     }
   }
-  
+
   return matches
 }
 
 function parseChannels(html, trgoolDomain) {
   const channels = []
-  const regex = /onclick=["']changePlayer\(["']([^"']+)["']\)["'][^>]*>.*?<div class=["']match-name["']>([^<]+)<\/div>/gs
-  
+  MATCH_ANCHOR_RE.lastIndex = 0
   let match
-  while ((match = regex.exec(html)) !== null) {
-    const id = match[1]
-    const name = match[2].trim()
-    
-    if (id && name) {
-      channels.push({
-        id,
-        name,
-        status: '7/24',
-        url: trgoolChannelEmbedUrl(trgoolDomain, id) || `${trgoolDomain}/channel.html?id=${id}`
-      })
-    }
+  while ((match = MATCH_ANCHOR_RE.exec(html)) !== null) {
+    const tagOpen = match[0].slice(0, match[0].indexOf('>') + 1)
+    const id = extractMatchId(tagOpen)
+    const content = match[1]
+    if (!id) continue
+
+    const homeMatch = content.match(/<div class="home">([^<]+)<\/div>/)
+    const nameOnly = content.match(/<div class=["']match-name["']>([^<]+)<\/div>/)
+    const name = homeMatch?.[1]?.trim() || nameOnly?.[1]?.trim()
+    if (!name) continue
+
+    channels.push({
+      id,
+      name,
+      status: '7/24',
+      url: trgoolChannelEmbedUrl(trgoolDomain, id) || `${trgoolDomain}/channel.html?id=${id}`,
+    })
   }
-  
+
   return channels
 }
