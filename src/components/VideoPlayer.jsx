@@ -5,7 +5,7 @@ import { SPLASH_BG } from './AppSplashScreen';
 import ChannelLogoImg from './ChannelLogoImg';
 import { isTrgoolSiteUrl } from '../utils/trgoolEmbedUrl';
 
-const PLAYER_UI_VERSION = 'android-ui-fix-2026-04-15';
+const PLAYER_UI_VERSION = 'ticker-kosoval1-flag-2026-08-16b';
 
 const VideoPlayer = ({ 
   selectedMatch, 
@@ -16,6 +16,7 @@ const VideoPlayer = ({
   onRailMatchSelect
 }) => {
   const [reloadKey, setReloadKey] = useState(0);
+  const [fakeFs, setFakeFs] = useState(false);
   const railPayload = useMemo(
     () =>
       (playerMatches || []).map((m) => ({
@@ -32,19 +33,51 @@ const VideoPlayer = ({
   useEffect(() => {
     const onMessage = (event) => {
       const data = event?.data;
-      if (!data || data.type !== 'player:select-match') return;
+      if (!data) return;
+      if (data.type === 'player:fake-fs') {
+        setFakeFs(!!data.on);
+        document.documentElement.classList.toggle('player-fake-fs', !!data.on);
+        document.body.classList.toggle('player-fake-fs', !!data.on);
+        return;
+      }
+      if (data.type !== 'player:select-match') return;
       if (!data.id || typeof onRailMatchSelect !== 'function') return;
       const picked = (playerMatches || []).find((m) => m.id === data.id);
       if (picked) onRailMatchSelect(picked);
     };
 
     window.addEventListener('message', onMessage);
-    return () => window.removeEventListener('message', onMessage);
+    return () => {
+      window.removeEventListener('message', onMessage);
+      document.documentElement.classList.remove('player-fake-fs');
+      document.body.classList.remove('player-fake-fs');
+    };
   }, [onRailMatchSelect, playerMatches]);
 
   useEffect(() => {
     setReloadKey(0);
+    setFakeFs(false);
+    document.documentElement.classList.remove('player-fake-fs');
+    document.body.classList.remove('player-fake-fs');
   }, [selectedMatch?.id, selectedMatch?.url, selectedMatch?.streamType]);
+
+  useEffect(() => {
+    if (!fakeFs) return undefined;
+    const onKey = (e) => {
+      if (e.key !== 'Escape') return;
+      setFakeFs(false);
+      document.documentElement.classList.remove('player-fake-fs');
+      document.body.classList.remove('player-fake-fs');
+      const frame = document.querySelector('#video-player iframe');
+      try {
+        frame?.contentWindow?.postMessage({ type: 'player:exit-fake-fs' }, '*');
+      } catch {
+        /* ignore */
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [fakeFs]);
 
   if (!selectedMatch) {
     return (
@@ -173,17 +206,27 @@ const VideoPlayer = ({
       
       <div
         id="video-player"
-        className="relative aspect-video bg-gradient-to-br from-slate-900 via-slate-800 to-green-900 p-2 sm:p-3 rounded-lg group"
+        className={
+          fakeFs
+            ? 'player-shell-fs fixed inset-0 z-[2147483000] bg-black p-0'
+            : 'relative aspect-video bg-gradient-to-br from-slate-900 via-slate-800 to-green-900 p-2 sm:p-3 rounded-lg group'
+        }
       >
-        <button
-          type="button"
-          onClick={() => setReloadKey((prev) => prev + 1)}
-          className="absolute right-3 top-3 z-20 rounded-md border border-slate-300/35 bg-slate-900/80 px-2 py-1 text-[10px] font-semibold text-slate-100 hover:bg-slate-800"
-        >
-          Yayını Yenile
-        </button>
+        {!fakeFs ? (
+          <button
+            type="button"
+            onClick={() => setReloadKey((prev) => prev + 1)}
+            className="absolute right-3 top-3 z-20 rounded-md border border-slate-300/35 bg-slate-900/80 px-2 py-1 text-[10px] font-semibold text-slate-100 hover:bg-slate-800"
+          >
+            Yayını Yenile
+          </button>
+        ) : null}
         <div
-          className="w-full h-full rounded-lg relative overflow-hidden border-2 border-green-500/30"
+          className={
+            fakeFs
+              ? 'h-full w-full overflow-hidden'
+              : 'w-full h-full rounded-lg relative overflow-hidden border-2 border-green-500/30'
+          }
         >
           {streamLoading ? (
             <div

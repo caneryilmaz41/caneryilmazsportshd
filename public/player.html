@@ -17,7 +17,80 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
   .bottom{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right));padding-bottom:max(10px,env(safe-area-inset-bottom))}
   .top-bar{padding-left:max(18px,env(safe-area-inset-left));padding-right:max(18px,env(safe-area-inset-right));padding-top:max(14px,env(safe-area-inset-top))}
   .watermark{right:max(16px,env(safe-area-inset-right))}
+  .ticker{
+    padding-left:max(0px,env(safe-area-inset-left));
+    padding-right:max(0px,env(safe-area-inset-right));
+    bottom:max(0px,env(safe-area-inset-bottom));
+  }
 }
+
+/* ── TV-style scrolling ticker (always visible, incl. fullscreen) ── */
+.ticker{
+  position:absolute;left:0;right:0;bottom:0;z-index:70;
+  height:clamp(26px,4.6vmin,36px);
+  display:flex;align-items:center;
+  pointer-events:none;
+  overflow:hidden;
+  background:rgba(8,10,14,.82);
+  border-top:1px solid rgba(220,38,38,.45);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+}
+.ticker-track{
+  display:flex;align-items:center;width:max-content;
+  white-space:nowrap;
+  will-change:transform;
+  animation:ticker-scroll 32s linear infinite;
+}
+.ticker-item{
+  display:inline-flex;align-items:center;gap:.55em;
+  padding:0 2.8em;
+  color:rgba(248,250,252,.92);
+  font-size:clamp(12px,2.35vmin,15px);
+  font-weight:500;
+  letter-spacing:.02em;
+  font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
+  text-shadow:0 1px 2px rgba(0,0,0,.55);
+}
+.ticker-flag{
+  width:clamp(18px,3.2vmin,24px);
+  height:auto;
+  aspect-ratio:5/3.5;
+  object-fit:cover;
+  border-radius:2px;
+  flex-shrink:0;
+  box-shadow:0 0 0 1px rgba(255,255,255,.18);
+}
+.ticker-brand{
+  color:#fff;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.ticker-sep{
+  color:rgba(248,250,252,.35);
+  font-weight:400;
+  margin:0 .05em;
+}
+@keyframes ticker-scroll{
+  from{transform:translate3d(0,0,0)}
+  to{transform:translate3d(-50%,0,0)}
+}
+@media (prefers-reduced-motion: reduce){
+  .ticker-track{animation:none;transform:none;justify-content:center;width:100%}
+  .ticker-item:nth-child(n+2){display:none}
+}
+
+/* iOS / tarayıcı: video native FS yerine kapsayıcı FS — ticker görünür kalsın */
+#wrap.fake-fs{
+  position:fixed !important;
+  inset:0 !important;
+  width:100vw !important;
+  height:100vh !important;
+  height:100dvh !important;
+  z-index:2147483000 !important;
+  background:#000;
+}
+body.fake-fs-lock{overflow:hidden;touch-action:none}
 
 /* ── Top bar ── */
 .top-bar{
@@ -32,7 +105,7 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
 .bottom{
   position:absolute;bottom:0;left:0;right:0;z-index:50;
   background:linear-gradient(transparent,rgba(0,0,0,.8));
-  padding:0 16px 10px;opacity:0;transition:opacity .35s;
+  padding:0 16px max(36px, calc(10px + env(safe-area-inset-bottom, 0px)));opacity:0;transition:opacity .35s;
 }
 #wrap.show-ctrl .top-bar,#wrap.show-ctrl .bottom{opacity:1}
 
@@ -156,7 +229,7 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
 
 /* ── Watermark: her zaman sağ alt, her ekranda ── */
 .watermark{
-  position:absolute;bottom:60px;right:16px;z-index:55;
+  position:absolute;bottom:max(48px, calc(28px + env(safe-area-inset-bottom, 0px)));right:16px;z-index:55;
   pointer-events:none;
 }
 .watermark img{height:32px;display:block;filter:drop-shadow(0 2px 6px rgba(0,0,0,.9))}
@@ -237,6 +310,8 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
   .vol-group:hover .vol-slider{width:52px;opacity:1}
   .watermark{bottom:72px;right:12px}
   .watermark img{height:28px}
+  .ticker{height:clamp(26px,5vmin,34px)}
+  .bottom{padding-bottom:max(40px, calc(12px + env(safe-area-inset-bottom, 0px)))}
 }
 
 @media (max-width: 520px){
@@ -259,6 +334,7 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
   .vol-group:hover .vol-slider{width:44px}
   .watermark{bottom:66px;right:10px}
   .watermark img{height:24px}
+  .bottom{padding-bottom:max(38px, calc(12px + env(safe-area-inset-bottom, 0px)))}
 }
 
 /* Dar yukseklikli telefonlar: kompakt ama okunur kontrol */
@@ -347,6 +423,16 @@ body.is-android.compact-controls #pipBtn{display:none}
 
   <!-- Watermark -->
   <div class="watermark"><img src="/logom.png" alt=""></div>
+
+  <!-- TV ticker (always on; works in fake fullscreen on iPhone too) -->
+  <div class="ticker" id="ticker" aria-hidden="true">
+    <div class="ticker-track">
+      <span class="ticker-item"><img class="ticker-flag" src="/albania-flag.png" alt="" width="24" height="17" decoding="async"><span class="ticker-brand">KOSOVAL1</span> ailesi tüm takımlara başarılar diler<span class="ticker-sep">|</span></span>
+      <span class="ticker-item"><img class="ticker-flag" src="/albania-flag.png" alt="" width="24" height="17" decoding="async"><span class="ticker-brand">KOSOVAL1</span> ailesi tüm takımlara başarılar diler<span class="ticker-sep">|</span></span>
+      <span class="ticker-item"><img class="ticker-flag" src="/albania-flag.png" alt="" width="24" height="17" decoding="async"><span class="ticker-brand">KOSOVAL1</span> ailesi tüm takımlara başarılar diler<span class="ticker-sep">|</span></span>
+      <span class="ticker-item"><img class="ticker-flag" src="/albania-flag.png" alt="" width="24" height="17" decoding="async"><span class="ticker-brand">KOSOVAL1</span> ailesi tüm takımlara başarılar diler<span class="ticker-sep">|</span></span>
+    </div>
+  </div>
 
   <!-- Top bar -->
   <div class="top-bar" id="topBar"></div>
@@ -593,28 +679,54 @@ document.getElementById('progressWrap').addEventListener('click',e=>{
 /* PiP */
 function pip(){document.pictureInPictureElement?document.exitPictureInPicture():V.requestPictureInPicture?.()}
 
-/* FS — iPhone/iOS + Android + Desktop */
-function isFS(){return !!(document.fullscreenElement||document.webkitFullscreenElement||document.webkitCurrentFullScreenElement)}
+/* FS — Desktop/Android: native; iPhone: fake FS so ticker stays visible */
+function isNativeFS(){return !!(document.fullscreenElement||document.webkitFullscreenElement||document.webkitCurrentFullScreenElement)}
+function isFakeFS(){return W.classList.contains('fake-fs')}
+function isFS(){return isNativeFS()||isFakeFS()}
+function setFakeFS(on){
+  W.classList.toggle('fake-fs',!!on);
+  document.body.classList.toggle('fake-fs-lock',!!on);
+  try{
+    if(on&&window.parent&&window.parent!==window){
+      window.parent.postMessage({type:'player:fake-fs',on:true},'*');
+    }else if(window.parent&&window.parent!==window){
+      window.parent.postMessage({type:'player:fake-fs',on:false},'*');
+    }
+  }catch(_){}
+}
 function toggleFS(){
-  if(isFS()){
-    (document.exitFullscreen||document.webkitExitFullscreen||document.webkitCancelFullScreen)?.call(document);
-  } else {
-    // 1) Container fullscreen (desktop/android)
-    if(W.requestFullscreen) W.requestFullscreen();
-    else if(W.webkitRequestFullscreen) W.webkitRequestFullscreen();
-    // 2) iOS Safari: sadece video element fullscreen olabilir
-    else if(V.webkitEnterFullscreen) V.webkitEnterFullscreen();
-    else if(V.webkitRequestFullscreen) V.webkitRequestFullscreen();
+  if(isFakeFS()){
+    setFakeFS(false);
+    onFSChange();
+    return;
   }
+  if(isNativeFS()){
+    (document.exitFullscreen||document.webkitExitFullscreen||document.webkitCancelFullScreen)?.call(document);
+    return;
+  }
+  // Container fullscreen (desktop / Android Chrome)
+  if(W.requestFullscreen){ W.requestFullscreen(); return; }
+  if(W.webkitRequestFullscreen){ W.webkitRequestFullscreen(); return; }
+  // iOS Safari: native video FS ticker'ı gizler → fake fullscreen
+  setFakeFS(true);
+  onFSChange();
 }
 function onFSChange(){
   const f=isFS();
-  document.getElementById('iFS').style.display=f?'none':'block';
-  document.getElementById('iFSx').style.display=f?'block':'none';
+  const iFS=document.getElementById('iFS');
+  const iFSx=document.getElementById('iFSx');
+  if(iFS) iFS.style.display=f?'none':'block';
+  if(iFSx) iFSx.style.display=f?'block':'none';
   showC();
 }
 document.addEventListener('fullscreenchange',onFSChange);
 document.addEventListener('webkitfullscreenchange',onFSChange);
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'&&isFakeFS()){ setFakeFS(false); onFSChange(); }
+});
+window.addEventListener('message',function(e){
+  if(e?.data?.type==='player:exit-fake-fs'&&isFakeFS()){ setFakeFS(false); onFSChange(); }
+});
 V.addEventListener('webkitbeginfullscreen',()=>onFSChange());
 V.addEventListener('webkitendfullscreen',()=>onFSChange());
 

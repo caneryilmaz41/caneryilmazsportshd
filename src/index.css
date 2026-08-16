@@ -99,3 +99,22 @@ body {
     animation: none;
   }
 }
+
+/* iPhone/iPad: player fake fullscreen — sayfa scroll kilidi */
+html.player-fake-fs,
+body.player-fake-fs {
+  overflow: hidden !important;
+  height: 100% !important;
+  overscroll-behavior: none;
+}
+.player-shell-fs {
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  max-height: -webkit-fill-available;
+  padding:
+    env(safe-area-inset-top, 0px)
+    env(safe-area-inset-right, 0px)
+    env(safe-area-inset-bottom, 0px)
+    env(safe-area-inset-left, 0px);
+}
