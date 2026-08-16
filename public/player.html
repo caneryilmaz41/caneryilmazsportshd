@@ -22,6 +22,10 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
     padding-right:max(0px,env(safe-area-inset-right));
     bottom:max(0px,env(safe-area-inset-bottom));
   }
+  .corner-logo{
+    top:max(10px,env(safe-area-inset-top));
+    right:max(10px,env(safe-area-inset-right));
+  }
 }
 
 /* ── TV-style scrolling ticker (always visible, incl. fullscreen) ── */
@@ -116,6 +120,41 @@ body.fake-fs-lock{overflow:hidden;touch-action:none}
 .top-channel{
   color:#fff;font-size:15px;font-weight:700;letter-spacing:.5px;
   text-shadow:0 1px 4px rgba(0,0,0,.6);
+}
+
+/* Fixed rotating corner logo (always visible, all devices + fullscreen) */
+.corner-logo{
+  position:absolute;
+  top:12px;
+  right:12px;
+  z-index:75;
+  width:clamp(52px,11vmin,78px);
+  height:clamp(52px,11vmin,78px);
+  pointer-events:none;
+  border-radius:50%;
+  overflow:hidden;
+  box-shadow:
+    0 0 0 2px rgba(255,255,255,.88),
+    0 4px 14px rgba(0,0,0,.45);
+  background:#111;
+}
+.corner-logo img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+  border-radius:50%;
+  transform-origin:50% 50%;
+  animation:corner-spin 8s linear infinite;
+  will-change:transform;
+  backface-visibility:hidden;
+}
+@keyframes corner-spin{
+  from{transform:rotate(0deg)}
+  to{transform:rotate(360deg)}
+}
+@media (prefers-reduced-motion: reduce){
+  .corner-logo img{animation:none}
 }
 
 /* ── Progress bar ── */
@@ -312,6 +351,7 @@ body.fake-fs-lock{overflow:hidden;touch-action:none}
   .watermark img{height:28px}
   .ticker{height:clamp(26px,5vmin,34px)}
   .bottom{padding-bottom:max(40px, calc(12px + env(safe-area-inset-bottom, 0px)))}
+  .corner-logo{width:clamp(48px,12vmin,68px);height:clamp(48px,12vmin,68px);top:10px;right:10px}
 }
 
 @media (max-width: 520px){
@@ -423,6 +463,11 @@ body.is-android.compact-controls #pipBtn{display:none}
 
   <!-- Watermark -->
   <div class="watermark"><img src="/logom.png" alt=""></div>
+
+  <!-- Rotating corner logo (always on; top-right) -->
+  <div class="corner-logo" aria-hidden="true">
+    <img src="/player-corner-logo.png" alt="" width="56" height="56" decoding="async">
+  </div>
 
   <!-- TV ticker (always on; works in fake fullscreen on iPhone too) -->
   <div class="ticker" id="ticker" aria-hidden="true">
@@ -545,27 +590,34 @@ function ui(){
   const m=V.muted||V.volume===0;
   document.getElementById('iVolOn').style.display=m?'none':'block';
   document.getElementById('iVolOff').style.display=m?'block':'none';
+  showC();
 }
 
-/* Show/hide controls */
+/* Show/hide controls — idle sonra gizle (tam ekran + mobil dahil) */
 let lastX=0,lastY=0;
+const CTRL_HIDE_MS=3200;
+function controlsPinned(){
+  return V.paused || matchesPanel.classList.contains('open');
+}
+function hideC(){
+  if(controlsPinned()) return;
+  W.classList.remove('show-ctrl');
+}
 function showC(){
   W.classList.add('show-ctrl');
   clearTimeout(hideT);
-  if(isAndroid || isTouch){
-    // Android/touch cihazlarda kontroller kaybolmasin.
-    return;
-  }
-  hideT=setTimeout(()=>{ if(!V.paused) W.classList.remove('show-ctrl'); },3000);
+  if(controlsPinned()) return;
+  hideT=setTimeout(hideC, CTRL_HIDE_MS);
 }
 W.addEventListener('mousemove',e=>{
-  if(Math.abs(e.clientX-lastX)>3||Math.abs(e.clientY-lastY)>3){lastX=e.clientX;lastY=e.clientY;showC()}
+  if(Math.abs(e.clientX-lastX)>3||Math.abs(e.clientY-lastY)>3){
+    lastX=e.clientX;lastY=e.clientY;showC();
+  }
 });
-W.addEventListener('touchstart',showC,{passive:true});
-if(isAndroid||isTouch){
-  // Mobilde ilk acilista kontroller gorunur olsun.
-  showC();
-}
+W.addEventListener('touchstart',function(){ showC(); },{passive:true});
+W.addEventListener('pointerdown',function(){ showC(); });
+/* İlk açılışta kısa süre göster, sonra gizle */
+showC();
 
 /* Matches menu in controls */
 let railData=[];
@@ -573,10 +625,11 @@ try{
   railData=JSON.parse(decodeURIComponent(railRaw||'[]'));
   if(!Array.isArray(railData)) railData=[];
 }catch(_e){railData=[]}
-function closeMatches(){matchesPanel.classList.remove('open')}
+function closeMatches(){matchesPanel.classList.remove('open');showC()}
 function toggleMatches(e){
   if(e) e.stopPropagation();
   matchesPanel.classList.toggle('open');
+  showC();
 }
 function makeItem(item){
   const b=document.createElement('button');

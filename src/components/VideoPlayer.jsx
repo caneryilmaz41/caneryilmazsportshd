@@ -5,7 +5,7 @@ import { SPLASH_BG } from './AppSplashScreen';
 import ChannelLogoImg from './ChannelLogoImg';
 import { isTrgoolSiteUrl } from '../utils/trgoolEmbedUrl';
 
-const PLAYER_UI_VERSION = 'ticker-kosoval1-flag-2026-08-16b';
+const PLAYER_UI_VERSION = 'corner-big-ctrl-hide-2026-08-16';
 
 const VideoPlayer = ({ 
   selectedMatch, 
