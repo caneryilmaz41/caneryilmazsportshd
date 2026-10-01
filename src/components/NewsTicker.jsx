@@ -67,7 +67,7 @@ export default function NewsTicker({ extraLines }) {
 
   return (
     <div
-      className="pointer-events-none fixed bottom-0 left-0 right-0 z-30 min-h-8 border-t border-slate-800 bg-slate-950 py-1.5 shadow-[0_-1px_0_0_rgba(16,185,129,0.2)] sm:min-h-9 sm:py-2"
+      className="pointer-events-none fixed bottom-0 left-0 right-0 z-30 min-h-8 border-t border-white/[0.06] bg-[#060a13]/90 py-1.5 shadow-[0_-1px_0_0_rgba(16,185,129,0.18)] backdrop-blur-md sm:min-h-9 sm:py-2"
       role="status"
       aria-live="off"
     >

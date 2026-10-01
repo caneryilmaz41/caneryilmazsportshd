@@ -47,7 +47,7 @@ const PWAInstallPrompt = () => {
   if (!deferredPrompt && !isIos) return null;
 
   return (
-    <div className="fixed inset-x-3 bottom-3 z-40 mx-auto max-w-md rounded-2xl border border-emerald-400/25 bg-gradient-to-br from-slate-900/95 to-slate-800/95 p-3.5 shadow-2xl backdrop-blur">
+    <div className="fixed inset-x-3 bottom-12 z-40 sm:bottom-14 mx-auto max-w-md rounded-2xl border border-emerald-400/25 bg-gradient-to-br from-slate-900/95 to-slate-800/95 p-3.5 shadow-2xl backdrop-blur">
       <div className="mb-2 flex justify-end">
         <button
           type="button"

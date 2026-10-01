@@ -50,14 +50,20 @@ async function verifyM3u8ReachableBrowser(url) {
   }
 }
 
-export const getStreamUrl = async (match) => {
+/**
+ * @param {object} match
+ * @param {{ exclude?: string[] }} [opts] exclude: hata veren adresler (yedek kaynak ararken atlanır)
+ */
+export const getStreamUrl = async (match, { exclude = [] } = {}) => {
   const id = match?.id
+  const skip = new Set(exclude.filter(Boolean))
   if (!id) {
     return { url: null, type: 'hls', iframeUrl: null }
   }
 
   const returnHls = async (rawUrl, { probe = true } = {}) => {
     const playlist = toHttps(String(rawUrl)).replace(/edge\d+/g, 'edge3')
+    if (skip.has(playlist)) return null
     if (!probe || (await verifyM3u8ReachableBrowser(playlist))) {
       return { url: playlist, type: 'hls', iframeUrl: null }
     }
@@ -90,7 +96,8 @@ export const getStreamUrl = async (match) => {
         const ok = await returnHls(link, { probe: true })
         if (ok) return ok
         // Probe CORS yüzünden fail olabilir; id’ye özel linki yine dene
-        return { url: toHttps(link).replace(/edge\d+/g, 'edge3'), type: 'hls', iframeUrl: null }
+        const direct = toHttps(link).replace(/edge\d+/g, 'edge3')
+        if (!skip.has(direct)) return { url: direct, type: 'hls', iframeUrl: null }
       }
     }
   } catch {}

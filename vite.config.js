@@ -41,7 +41,9 @@ export default defineConfig(({ mode }) => {
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,jpg,jpeg,webp,json}'],
         // player.html?src=... istekleri app-shell fallback'e dusmemeli.
-        navigateFallbackDenylist: [/^\/player\.html/],
+        navigateFallbackDenylist: [/^\/player\.html/, /^\/api\//, /^\/_vercel\//],
+        // Hatırlatıcı bildirimine tıklanınca maçı açan küçük ek.
+        importScripts: ['/sw-notify.js'],
         // Query param ile gelen player URL'lerinde precache eslesmesini bozma.
         ignoreURLParametersMatching: [/^src$/, /^utm_/, /^fbclid$/],
         runtimeCaching: [

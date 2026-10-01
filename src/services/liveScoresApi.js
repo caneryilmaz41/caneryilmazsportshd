@@ -205,3 +205,24 @@ export async function fetchLiveScores(options = {}) {
 
   return deduped.slice(0, 120);
 }
+
+/** Oynatıcı başlığı için: sadece dün+bugün, Avrupa kupaları ve milli maçlar dahil. */
+const PLAYER_EXTRA_LEAGUES = [
+  { slug: 'uefa.europa', label: 'UEL' },
+  { slug: 'uefa.europa.conf', label: 'UECL' },
+  { slug: 'uefa.nations', label: 'Uluslar Ligi' },
+  { slug: 'fifa.worldq.uefa', label: 'DK Elemeleri' },
+  { slug: 'uefa.euroq', label: 'EURO Elemeleri' },
+];
+
+export async function fetchTodayScores() {
+  const today = toDateOnly(new Date());
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const leagues = [...IMPORTANT_LEAGUES, ...PLAYER_EXTRA_LEAGUES];
+  const all = await Promise.all(
+    [yesterday, today].flatMap((d) => leagues.map((l) => fetchLiveScoresForLeague(l, d)))
+  );
+  const seen = new Set();
+  return all.flat().filter((m) => (seen.has(m.id) ? false : seen.add(m.id)));
+}

@@ -38,6 +38,7 @@ const PrayerCountdown = () => {
   const [heading, setHeading] = useState(null);
   const [qiblaStatus, setQiblaStatus] = useState('Kıble için konum izni verin');
   const [orientationEnabled, setOrientationEnabled] = useState(false);
+  const [qiblaOpen, setQiblaOpen] = useState(false);
 
   useEffect(() => {
     const today = new Date();
@@ -155,29 +156,55 @@ const PrayerCountdown = () => {
   const isAligned = qiblaRelative != null && (qiblaRelative < 10 || qiblaRelative > 350);
 
   return (
-    <div className="bg-slate-900/80 border-b border-slate-700/30">
-      <div className="flex items-center justify-center gap-3 py-1.5 text-xs">
-        <span className="text-slate-500">🕌 Kocaeli</span>
-        <span className="text-slate-400">{nextName} Vaktine Kalan</span>
-        <span className="font-mono text-emerald-400 font-bold text-sm tabular-nums">{cdText}</span>
-      </div>
-      <div className="flex items-center justify-center gap-1 pb-1.5 px-2 flex-wrap">
-        {todayTimes.map((t, i) => (
-          <div
-            key={i}
-            className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] sm:text-xs ${
-              i === nextIdx
-                ? 'bg-emerald-500/20 text-emerald-300 font-bold'
-                : 'text-slate-500'
-            }`}
-          >
-            <span>{NAMES[i]}</span>
-            <span className={i === nextIdx ? 'text-white' : 'text-slate-400'}>{t}</span>
+    <div className="border-b border-white/[0.05] bg-slate-950/40">
+      <div className="mx-auto flex max-w-[1600px] flex-col gap-2 px-4 py-2 sm:flex-row sm:items-center sm:gap-4 lg:px-6">
+        <div className="flex shrink-0 items-center justify-between gap-3 sm:justify-start">
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-slate-500">🕌 Kocaeli</span>
+            <span className="hidden text-slate-400 min-[380px]:inline">{nextName} vaktine</span>
+            <span className="min-[380px]:hidden text-slate-400">{nextName}</span>
+            <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 font-mono text-sm font-bold tabular-nums text-emerald-400 ring-1 ring-emerald-500/20">
+              {cdText}
+            </span>
           </div>
-        ))}
+          <button
+            type="button"
+            onClick={() => setQiblaOpen((v) => !v)}
+            aria-expanded={qiblaOpen}
+            className="rounded-full border border-slate-600/50 bg-slate-900/60 px-2.5 py-1 text-[11px] font-semibold text-slate-300 transition hover:border-emerald-500/40 hover:text-emerald-200 sm:hidden"
+          >
+            🧭 Kıble
+          </button>
+        </div>
+
+        <div className="hide-scrollbar -mx-4 flex min-w-0 flex-1 items-center gap-1 overflow-x-auto px-4 sm:mx-0 sm:justify-center sm:px-0">
+          {todayTimes.map((t, i) => (
+            <div
+              key={i}
+              className={`flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] ${
+                i === nextIdx
+                  ? 'bg-emerald-500/15 font-bold text-emerald-300 ring-1 ring-emerald-500/30'
+                  : 'text-slate-500'
+              }`}
+            >
+              <span>{NAMES[i]}</span>
+              <span className={`tabular-nums ${i === nextIdx ? 'text-white' : 'text-slate-400'}`}>{t}</span>
+            </div>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setQiblaOpen((v) => !v)}
+          aria-expanded={qiblaOpen}
+          className="hidden shrink-0 rounded-full border border-slate-600/50 bg-slate-900/60 px-3 py-1 text-[11px] font-semibold text-slate-300 transition hover:border-emerald-500/40 hover:text-emerald-200 sm:inline-flex"
+        >
+          🧭 Kıble Bulucu
+        </button>
       </div>
 
-      <div className="mx-2 mb-2 rounded-xl border border-emerald-500/20 bg-gradient-to-br from-slate-800/80 to-slate-900/90 p-2.5 shadow-[0_8px_24px_rgba(15,23,42,0.35)] sm:mx-auto sm:max-w-xl">
+      {qiblaOpen ? (
+      <div className="mx-4 mb-3 rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-slate-800/80 to-slate-900/90 p-3 shadow-[0_8px_24px_rgba(15,23,42,0.35)] sm:mx-auto sm:max-w-xl">
         <div className="flex items-center justify-between gap-2">
           <div>
             <p className="text-[11px] font-semibold text-slate-100">🧭 Kıble Bulucu</p>
@@ -226,6 +253,7 @@ const PrayerCountdown = () => {
           </div>
         ) : null}
       </div>
+      ) : null}
     </div>
   );
 };

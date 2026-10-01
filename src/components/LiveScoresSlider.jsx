@@ -115,7 +115,7 @@ function MatchRow({ m }) {
 
   return (
     <div
-      className={`flex items-stretch gap-0.5 border-b border-slate-600/35 px-1 py-1 text-[10px] leading-tight hover:bg-slate-700/25 min-[400px]:gap-1 min-[400px]:px-1.5 min-[400px]:text-[11px] ${
+      className={`flex items-stretch gap-0.5 border-b border-white/[0.04] px-1 py-1.5 text-[10px] leading-tight hover:bg-white/[0.03] min-[400px]:gap-1 min-[400px]:px-1.5 min-[400px]:text-[11px] ${
         m.isLive ? 'bg-red-950/15' : ''
       }`}
     >
@@ -169,8 +169,8 @@ function LeagueSection({ league, rows, open, onToggle, onStandings, hasStandings
   const meta = LEAGUE_META[league] || { country: '', flag: '⚽' };
 
   return (
-    <div className="mb-1.5 overflow-hidden rounded-lg border border-slate-600/40 bg-slate-800/40">
-      <div className="flex items-center gap-1.5 border-b border-slate-600/50 bg-slate-700/35 px-2 py-1.5">
+    <div className="mb-2 overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.02]">
+      <div className="flex items-center gap-1.5 border-b border-white/[0.06] bg-white/[0.04] px-2.5 py-1.5">
         <span className="text-sm leading-none">{meta.flag}</span>
         <span className="min-w-0 flex-1 truncate text-[10px] font-bold uppercase tracking-wide text-slate-200">
           {meta.country ? `${meta.country} · ` : ''}
@@ -180,7 +180,7 @@ function LeagueSection({ league, rows, open, onToggle, onStandings, hasStandings
           <button
             type="button"
             onClick={() => onStandings(league)}
-            className="shrink-0 text-[9px] font-semibold text-green-400 hover:underline"
+            className="shrink-0 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9px] font-semibold text-emerald-300 hover:bg-emerald-500/20"
           >
             Puan
           </button>
@@ -319,13 +319,13 @@ export default function LiveScoresSlider({ variant = 'footer' }) {
   ];
 
   const shell = isSidebar
-    ? 'flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-600/50 bg-slate-800/90 shadow-lg'
+    ? 'app-panel flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden'
     : 'border-t border-slate-700/60 bg-slate-900/95 py-3';
 
-  const inner = isSidebar ? 'flex min-h-0 w-full min-w-0 flex-1 flex-col px-2 pb-2 pt-2 sm:px-3' : 'mx-auto max-w-7xl px-3';
+  const inner = isSidebar ? 'flex min-h-0 w-full min-w-0 flex-1 flex-col px-2.5 pb-2.5 pt-2.5 sm:px-3' : 'mx-auto max-w-7xl px-3';
 
   const scrollMax = isSidebar
-    ? 'max-h-[min(42dvh,360px)] min-h-[200px] sm:max-h-[min(48dvh,420px)] lg:max-h-[min(70dvh,560px)] xl:max-h-[calc(100vh-7.5rem)]'
+    ? ''
     : 'max-h-[min(58vh,520px)] sm:max-h-[min(65vh,600px)]';
 
   const showScoresLoading = activeTab !== 'standings' && loading && scores.length === 0;
@@ -334,9 +334,9 @@ export default function LiveScoresSlider({ variant = 'footer' }) {
   return (
     <div className={shell}>
       <div className={inner}>
-        <div className="mb-2 shrink-0 border-b border-slate-600/40 pb-2">
+        <div className="mb-2 shrink-0 border-b border-white/[0.06] pb-2.5">
           <div className="mb-2 flex flex-col gap-2 min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between">
-            <h3 className="text-xs font-bold uppercase tracking-wide text-slate-300">Skorlar</h3>
+            <h3 className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-300">Skorlar</h3>
             <div className="flex flex-wrap items-center gap-0.5">
               <button
                 type="button"
@@ -384,7 +384,7 @@ export default function LiveScoresSlider({ variant = 'footer' }) {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-1 sm:gap-1.5">
+          <div className="hide-scrollbar flex gap-1 overflow-x-auto rounded-xl border border-white/[0.06] bg-slate-950/60 p-1">
             {matchTabs.map((tab) => {
               const active = activeTab === tab.id;
               return (
@@ -392,10 +392,10 @@ export default function LiveScoresSlider({ variant = 'footer' }) {
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`rounded-md px-2 py-0.5 text-[10px] font-semibold transition ${
+                  className={`flex-1 shrink-0 whitespace-nowrap rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
                     active
-                      ? 'bg-green-600 text-white shadow-sm'
-                      : 'bg-slate-700/40 text-slate-400 hover:bg-slate-700/70 hover:text-slate-200'
+                      ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-900/40'
+                      : 'text-slate-400 hover:bg-white/[0.05] hover:text-slate-200'
                   }`}
                 >
                   {tab.label}

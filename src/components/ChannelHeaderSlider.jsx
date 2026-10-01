@@ -71,14 +71,14 @@ const ChannelHeaderSlider = ({
 
   if (loading) {
     return (
-      <section className="relative w-full overflow-hidden border-y border-white/[0.06] bg-slate-950/90">
+      <section className="relative w-full overflow-hidden border-y border-white/[0.06] bg-slate-950/80 sm:rounded-2xl sm:border">
         <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_0%,rgba(16,185,129,0.14),transparent_55%)]" />
         <div className="relative py-3 sm:py-4">
-          <div className="mb-2 flex items-end justify-between px-4 sm:px-6 lg:px-10">
+          <div className="mb-2 flex items-end justify-between px-4 sm:px-5">
             <div className="h-3 w-40 rounded bg-slate-800/80 animate-pulse motion-reduce:animate-none" />
             <div className="h-2.5 w-16 rounded bg-slate-800/60 animate-pulse motion-reduce:animate-none" />
           </div>
-          <div className="flex items-stretch gap-0 px-2 pb-2 sm:px-3 lg:px-6">
+          <div className="flex items-stretch gap-0 px-2 pb-2.5 sm:px-3">
             <div className="w-8 shrink-0 rounded-l-xl border border-slate-800/80 bg-slate-800/50 sm:w-9" />
             <div className="hide-scrollbar flex min-w-0 flex-1 gap-3 overflow-x-auto border-y border-slate-800/50 bg-slate-950/20 px-1.5 py-1 sm:gap-3.5 sm:px-2">
               {Array.from({ length: 12 }).map((_, i) => (
@@ -107,7 +107,7 @@ const ChannelHeaderSlider = ({
         type="button"
         onClick={() => onChannelKind(id)}
         className={[
-          'min-w-0 flex-1 rounded-md px-3 py-1.5 text-center text-[11px] font-semibold transition-colors sm:px-4 sm:py-1.5 sm:text-xs',
+          'min-w-0 flex-1 whitespace-nowrap rounded-md px-3 py-1.5 text-center text-[11px] font-semibold transition-colors sm:px-4 sm:py-1.5 sm:text-xs',
           on
             ? 'bg-slate-100 text-slate-900 shadow-sm'
             : 'text-slate-400 hover:text-slate-200',
@@ -120,7 +120,7 @@ const ChannelHeaderSlider = ({
 
   return (
     <section
-      className="relative w-full overflow-hidden border-y border-white/[0.08] bg-slate-950 shadow-[0_12px_48px_rgba(0,0,0,0.45)]"
+      className="relative w-full overflow-hidden border-y border-white/[0.08] bg-slate-950/80 shadow-[0_12px_48px_rgba(0,0,0,0.45)] sm:rounded-2xl sm:border"
       aria-label="Hızlı kanal seçimi"
     >
       <div
@@ -134,7 +134,7 @@ const ChannelHeaderSlider = ({
       />
 
       <div className="relative">
-        <div className="flex flex-col gap-2 border-b border-white/[0.05] px-4 py-2.5 sm:flex-row sm:items-end sm:justify-between sm:px-6 sm:py-3 lg:px-10">
+        <div className="flex flex-col gap-2 border-b border-white/[0.05] px-4 py-2.5 sm:flex-row sm:items-end sm:justify-between sm:px-5 sm:py-3">
           <div>
             <p className="text-[9px] font-semibold uppercase tracking-[0.32em] text-slate-500 sm:text-[10px]">canlı</p>
             <h2 className="text-base font-bold tracking-tight text-white sm:text-lg">
@@ -155,7 +155,7 @@ const ChannelHeaderSlider = ({
           )}
         </div>
 
-        <div className="flex min-h-0 items-stretch gap-0 px-2 pb-2 pt-0.5 sm:px-3 lg:px-6">
+        <div className="flex min-h-0 items-stretch gap-0 px-2 pb-2.5 pt-0.5 sm:px-3">
           <button
             type="button"
             onClick={() => scrollByDir('left')}

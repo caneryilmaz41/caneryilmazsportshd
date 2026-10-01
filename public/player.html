@@ -421,6 +421,11 @@ const src=new URLSearchParams(location.search).get('src');
 const fallback=new URLSearchParams(location.search).get('fallback');
 const selectedId=new URLSearchParams(location.search).get('selected')||'';
 const railRaw=new URLSearchParams(location.search).get('rail');
+const startMuted=new URLSearchParams(location.search).get('muted')==='1';
+/* Çoklu izlemede üst sayfanın ses tercihi, yayın başlamadan gelse de geçerli olsun */
+let forcedMute=null;
+/* Üst sayfaya durum bildir (otomatik yedek kaynak, istatistik, çoklu izleme) */
+function tellParent(msg){try{if(window.parent&&window.parent!==window)window.parent.postMessage(msg,'*')}catch(_){}}
 const V=document.getElementById('v'),W=document.getElementById('wrap');
 const loader=document.getElementById('loader'),errEl=document.getElementById('error');
 const bigPlay=document.getElementById('bigPlay');
@@ -440,10 +445,16 @@ if(isAndroid) document.body.classList.add('is-android');
 if(isAndroid && window.innerHeight <= 560) document.body.classList.add('compact-controls');
 
 function hide(){loader.classList.add('hidden')}
+let errorSent=false;
 function err(){
   hide();
   errEl.classList.add('show');
+  clearTimeout(stallT);
+  if(!errorSent){errorSent=true;tellParent({type:'player:error',src:src||''});}
 }
+/* Manifest hiç gelmez / görüntü hiç başlamazsa da hata say */
+let started=false;
+const stallT=setTimeout(function(){ if(!started) err(); },30000);
 function fmt(s){const m=Math.floor(s/60),ss=Math.floor(s%60);return m+':'+(ss<10?'0':'')+ss}
 
 /* Icons */
@@ -638,17 +649,40 @@ function onFSChange(){
 }
 document.addEventListener('fullscreenchange',onFSChange);
 document.addEventListener('webkitfullscreenchange',onFSChange);
+function runCmd(cmd){
+  if(cmd==='fs') toggleFS();
+  else if(cmd==='mute') toggleMute();
+  else if(cmd==='pip') pip();
+  else if(cmd==='play') togglePlay();
+  else if(cmd==='unmute'){ forcedMute=false; V.muted=false; ui(); }
+  else if(cmd==='silence'){ forcedMute=true; V.muted=true; ui(); }
+}
 document.addEventListener('keydown',function(e){
-  if(e.key==='Escape'&&isFakeFS()){ setFakeFS(false); onFSChange(); }
+  if(e.key==='Escape'&&isFakeFS()){ setFakeFS(false); onFSChange(); return; }
+  if(e.ctrlKey||e.metaKey||e.altKey) return;
+  const k=(e.key||'').toLowerCase();
+  if(k==='f'){ e.preventDefault(); runCmd('fs'); }
+  else if(k==='m'){ e.preventDefault(); runCmd('mute'); }
+  else if(k==='p'){ e.preventDefault(); runCmd('pip'); }
+  else if(k===' '||k==='k'){ e.preventDefault(); runCmd('play'); }
+  /* Yenile ve maç geçişi üst sayfada yönetiliyor */
+  else if(k==='r'||k==='n'||k==='b'||k==='arrowup'||k==='arrowdown'){ e.preventDefault(); tellParent({type:'player:key',key:k}); }
 });
 window.addEventListener('message',function(e){
   if(e?.data?.type==='player:exit-fake-fs'&&isFakeFS()){ setFakeFS(false); onFSChange(); }
+  if(e?.data?.type==='player:cmd') runCmd(e.data.cmd);
+});
+V.addEventListener('playing',function(){
+  if(started) return;
+  started=true; clearTimeout(stallT);
+  tellParent({type:'player:playing',src:src||''});
 });
 V.addEventListener('webkitbeginfullscreen',()=>onFSChange());
 V.addEventListener('webkitendfullscreen',()=>onFSChange());
 
 /* Autoplay: sesli başlatmayı dener; tarayıcı engellerse sessiz oynatmaya düşer */
 function go(){
+  if (forcedMute===true || (forcedMute===null && startMuted)) { V.muted = true; V.play().catch(()=>{}); ui(); return; }
   V.muted = false;
   const p = V.play();
   if (p) p.catch(function () { V.muted = true; V.play().catch(()=>{}); ui(); });

@@ -1,19 +1,11 @@
 const Footer = () => {
   return (
-    <footer className="mt-16 border-t border-slate-700/30">
-      <div className="max-w-7xl mx-auto px-3 lg:px-6 py-8">
-        <div className="flex flex-col items-center justify-center gap-4">
-          <img src="/logom.png" alt="Logo" className="h-8 opacity-70" />
-          <div className="text-slate-400 text-sm font-light flex items-center gap-2">
-            <span>© 2026
-              
-            </span>
-            <span className="text-green-400 font-medium">caneryılmazsportshd</span>
-          </div>
-          <div className="text-slate-500 text-xs">
-            Tüm hakları saklıdır
-          </div>
-        </div>
+    <footer className="mt-10 border-t border-white/[0.06] lg:mt-14">
+      <div className="mx-auto flex max-w-[1600px] flex-col items-center justify-between gap-3 px-4 py-6 sm:flex-row lg:px-6">
+        <img src="/logom.png" alt="caneryılmazsports" className="h-7 w-auto opacity-80" />
+        <p className="text-center text-xs text-slate-500 sm:text-right">
+          © 2026 <span className="font-semibold text-emerald-400">caneryılmazsportshd</span> · Tüm hakları saklıdır
+        </p>
       </div>
     </footer>
   );

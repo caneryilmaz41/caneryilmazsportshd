@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import Header from './components/Header';
 import PrayerCountdown from './components/PrayerCountdown';
 import Footer from './components/Footer';
@@ -13,6 +13,9 @@ import NewsTicker from './components/NewsTicker';
 import ScrollToTopButton from './components/ScrollToTopButton';
 import TabSelector from './components/TabSelector';
 import ChannelHeaderSlider from './components/ChannelHeaderSlider';
+import ScheduleList from './components/ScheduleList';
+import MultiView from './components/MultiView';
+import ReminderToast from './components/ReminderToast';
 
 import { useStreamData } from './hooks/useStreamData';
 import { useStreamPlayer } from './hooks/useStreamPlayer';
@@ -21,6 +24,20 @@ import { parseMatchTeams } from './utils/teamUtils';
 import RecentPicks from './components/RecentPicks';
 import { useHlsMatchList } from './hooks/useHlsMatchList';
 import { getFilteredChannels } from './utils/channelFilter';
+import { getFilteredMatches } from './utils/matchFilter';
+import { useFavorites, favKey } from './hooks/useFavorites';
+import { useReminders } from './hooks/useReminders';
+import { track } from './utils/analytics';
+
+const SITE_TITLE = 'caneryılmazsports';
+
+/** Favoriler üste; kendi aralarında ve diğerlerinde kaynak sırası korunur. */
+function favoritesFirst(list, isFavItem) {
+  const fav = [];
+  const rest = [];
+  for (const x of list) (isFavItem(x) ? fav : rest).push(x);
+  return fav.length ? [...fav, ...rest] : list;
+}
 
 function App() {
   const [matchSearch, setMatchSearch] = useState("");
@@ -35,7 +52,10 @@ function App() {
     }
   });
   
-  const { matches, channels, belgeselChannels, loading } = useStreamData();
+  const { matches: rawMatches, channels, belgeselChannels, loading } = useStreamData();
+  const { favs, has: isFav, toggle: toggleFav } = useFavorites();
+  const reminders = useReminders();
+  const matches = useMemo(() => getFilteredMatches(rawMatches), [rawMatches]);
   const { hlsMatches } = useHlsMatchList(matches);
   const visibleMatches = useMemo(() => {
     // HLS probe boş dönerse liste tamamen kaybolmasın; ham maçları fallback göster.
@@ -58,8 +78,12 @@ function App() {
 
   const filteredMatches = useMemo(() => {
     const q = matchSearch.trim().toLowerCase();
-    if (!q) return visibleMatches;
-    return visibleMatches.filter((m) => {
+    const isFavMatch = (m) => {
+      const [h, a] = parseMatchTeams(m.name);
+      return favs.has(favKey('team', h)) || favs.has(favKey('team', a));
+    };
+    if (!q) return favoritesFirst(visibleMatches, isFavMatch);
+    return favoritesFirst(visibleMatches.filter((m) => {
       const name = m.name?.toLowerCase() || "";
       const league = m.league?.toLowerCase() || "";
       const cat = m.category?.toLowerCase() || "";
@@ -73,33 +97,159 @@ function App() {
         t0.includes(q) ||
         t1.includes(q)
       );
-    });
-  }, [visibleMatches, matchSearch]);
+    }), isFavMatch);
+  }, [visibleMatches, matchSearch, favs]);
   const filteredChannels = useMemo(() => {
     const q = matchSearch.trim().toLowerCase();
-    if (!q) return safeChannels;
-    return safeChannels.filter((c) => {
+    const isFavChannel = (c) => favs.has(favKey('channel', c.id));
+    if (!q) return favoritesFirst(safeChannels, isFavChannel);
+    return favoritesFirst(safeChannels.filter((c) => {
       const name = c.name?.toLowerCase() || "";
       const status = c.status?.toLowerCase() || "";
       const cat = c.category?.toLowerCase() || "";
       return name.includes(q) || status.includes(q) || cat.includes(q);
-    });
-  }, [safeChannels, matchSearch]);
+    }), isFavChannel);
+  }, [safeChannels, matchSearch, favs]);
   const {
     selectedMatch,
     streamLoading,
-    handleMatchSelect
+    handleMatchSelect,
+    retryStream,
   } = useStreamPlayer();
+
+  // Çoklu izleme
+  const [multiView, setMultiView] = useState(false);
+  const [multiLayout, setMultiLayout] = useState(2);
+  const [multiSlots, setMultiSlots] = useState([]);
+  const [multiAudio, setMultiAudio] = useState(null);
+  const [multiTarget, setMultiTarget] = useState(0);
+
+  const addToMulti = (item) => {
+    if (multiSlots.some((x) => x.id === item.id)) return;
+    const next = [...multiSlots];
+    if (next.length < multiLayout) {
+      next.push(item);
+      setMultiTarget(Math.min(next.length, multiLayout - 1));
+    } else {
+      next[Math.min(multiTarget, next.length - 1)] = item;
+    }
+    setMultiSlots(next);
+    setMultiAudio((cur) => (cur != null && next.some((x) => x.id === cur) ? cur : item.id));
+    track('multiview_add', { name: item.name });
+  };
+  const enterMultiView = () => {
+    const seed = selectedMatch ? [{ ...selectedMatch }] : [];
+    setMultiSlots(seed);
+    setMultiAudio(seed[0]?.id ?? null);
+    setMultiTarget(seed.length);
+    setMultiView(true);
+    track('multiview_open');
+  };
+  const removeFromMulti = (id) => {
+    const next = multiSlots.filter((x) => x.id !== id);
+    setMultiSlots(next);
+    setMultiTarget(Math.min(next.length, multiLayout - 1));
+    setMultiAudio((cur) => (cur === id ? null : cur));
+  };
+  const changeMultiLayout = (n) => {
+    setMultiLayout(n);
+    setMultiSlots((prev) => prev.slice(0, n));
+    setMultiTarget((t) => Math.min(t, n - 1));
+  };
 
   const { recent, addPick } = useRecentPicks();
 
-  const selectMatch = (m) => {
-    addPick({ id: m.id, name: m.name, kind: 'match' });
-    handleMatchSelect(m);
+  // Mobil/tablette oynatıcı listenin üstünde; seçim yapılınca oraya kaydır.
+  const revealPlayer = () => {
+    if (!window.matchMedia('(max-width: 1279px)').matches) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    requestAnimationFrame(() => {
+      document.getElementById('player-section')?.scrollIntoView({
+        behavior: reduce ? 'auto' : 'smooth',
+        block: 'start',
+      });
+    });
   };
-  const selectChannel = (c) => {
-    addPick({ id: c.id, name: c.name, kind: 'channel' });
-    handleMatchSelect(c);
+
+  // Paylaşılabilir link: ?mac=<id> veya ?kanal=<id>
+  const setShareParam = (kind, id) => {
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('mac');
+      url.searchParams.delete('kanal');
+      if (id != null) url.searchParams.set(kind === 'channel' ? 'kanal' : 'mac', id);
+      window.history.replaceState(null, '', url.pathname + url.search + url.hash);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const openItem = (item, kind) => {
+    const withKind = { ...item, kind };
+    addPick({ id: item.id, name: item.name, kind });
+    track(kind === 'channel' ? 'channel_select' : 'match_select', { name: item.name });
+    if (multiView) {
+      addToMulti(withKind);
+      revealPlayer();
+      return;
+    }
+    handleMatchSelect(withKind);
+    setShareParam(kind, item.id);
+    revealPlayer();
+  };
+  const selectMatch = (m) => openItem(m, 'match');
+  const selectChannel = (c) => openItem(c, 'channel');
+
+  // Linkle gelindiyse liste yüklenince o yayını aç (bir kez).
+  const deepLinkDone = useRef(false);
+  useEffect(() => {
+    if (loading || deepLinkDone.current) return;
+    deepLinkDone.current = true;
+    const params = new URLSearchParams(window.location.search);
+    const macId = params.get('mac');
+    const kanalId = params.get('kanal');
+    if (!macId && !kanalId) return;
+    const found = macId
+      ? visibleMatches.find((m) => String(m.id) === macId)
+      : safeChannels.find((c) => String(c.id) === kanalId);
+    if (found) {
+      if (kanalId) setActiveTab('channels');
+      openItem(found, macId ? 'match' : 'channel');
+      track('deeplink_open', { name: found.name });
+    } else {
+      setShareParam(null, null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, visibleMatches, safeChannels]);
+
+  // Sekme başlığı: izlenen yayın
+  useEffect(() => {
+    if (!selectedMatch?.name || multiView) {
+      document.title = SITE_TITLE;
+      return;
+    }
+    const teams = parseMatchTeams(selectedMatch.name);
+    const label = selectedMatch.kind === 'match' && teams[0] && teams[1] ? `${teams[0]} – ${teams[1]}` : selectedMatch.name;
+    document.title = `${label} canlı izle | ${SITE_TITLE}`;
+  }, [selectedMatch?.name, selectedMatch?.kind, multiView]);
+
+  // Klavye N/B ve oynatıcıdaki "Sonraki maç": görünen listede bir sonraki / önceki
+  const stepSelection = (dir) => {
+    const isChannel = selectedMatch?.kind === 'channel';
+    const list = isChannel ? filteredChannels : filteredMatches;
+    if (!list.length) return;
+    const idx = list.findIndex((x) => x.id === selectedMatch?.id);
+    const next = list[(idx + dir + list.length) % list.length];
+    if (next) openItem(next, isChannel ? 'channel' : 'match');
+  };
+
+  const openFromReminder = (r) => {
+    reminders.dismissToast();
+    const m = visibleMatches.find((x) => x.id === r.id);
+    if (m) {
+      setActiveTab('matches');
+      selectMatch(m);
+    }
   };
 
   const dismissOnboarding = () => {
@@ -119,13 +269,13 @@ function App() {
   }, [filteredMatches, visibleMatches, selectedMatch]);
 
   return (
-    <div className="min-h-screen pb-9 text-white antialiased sm:pb-10">
+    <div className="min-h-screen pb-10 text-white antialiased sm:pb-11">
       <AppSplashScreen />
       <Header />
       <PrayerCountdown />
 
-      <div className="mx-auto max-w-[1600px] px-3 pt-4 lg:px-6 lg:pt-6">
-        <div className="mb-4 -mx-3 sm:mx-0 lg:-mx-6 lg:mb-5">
+      <main className="mx-auto max-w-[1600px] px-3 pt-4 sm:px-4 lg:px-6 lg:pt-5">
+        <div className="-mx-3 mb-4 sm:mx-0 lg:mb-5">
           <ChannelHeaderSlider
             channels={headerSliderChannels}
             selectedMatch={selectedMatch}
@@ -143,16 +293,17 @@ function App() {
           Mobil: seçim yokken oynatıcı yok; maç/kanal seçilince oynatıcı üstte, liste altında.
           xl+: sol maç/kanallar | orta oynatıcı | sağ skorlar (seçim yokken de orta panel boş/placeholder)
         */}
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(260px,300px)_minmax(0,1fr)_minmax(240px,300px)] xl:items-start xl:gap-5">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-[minmax(270px,320px)_minmax(0,1fr)_minmax(250px,310px)] xl:items-start xl:gap-5">
           {/* Sol: sabit yükseklik + flex ile scroll her zaman çalışır */}
-          <aside className="order-2 flex h-[min(420px,52dvh)] min-h-0 flex-col gap-3 xl:order-none xl:h-[calc(100vh-5.5rem)] xl:max-h-[calc(100vh-5.5rem)] xl:sticky xl:top-4 xl:self-start">
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-600/45 bg-gradient-to-b from-slate-800/95 to-slate-900/90 shadow-xl ring-1 ring-white/[0.04]">
-              <div className="flex shrink-0 items-center justify-between border-b border-slate-600/40 bg-slate-900/40 px-3 py-2 backdrop-blur-sm">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                  {activeTab === 'matches' ? 'Canlı maçlar' : 'Canlı kanallar'}
+          <aside className="order-2 flex h-[min(560px,72dvh)] min-h-0 flex-col gap-3 xl:order-none xl:sticky xl:top-20 xl:h-[calc(100dvh-8.75rem)] xl:self-start">
+            <div className="app-panel flex min-h-0 flex-1 flex-col overflow-hidden">
+              <div className="app-panel-header flex shrink-0 items-center justify-between px-3.5 py-2.5">
+                <span className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-300">
+                  <span className="live-dot" aria-hidden />
+                  {activeTab === 'matches' ? 'Canlı maçlar' : activeTab === 'program' ? 'Bugünün programı' : 'Canlı kanallar'}
                 </span>
-                <span className="rounded-md bg-slate-800/80 px-2 py-0.5 text-[10px] font-bold tabular-nums text-slate-500">
-                  {activeTab === 'matches'
+                <span className="rounded-full bg-white/[0.06] px-2.5 py-0.5 text-[10px] font-bold tabular-nums text-slate-400">
+                  {activeTab !== 'channels'
                     ? (matchSearch.trim()
                       ? `${filteredMatches.length}/${visibleMatches.length}`
                       : visibleMatches.length)
@@ -162,13 +313,25 @@ function App() {
                 </span>
               </div>
 
-              <div className="shrink-0 space-y-2 border-b border-slate-700/35 bg-slate-900/30 px-2 py-2">
+              <div className="shrink-0 space-y-2 border-b border-white/[0.06] px-2.5 py-2.5">
                 <TabSelector
                   activeTab={activeTab}
                   onTabChange={setActiveTab}
                   matchesCount={visibleMatches.length}
                   channelsCount={safeChannels.length}
                 />
+                {multiView ? (
+                  <div className="flex items-center justify-between gap-2 rounded-lg border border-sky-500/30 bg-sky-500/10 px-2 py-1.5">
+                    <p className="text-[11px] text-sky-200">Çoklu izleme açık: seçtiğin yayın kutulara eklenir.</p>
+                    <button
+                      type="button"
+                      onClick={() => setMultiView(false)}
+                      className="shrink-0 rounded px-1.5 text-[11px] font-semibold text-sky-200 hover:bg-sky-500/20"
+                    >
+                      Kapat
+                    </button>
+                  </div>
+                ) : null}
                 {showOnboarding ? (
                   <div className="flex items-start justify-between gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 py-1.5">
                     <p className="text-[11px] text-emerald-200">Bir maç seç, yayın player alanında hemen açılır.</p>
@@ -184,7 +347,7 @@ function App() {
                 <div className="relative">
                   <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500" aria-hidden>
                     <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 0 11-14 0 7 7 0 0114 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   </span>
                   <input
@@ -193,7 +356,7 @@ function App() {
                     onChange={(e) => setMatchSearch(e.target.value)}
                     placeholder="Takım, lig ara…"
                     autoComplete="off"
-                    className="w-full rounded-lg border border-slate-600/50 bg-slate-900/70 py-1.5 pl-8 pr-8 text-xs text-slate-100 placeholder:text-slate-500 focus:border-green-500/40 focus:outline-none focus:ring-1 focus:ring-green-500/30"
+                    className="w-full rounded-xl border border-white/[0.08] bg-slate-950/60 py-2 pl-8 pr-8 text-base text-slate-100 transition placeholder:text-slate-500 focus:border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 xl:text-xs"
                   />
                   {matchSearch ? (
                     <button
@@ -238,8 +401,21 @@ function App() {
                         onMatchSelect={selectMatch}
                         logoState={logoState}
                         setLogoState={setLogoState}
+                        isFav={isFav}
+                        onToggleFav={toggleFav}
+                        hasReminder={reminders.has}
+                        onToggleReminder={reminders.toggle}
                       />
                     </>
+                  ) : activeTab === 'program' ? (
+                    <ScheduleList
+                      matches={filteredMatches}
+                      selectedMatch={selectedMatch}
+                      onMatchSelect={selectMatch}
+                      isFav={isFav}
+                      hasReminder={reminders.has}
+                      onToggleReminder={reminders.toggle}
+                    />
                   ) : (
                     <>
                       <RecentPicks
@@ -252,6 +428,8 @@ function App() {
                         channels={filteredChannels}
                         selectedMatch={selectedMatch}
                         onChannelSelect={selectChannel}
+                        isFav={isFav}
+                        onToggleFav={toggleFav}
                       />
                     </>
                   )}
@@ -261,35 +439,55 @@ function App() {
           </aside>
 
           <section
+            id="player-section"
             className={
-              'order-1 min-w-0 xl:order-none ' + (!selectedMatch ? 'hidden xl:block' : '')
+              'order-1 min-w-0 scroll-mt-[4.5rem] md:col-span-2 xl:order-none xl:col-span-1 ' +
+              (!selectedMatch && !multiView ? 'hidden xl:block' : '')
             }
           >
-            <div className="relative overflow-hidden rounded-2xl border border-green-500/20 bg-slate-800/90 shadow-lg">
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent" />
+            <div className="app-panel relative overflow-hidden">
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-500/[0.06] via-transparent to-sky-500/[0.03]" />
               <div className="relative">
-                <VideoPlayer
-                  selectedMatch={selectedMatch}
-                  streamLoading={streamLoading}
-                  logoState={logoState}
-                  setLogoState={setLogoState}
-                  playerMatches={playerRailMatches}
-                  onRailMatchSelect={selectMatch}
-                />
+                {multiView ? (
+                  <MultiView
+                    slots={multiSlots}
+                    layout={multiLayout}
+                    onLayout={changeMultiLayout}
+                    onRemove={removeFromMulti}
+                    onExit={() => setMultiView(false)}
+                    audioId={multiAudio}
+                    onAudio={setMultiAudio}
+                    targetIndex={multiTarget}
+                    onTarget={setMultiTarget}
+                  />
+                ) : (
+                  <VideoPlayer
+                    selectedMatch={selectedMatch}
+                    streamLoading={streamLoading}
+                    logoState={logoState}
+                    setLogoState={setLogoState}
+                    playerMatches={playerRailMatches}
+                    onRailMatchSelect={selectMatch}
+                    onRetry={retryStream}
+                    onStep={stepSelection}
+                    onMultiView={enterMultiView}
+                  />
+                )}
               </div>
             </div>
           </section>
 
-          <aside className="order-3 flex min-h-0 h-[min(400px,50dvh)] flex-col xl:order-none xl:h-[calc(100vh-5.5rem)] xl:max-h-[calc(100vh-5.5rem)] xl:self-start xl:sticky xl:top-4">
+          <aside className="order-3 flex h-[min(560px,72dvh)] min-h-0 flex-col xl:order-none xl:sticky xl:top-20 xl:h-[calc(100dvh-8.75rem)] xl:self-start">
             <LiveScoresSlider variant="sidebar" />
           </aside>
         </div>
-      </div>
+      </main>
       <Footer />
       <PWAInstallPrompt />
       <NewsTicker />
       <ScrollToTopButton />
       <StandaloneRefreshButton />
+      <ReminderToast reminder={reminders.toast} onOpen={openFromReminder} onClose={reminders.dismissToast} />
     </div>
   );
 }
