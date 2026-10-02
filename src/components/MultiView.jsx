@@ -23,6 +23,8 @@ function Slot({ match, audible, onAudio, onRemove, selected, onSelectSlot }) {
     return () => {
       alive = false;
     };
+    // Sadece kutudaki yayın değişince (id) veya elle yenilenince yeniden çöz.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [match.id, reloadKey]);
 
   // Ses tek kutuda açık olsun: seçilen açılır, diğerleri kısılır.
@@ -154,7 +156,7 @@ const MultiView = ({ slots, layout, onLayout, onRemove, onExit, audioId, onAudio
         </div>
       </div>
 
-      <div className={`grid gap-2 p-2 ${layout === 2 ? 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2' : 'grid-cols-2'}`}>
+      <div className={`grid gap-2 p-2 ${layout === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-2'}`}>
         {cells.map((m, i) =>
           m ? (
             <Slot

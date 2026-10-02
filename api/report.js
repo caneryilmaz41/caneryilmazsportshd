@@ -33,7 +33,7 @@ export default async function handler(req, res) {
 
   console.log('[stream-report]', JSON.stringify(report))
 
-  const hook = (process.env.REPORT_WEBHOOK_URL || '').trim()
+  const hook = (globalThis.process?.env?.REPORT_WEBHOOK_URL || '').trim()
   if (hook) {
     try {
       await fetch(hook, {
