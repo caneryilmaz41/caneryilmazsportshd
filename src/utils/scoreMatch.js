@@ -55,3 +55,49 @@ export function findScoreFor(teams, scores) {
   }
   return null;
 }
+
+/** Skor kaynağındaki İngilizce adları Türkçe göster (milli takımlar ve Türk kulüpleri). */
+const DISPLAY_TR = {
+  germany: 'Almanya', serbia: 'Sırbistan', greece: 'Yunanistan', netherlands: 'Hollanda', denmark: 'Danimarka',
+  portugal: 'Portekiz', england: 'İngiltere', france: 'Fransa', spain: 'İspanya', italy: 'İtalya',
+  turkiye: 'Türkiye', turkey: 'Türkiye', belgium: 'Belçika', croatia: 'Hırvatistan', switzerland: 'İsviçre',
+  austria: 'Avusturya', poland: 'Polonya', czechia: 'Çekya', 'czech republic': 'Çekya', scotland: 'İskoçya',
+  wales: 'Galler', hungary: 'Macaristan', romania: 'Romanya', ukraine: 'Ukrayna', sweden: 'İsveç',
+  norway: 'Norveç', albania: 'Arnavutluk', kosovo: 'Kosova', 'bosnia and herzegovina': 'Bosna Hersek',
+  bosnia: 'Bosna Hersek', slovakia: 'Slovakya', slovenia: 'Slovenya', finland: 'Finlandiya',
+  'republic of ireland': 'İrlanda', ireland: 'İrlanda', 'northern ireland': 'Kuzey İrlanda', iceland: 'İzlanda',
+  georgia: 'Gürcistan', montenegro: 'Karadağ', bulgaria: 'Bulgaristan', lithuania: 'Litvanya', latvia: 'Letonya',
+  estonia: 'Estonya', armenia: 'Ermenistan', azerbaijan: 'Azerbaycan', kazakhstan: 'Kazakistan',
+  luxembourg: 'Lüksemburg', cyprus: 'Kıbrıs', gibraltar: 'Cebelitarık', 'faroe islands': 'Faroe Adaları',
+  liechtenstein: 'Lihtenştayn', 'north macedonia': 'Kuzey Makedonya', israel: 'İsrail', russia: 'Rusya',
+  belarus: 'Belarus', moldova: 'Moldova', malta: 'Malta', andorra: 'Andorra', 'san marino': 'San Marino',
+  brazil: 'Brezilya', argentina: 'Arjantin', morocco: 'Fas', egypt: 'Mısır', 'saudi arabia': 'Suudi Arabistan',
+  japan: 'Japonya', 'south korea': 'Güney Kore', 'united states': 'ABD', usa: 'ABD', mexico: 'Meksika',
+  colombia: 'Kolombiya', uruguay: 'Uruguay', chile: 'Şili', peru: 'Peru', ecuador: 'Ekvador', paraguay: 'Paraguay',
+  venezuela: 'Venezuela', bolivia: 'Bolivya', canada: 'Kanada', australia: 'Avustralya', nigeria: 'Nijerya',
+  senegal: 'Senegal', ghana: 'Gana', algeria: 'Cezayir', tunisia: 'Tunus', iran: 'İran', iraq: 'Irak',
+  china: 'Çin', 'china pr': 'Çin', india: 'Hindistan', qatar: 'Katar', 'united arab emirates': 'BAE',
+  cameroon: 'Kamerun', 'ivory coast': 'Fildişi Sahili', "cote d'ivoire": 'Fildişi Sahili', jamaica: 'Jamaika',
+  cuba: 'Küba', 'new zealand': 'Yeni Zelanda', indonesia: 'Endonezya', vietnam: 'Vietnam', thailand: 'Tayland',
+  fenerbahce: 'Fenerbahçe', besiktas: 'Beşiktaş', basaksehir: 'Başakşehir', 'istanbul basaksehir': 'Başakşehir',
+  kasimpasa: 'Kasımpaşa', goztepe: 'Göztepe', eyupspor: 'Eyüpspor', 'caykur rizespor': 'Çaykur Rizespor',
+  genclerbirligi: 'Gençlerbirliği', 'fatih karagumruk': 'Fatih Karagümrük', 'bayern munich': 'Bayern Münih',
+};
+
+export function toTurkishTeam(name) {
+  const base = String(name || '')
+    .toLocaleLowerCase('tr-TR')
+    .replace(/ı/g, 'i')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+  return DISPLAY_TR[base] || name;
+}
+
+/** İki maç adının (ev/deplasman sırası farklı olabilir) aynı maç olup olmadığı. */
+export function sameFixture(teamsA, teamsB) {
+  const [a1, a2] = (teamsA || []).map(normalizeTeam);
+  const [b1, b2] = (teamsB || []).map(normalizeTeam);
+  if (!a1 || !a2 || !b1 || !b2) return false;
+  return (similar(a1, b1) && similar(a2, b2)) || (similar(a1, b2) && similar(a2, b1));
+}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchTodayScores } from '../services/liveScoresApi';
+import { fetchTodayFlat } from '../services/scoresApi';
 import { findScoreFor } from '../utils/scoreMatch';
 
 /** Oynatıcıdaki maçın canlı skorunu 60 sn'de bir yeniler. Eşleşme yoksa null. */
@@ -14,7 +14,7 @@ export function useMatchScore(teams, enabled) {
     let alive = true;
     const load = async () => {
       try {
-        const all = await fetchTodayScores();
+        const all = await fetchTodayFlat();
         if (alive) setScore(findScoreFor([home, away], all));
       } catch {
         /* skor yoksa başlık VS olarak kalır */

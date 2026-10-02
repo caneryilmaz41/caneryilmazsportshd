@@ -5,7 +5,7 @@ import Footer from './components/Footer';
 import VideoPlayer from './components/VideoPlayer';
 import MatchList from './components/MatchList';
 import ChannelList from './components/ChannelList';
-import LiveScoresSlider from './components/LiveScoresSlider';
+import ScoreCenter from './components/scores/ScoreCenter';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import AppSplashScreen from './components/AppSplashScreen';
 import StandaloneRefreshButton from './components/StandaloneRefreshButton';
@@ -293,7 +293,7 @@ function App() {
           Mobil: seçim yokken oynatıcı yok; maç/kanal seçilince oynatıcı üstte, liste altında.
           xl+: sol maç/kanallar | orta oynatıcı | sağ skorlar (seçim yokken de orta panel boş/placeholder)
         */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-[minmax(270px,320px)_minmax(0,1fr)_minmax(250px,310px)] xl:items-start xl:gap-5">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-[minmax(270px,310px)_minmax(0,1fr)_minmax(300px,350px)] xl:items-start xl:gap-5">
           {/* Sol: sabit yükseklik + flex ile scroll her zaman çalışır */}
           <aside className="order-2 flex h-[min(560px,72dvh)] min-h-0 flex-col gap-3 xl:order-none xl:sticky xl:top-20 xl:h-[calc(100dvh-8.75rem)] xl:self-start">
             <div className="app-panel flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -478,7 +478,14 @@ function App() {
           </section>
 
           <aside className="order-3 flex h-[min(560px,72dvh)] min-h-0 flex-col xl:order-none xl:sticky xl:top-20 xl:h-[calc(100dvh-8.75rem)] xl:self-start">
-            <LiveScoresSlider variant="sidebar" />
+            <ScoreCenter
+              favs={favs}
+              streamMatches={visibleMatches}
+              onWatch={(m) => {
+                setActiveTab('matches');
+                selectMatch(m);
+              }}
+            />
           </aside>
         </div>
       </main>

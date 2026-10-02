@@ -43,8 +43,7 @@ function detectIsChannel(item) {
 function scoreLabel(score) {
   if (!score) return null;
   if (score.isFinished) return 'MS';
-  const digits = String(score.statusText || '').match(/\d+/);
-  return digits ? `${digits[0]}'` : 'CANLI';
+  return score.minute || 'CANLI';
 }
 
 function Popover({ open, onClose, children, className = '' }) {
