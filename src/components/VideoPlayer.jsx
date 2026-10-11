@@ -10,7 +10,7 @@ import { reportStream, REPORT_REASONS, wasReportedRecently } from '../services/r
 import { track } from '../utils/analytics';
 import { CloseIcon, FlagIcon, GridIcon, KeyboardIcon, RefreshIcon, ShareIcon } from './icons';
 
-const PLAYER_UI_VERSION = 'slogan-2026-10-11';
+const PLAYER_UI_VERSION = 'brand-script-2026-10-11';
 const MAX_AUTO_RETRY = 2;
 const MAX_TOTAL_ATTEMPTS = 5;
 

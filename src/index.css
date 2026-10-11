@@ -111,8 +111,11 @@ body {
 }
 
 .slogan-text {
-  letter-spacing: -0.01em;
-  font-weight: 600;
+  font-family: 'Kaushan Script', 'Brush Script MT', cursive;
+  font-weight: 400;
+  font-size: 1.3em; /* el yazısı fontu optik olarak küçük durur */
+  line-height: 1.25;
+  padding: 0 0.15em; /* fırça kuyrukları kesilmesin */
   background: linear-gradient(90deg, #6ee7b7 0%, #fde68a 45%, #fff7d6 50%, #fde68a 55%, #6ee7b7 100%);
   background-size: 250% auto;
   -webkit-background-clip: text;

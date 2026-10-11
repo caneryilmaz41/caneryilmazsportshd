@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kaushan+Script&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%}
@@ -186,7 +188,7 @@ body.fake-fs-lock{overflow:hidden;touch-action:none}
 @keyframes slogan-shine{to{background-position:-250% center}}
 .slogan{display:inline-flex;align-items:center;gap:.6em;white-space:nowrap;font-weight:600;line-height:1}
 .slogan-text{
-  letter-spacing:-.01em;
+  font-family:'Kaushan Script','Brush Script MT',cursive;font-weight:400;font-size:1.3em;line-height:1.25;padding:0 .15em;
   background:linear-gradient(90deg,#6ee7b7 0%,#fde68a 45%,#fff7d6 50%,#fde68a 55%,#6ee7b7 100%);
   background-size:250% auto;-webkit-background-clip:text;background-clip:text;color:transparent;
   animation:slogan-shine 5s linear infinite;
@@ -195,29 +197,33 @@ body.fake-fs-lock{overflow:hidden;touch-action:none}
 .slogan-line.r{background:linear-gradient(270deg,transparent,rgba(253,230,138,.7))}
 .loader .slogan{font-size:15px;margin:10px 0 22px}
 
-/* ── Marka bandı: yayın başlayınca ve aralıklarla sol üstte kısa süre görünür ── */
+/* ── Marka bandı: videonun sağ üst köşesinde sabit; kanal logosunun üstünü kapatır.
+   --u = görüntülenen videonun genişliğinin %1'i (JS hesaplar; letterbox'ı da hesaba katar) ── */
 .brand-bug{
-  position:absolute;top:max(16px,env(safe-area-inset-top));left:max(16px,env(safe-area-inset-left));z-index:54;
-  display:flex;align-items:center;gap:10px;padding:8px 14px 8px 10px;border-radius:12px;
-  background:linear-gradient(90deg,rgba(2,6,23,.82),rgba(2,6,23,.55));
-  border:1px solid rgba(253,230,138,.18);box-shadow:0 10px 30px -10px rgba(0,0,0,.8);
-  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
-  pointer-events:none;opacity:0;clip-path:inset(0 100% 0 0 round 12px);
-  transition:opacity .3s;
+  --u:1vw;
+  position:absolute;top:calc(var(--u)*3.2);right:calc(var(--u)*1.6);z-index:54;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:calc(var(--u)*.45);
+  padding:calc(var(--u)*.75) calc(var(--u)*.9) calc(var(--u)*.7);
+  border-radius:calc(var(--u)*.9);
+  /* Sitenin panel rengi (koyu lacivert); hafif buzlu cam kanal logosunu tamamen gizler */
+  background:
+    radial-gradient(90% 120% at 50% 0%,rgba(16,185,129,.12),transparent 70%),
+    linear-gradient(180deg,rgba(15,23,42,.92) 0%,rgba(6,10,19,.94) 100%);
+  backdrop-filter:blur(max(10px,calc(var(--u)*1.6)));
+  -webkit-backdrop-filter:blur(max(10px,calc(var(--u)*1.6)));
+  border:1px solid rgba(148,163,184,.14);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 10px 28px -14px rgba(0,0,0,.8);
+  pointer-events:none;opacity:0;clip-path:inset(0 0 0 100% round 12px);
 }
-.brand-bug::before{content:'';width:3px;align-self:stretch;border-radius:3px;background:linear-gradient(180deg,#34d399,#fde68a)}
-.brand-bug img{height:16px;display:block}
-.brand-bug .sep{width:1px;height:14px;background:rgba(255,255,255,.18)}
-.brand-bug .slogan{font-size:13px}
-.brand-bug.on{animation:bug-in 6.5s cubic-bezier(.2,.8,.2,1) forwards}
+.brand-bug img{width:calc(var(--u)*15);min-width:56px;height:auto;display:block}
+.brand-bug .slogan{font-size:max(6.5px,calc(var(--u)*1.05));gap:.5em;filter:drop-shadow(0 1px 2px rgba(0,0,0,.9))}
+.brand-bug .slogan-line{width:1.2em}
+.brand-bug.on{animation:bug-in .9s cubic-bezier(.2,.8,.2,1) forwards}
 @keyframes bug-in{
-  0%{opacity:0;clip-path:inset(0 100% 0 0 round 12px)}
-  10%{opacity:1;clip-path:inset(0 0 0 0 round 12px)}
-  88%{opacity:1;clip-path:inset(0 0 0 0 round 12px)}
-  100%{opacity:0;clip-path:inset(0 0 0 100% round 12px)}
+  0%{opacity:0;clip-path:inset(0 0 0 100% round 12px)}
+  100%{opacity:1;clip-path:inset(0 0 0 0 round 12px)}
 }
-#wrap.show-ctrl .brand-bug{opacity:0 !important}
-@media (max-width:480px){.brand-bug{padding:6px 10px 6px 8px;gap:8px}.brand-bug img{height:12px}.brand-bug .slogan{font-size:11px}}
 @media (prefers-reduced-motion:reduce){.slogan-text{animation:none}}
 .loader-spinner{
   width:38px;height:38px;border-radius:50%;
@@ -382,8 +388,8 @@ body.is-android.compact-controls #pipBtn{display:none}
 
   <!-- Marka bandı -->
   <div class="brand-bug" id="brandBug" aria-hidden="true">
-    <img src="/logom.png" alt=""><span class="sep"></span>
-    <span class="slogan"><span class="slogan-text">kalitenin beşiği</span></span>
+    <img src="/player-brand.png" alt="">
+    <span class="slogan"><span class="slogan-line"></span><span class="slogan-text">kalitenin beşiği</span><span class="slogan-line r"></span></span>
   </div>
 
   <!-- Watermark -->
@@ -684,7 +690,7 @@ function toggleFS(){
   setFakeFS(true);
   onFSChange();
 }
-function onFSChange(){
+function onFSChange(){setTimeout(placeBrandBug,60);
   const f=isFS();
   const iFS=document.getElementById('iFS');
   const iFSx=document.getElementById('iFSx');
@@ -721,15 +727,27 @@ V.addEventListener('playing',function(){
   if(started) return;
   started=true; clearTimeout(stallT);
   tellParent({type:'player:playing',src:src||''});
-  /* Marka bandı: başlangıçtan kısa süre sonra, sonra her 15 dakikada bir */
-  setTimeout(showBrandBug,2500);
-  setInterval(showBrandBug,15*60*1000);
+  /* Marka bandı: yayın başlayınca açılır ve sabit kalır */
+  placeBrandBug();
+  brandBug.classList.add('on');
 });
-function showBrandBug(){
-  const b=document.getElementById('brandBug');
-  if(!b||V.paused) return;
-  b.classList.remove('on'); void b.offsetWidth; b.classList.add('on');
+/* Bandı görüntülenen videonun sağ üstüne oturt (siyah bantlar hariç) */
+const brandBug=document.getElementById('brandBug');
+function placeBrandBug(){
+  const r=W.getBoundingClientRect();
+  if(!r.width||!r.height) return;
+  const vw=V.videoWidth||16, vh=V.videoHeight||9;
+  const k=Math.min(r.width/vw, r.height/vh);
+  const w=vw*k, h=vh*k;
+  const u=w/100;
+  brandBug.style.setProperty('--u',u+'px');
+  brandBug.style.top=((r.height-h)/2 + u*3.2)+'px';
+  brandBug.style.right=((r.width-w)/2 + u*2)+'px';
 }
+window.addEventListener('resize',placeBrandBug);
+document.addEventListener('fullscreenchange',()=>setTimeout(placeBrandBug,50));
+V.addEventListener('loadedmetadata',placeBrandBug);
+V.addEventListener('resize',placeBrandBug);
 V.addEventListener('webkitbeginfullscreen',()=>onFSChange());
 V.addEventListener('webkitendfullscreen',()=>onFSChange());
 

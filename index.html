@@ -5,7 +5,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Kaushan+Script&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,500&display=swap"
       rel="stylesheet"
     />
     <link rel="icon" type="image/jpeg" href="/cy.jpg" />
@@ -82,16 +82,14 @@
       }
       .bp-line.r { background: linear-gradient(270deg, transparent, rgba(253, 230, 138, .8)); }
       .bp-text {
-        white-space: nowrap; font-size: clamp(17px, 5vw, 22px); font-weight: 600;
-        letter-spacing: -.01em;
+        white-space: nowrap; font-size: clamp(24px, 7vw, 32px); font-weight: 400; line-height: 1.25;
+        font-family: 'Kaushan Script', 'Brush Script MT', cursive;
+        padding: 0 .2em; /* fırça kuyruklarının kesilmemesi için */
         background: linear-gradient(90deg, #6ee7b7 0%, #fde68a 45%, #fff7d6 50%, #fde68a 55%, #6ee7b7 100%);
         background-size: 250% auto;
         -webkit-background-clip: text; background-clip: text; color: transparent;
-        animation: bp-text-shine 2.6s linear 1.6s infinite;
-      }
-      .bp-text span {
-        display: inline-block; opacity: 0; transform: translateY(8px); filter: blur(4px);
-        animation: bp-letter .5s ease-out forwards;
+        clip-path: inset(0 100% 0 0);
+        animation: bp-write 1s cubic-bezier(.6,.1,.3,1) .7s forwards, bp-text-shine 2.6s linear 1.7s infinite;
       }
       .bp-bar {
         position: relative; margin-top: 26px; width: 140px; height: 2px;
@@ -105,18 +103,18 @@
       }
       @keyframes bp-logo-in { from { opacity: 0; transform: scale(.92); filter: blur(6px); } }
       @keyframes bp-sweep { to { transform: translateX(120%); } }
-      @keyframes bp-letter { to { opacity: 1; transform: none; filter: none; } }
+      @keyframes bp-write { to { clip-path: inset(0 0 0 0); } }
       @keyframes bp-line { to { width: clamp(18px, 8vw, 42px); } }
       @keyframes bp-text-shine { to { background-position: -250% center; } }
       @keyframes bp-bar { from { transform: translateX(-120%); } to { transform: translateX(320%); } }
       /* Aynı oturumda tekrar açılışta kısa sürüm */
       #boot-preloader.is-quick .bp-logo, #boot-preloader.is-quick .bp-logo-wrap::after,
-      #boot-preloader.is-quick .bp-text span, #boot-preloader.is-quick .bp-line {
+      #boot-preloader.is-quick .bp-text, #boot-preloader.is-quick .bp-line {
         animation-duration: .01s; animation-delay: 0s;
       }
       @media (prefers-reduced-motion: reduce) {
         #boot-preloader *, #boot-preloader *::after { animation: none !important; }
-        .bp-text span { opacity: 1; transform: none; filter: none; }
+        .bp-text { clip-path: none; }
         .bp-line { width: 32px; }
       }
     </style>
@@ -136,18 +134,9 @@
     <script>
       (function () {
         var el = document.getElementById('boot-preloader');
-        var t = document.getElementById('bp-text');
         var quick = false;
         try { quick = sessionStorage.getItem('cys_intro_seen') === '1'; sessionStorage.setItem('cys_intro_seen', '1'); } catch (_) {}
         if (quick) el.classList.add('is-quick');
-        /* Harfleri tek tek belirt */
-        var txt = t.textContent; t.textContent = '';
-        for (var i = 0; i < txt.length; i++) {
-          var s = document.createElement('span');
-          s.textContent = txt[i] === ' ' ? ' ' : txt[i];
-          s.style.animationDelay = (0.7 + i * 0.045) + 's';
-          t.appendChild(s);
-        }
         var start = Date.now();
         var minShow = quick ? 250 : 2300;
         var done = false;
