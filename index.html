@@ -41,8 +41,127 @@
     <meta name="twitter:title" content="caneryılmazsports · Canlı maçlar ve spor kanalları" />
     <meta name="twitter:description" content="Canlı maçlar, spor kanalları, anlık skorlar ve puan durumu tek ekranda." />
     <meta name="twitter:image" content="https://caneryilmazsportshd.vercel.app/logom.png" />
+    <style>
+      /* Açılış preloader'ı: JS/Tailwind beklemeden ilk karede görünür */
+      #boot-preloader {
+        position: fixed; inset: 0; z-index: 9999;
+        display: flex; align-items: center; justify-content: center;
+        background:
+          radial-gradient(40rem 22rem at 50% 42%, rgba(16, 185, 129, 0.16), transparent 70%),
+          radial-gradient(60rem 30rem at 15% -10%, rgba(16, 185, 129, 0.08), transparent 60%),
+          #060a13;
+        font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+        transition: opacity .55s ease, visibility .55s ease;
+      }
+      #boot-preloader.is-done { opacity: 0; visibility: hidden; pointer-events: none; }
+      #boot-preloader.is-done .bp-inner { transform: scale(1.04); }
+      .bp-inner {
+        display: flex; flex-direction: column; align-items: center;
+        padding: 0 24px; transition: transform .55s ease;
+      }
+      .bp-logo-wrap { position: relative; overflow: hidden; }
+      .bp-logo {
+        display: block; width: min(300px, 70vw); height: auto;
+        filter: drop-shadow(0 0 22px rgba(52, 211, 153, .28));
+        animation: bp-logo-in .9s cubic-bezier(.2, .8, .2, 1) both;
+      }
+      .bp-logo-wrap::after {
+        content: ''; position: absolute; inset: 0;
+        background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .55) 50%, transparent 65%);
+        transform: translateX(-120%);
+        animation: bp-sweep 1.1s ease-in-out .75s both;
+        mix-blend-mode: overlay;
+      }
+      .bp-slogan {
+        display: flex; align-items: center; gap: 12px; margin-top: 14px;
+      }
+      .bp-line {
+        height: 1px; width: 0;
+        background: linear-gradient(90deg, transparent, rgba(253, 230, 138, .8));
+        animation: bp-line 0.7s ease-out 1.55s forwards;
+      }
+      .bp-line.r { background: linear-gradient(270deg, transparent, rgba(253, 230, 138, .8)); }
+      .bp-text {
+        white-space: nowrap; font-size: clamp(17px, 5vw, 22px); font-weight: 600;
+        letter-spacing: -.01em;
+        background: linear-gradient(90deg, #6ee7b7 0%, #fde68a 45%, #fff7d6 50%, #fde68a 55%, #6ee7b7 100%);
+        background-size: 250% auto;
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+        animation: bp-text-shine 2.6s linear 1.6s infinite;
+      }
+      .bp-text span {
+        display: inline-block; opacity: 0; transform: translateY(8px); filter: blur(4px);
+        animation: bp-letter .5s ease-out forwards;
+      }
+      .bp-bar {
+        position: relative; margin-top: 26px; width: 140px; height: 2px;
+        border-radius: 9999px; overflow: hidden; background: rgba(30, 41, 59, .9);
+      }
+      .bp-bar::after {
+        content: ''; position: absolute; top: 0; left: 0; height: 100%; width: 42%;
+        border-radius: 9999px;
+        background: linear-gradient(90deg, transparent, rgba(52, 211, 153, .85), transparent);
+        animation: bp-bar 1.3s ease-in-out infinite;
+      }
+      @keyframes bp-logo-in { from { opacity: 0; transform: scale(.92); filter: blur(6px); } }
+      @keyframes bp-sweep { to { transform: translateX(120%); } }
+      @keyframes bp-letter { to { opacity: 1; transform: none; filter: none; } }
+      @keyframes bp-line { to { width: clamp(18px, 8vw, 42px); } }
+      @keyframes bp-text-shine { to { background-position: -250% center; } }
+      @keyframes bp-bar { from { transform: translateX(-120%); } to { transform: translateX(320%); } }
+      /* Aynı oturumda tekrar açılışta kısa sürüm */
+      #boot-preloader.is-quick .bp-logo, #boot-preloader.is-quick .bp-logo-wrap::after,
+      #boot-preloader.is-quick .bp-text span, #boot-preloader.is-quick .bp-line {
+        animation-duration: .01s; animation-delay: 0s;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #boot-preloader *, #boot-preloader *::after { animation: none !important; }
+        .bp-text span { opacity: 1; transform: none; filter: none; }
+        .bp-line { width: 32px; }
+      }
+    </style>
   </head>
   <body>
+    <div id="boot-preloader" role="status" aria-label="caneryılmazsports yükleniyor">
+      <div class="bp-inner">
+        <div class="bp-logo-wrap"><img class="bp-logo" src="/logom.png" alt="caneryılmazsports" /></div>
+        <div class="bp-slogan">
+          <span class="bp-line"></span>
+          <span class="bp-text" id="bp-text">kalitenin beşiği</span>
+          <span class="bp-line r"></span>
+        </div>
+        <div class="bp-bar"></div>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var el = document.getElementById('boot-preloader');
+        var t = document.getElementById('bp-text');
+        var quick = false;
+        try { quick = sessionStorage.getItem('cys_intro_seen') === '1'; sessionStorage.setItem('cys_intro_seen', '1'); } catch (_) {}
+        if (quick) el.classList.add('is-quick');
+        /* Harfleri tek tek belirt */
+        var txt = t.textContent; t.textContent = '';
+        for (var i = 0; i < txt.length; i++) {
+          var s = document.createElement('span');
+          s.textContent = txt[i] === ' ' ? ' ' : txt[i];
+          s.style.animationDelay = (0.7 + i * 0.045) + 's';
+          t.appendChild(s);
+        }
+        var start = Date.now();
+        var minShow = quick ? 250 : 2300;
+        var done = false;
+        window.__hideBootPreloader = function () {
+          if (done) return; done = true;
+          setTimeout(function () {
+            el.classList.add('is-done');
+            setTimeout(function () { el.remove(); }, 650);
+          }, Math.max(0, minShow - (Date.now() - start)));
+        };
+        /* Güvenlik: uygulama ne olursa olsun ekranı kilitlemesin */
+        setTimeout(window.__hideBootPreloader, 9000);
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

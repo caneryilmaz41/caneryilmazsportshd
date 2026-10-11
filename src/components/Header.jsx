@@ -1,11 +1,14 @@
+import Slogan from './Slogan';
+
 const Header = () => {
   return (
     <header className="sticky top-0 z-40 border-b border-white/[0.06] bg-[#060a13]/75 backdrop-blur-xl supports-[backdrop-filter]:bg-[#060a13]/60">
       <div className="mx-auto grid h-14 max-w-[1600px] grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 lg:h-16 lg:px-6">
         <div aria-hidden />
 
-        <a href="/" className="flex min-w-0 items-center justify-center" aria-label="Ana sayfa">
-          <img src="/logom.png" alt="caneryılmazsports" className="h-7 w-auto object-contain sm:h-8 lg:h-10" />
+        <a href="/" className="flex min-w-0 flex-col items-center justify-center gap-0.5 lg:gap-1" aria-label="Ana sayfa">
+          <img src="/logom.png" alt="caneryılmazsports" className="h-6 w-auto object-contain sm:h-7 lg:h-8" />
+          <Slogan className="text-[10px] sm:text-[11px] lg:text-[13px]" />
         </a>
 
         <div className="flex items-center justify-end gap-2">

@@ -3,13 +3,14 @@ import TeamLogo from './TeamLogo';
 import { parseMatchTeams } from '../utils/teamUtils';
 import { SPLASH_BG } from './AppSplashScreen';
 import ChannelLogoImg from './ChannelLogoImg';
+import Slogan from './Slogan';
 import { isTrgoolSiteUrl } from '../utils/trgoolEmbedUrl';
 import { useMatchScore } from '../hooks/useMatchScore';
 import { reportStream, REPORT_REASONS, wasReportedRecently } from '../services/reportStream';
 import { track } from '../utils/analytics';
 import { CloseIcon, FlagIcon, GridIcon, KeyboardIcon, RefreshIcon, ShareIcon } from './icons';
 
-const PLAYER_UI_VERSION = 'corner-big-ctrl-hide-2026-08-16';
+const PLAYER_UI_VERSION = 'slogan-2026-10-11';
 const MAX_AUTO_RETRY = 2;
 const MAX_TOTAL_ATTEMPTS = 5;
 
@@ -290,6 +291,7 @@ const VideoPlayer = ({
           <div className="relative z-10 p-4 lg:p-12">
             <div className="mb-4 lg:mb-8">
               <img src="/logom.png" alt="Logo" className="h-10 lg:h-24 mx-auto opacity-90" />
+              <Slogan className="mt-2 text-xs lg:mt-3 lg:text-lg" />
             </div>
             <h2 className="text-lg lg:text-3xl font-light mb-3 lg:mb-6 text-white tracking-wide">
               YAYIN BAŞLIYOR
@@ -583,6 +585,7 @@ const VideoPlayer = ({
                       className="mx-auto h-9 w-auto object-contain opacity-[0.97] sm:h-11"
                       decoding="async"
                     />
+                    <Slogan className="mt-1.5 text-[11px] sm:text-xs" />
                     {isChannel ? (
                       <div className="mt-4 flex flex-col items-center gap-1.5">
                         <div className="flex items-center justify-center gap-2.5">

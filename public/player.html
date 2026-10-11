@@ -180,7 +180,45 @@ body.fake-fs-lock{overflow:hidden;touch-action:none}
   background:#0a0a0a;transition:opacity .5s;
 }
 .loader.hidden{opacity:0;pointer-events:none}
-.loader-logo{height:48px;margin-bottom:20px;opacity:.85}
+.loader-logo{height:48px;opacity:.9;filter:drop-shadow(0 0 18px rgba(52,211,153,.25))}
+
+/* ── Marka sloganı: Kalitenin Beşiği ── */
+@keyframes slogan-shine{to{background-position:-250% center}}
+.slogan{display:inline-flex;align-items:center;gap:.6em;white-space:nowrap;font-weight:600;line-height:1}
+.slogan-text{
+  letter-spacing:-.01em;
+  background:linear-gradient(90deg,#6ee7b7 0%,#fde68a 45%,#fff7d6 50%,#fde68a 55%,#6ee7b7 100%);
+  background-size:250% auto;-webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:slogan-shine 5s linear infinite;
+}
+.slogan-line{height:1px;width:1.6em;background:linear-gradient(90deg,transparent,rgba(253,230,138,.7))}
+.slogan-line.r{background:linear-gradient(270deg,transparent,rgba(253,230,138,.7))}
+.loader .slogan{font-size:15px;margin:10px 0 22px}
+
+/* ── Marka bandı: yayın başlayınca ve aralıklarla sol üstte kısa süre görünür ── */
+.brand-bug{
+  position:absolute;top:max(16px,env(safe-area-inset-top));left:max(16px,env(safe-area-inset-left));z-index:54;
+  display:flex;align-items:center;gap:10px;padding:8px 14px 8px 10px;border-radius:12px;
+  background:linear-gradient(90deg,rgba(2,6,23,.82),rgba(2,6,23,.55));
+  border:1px solid rgba(253,230,138,.18);box-shadow:0 10px 30px -10px rgba(0,0,0,.8);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  pointer-events:none;opacity:0;clip-path:inset(0 100% 0 0 round 12px);
+  transition:opacity .3s;
+}
+.brand-bug::before{content:'';width:3px;align-self:stretch;border-radius:3px;background:linear-gradient(180deg,#34d399,#fde68a)}
+.brand-bug img{height:16px;display:block}
+.brand-bug .sep{width:1px;height:14px;background:rgba(255,255,255,.18)}
+.brand-bug .slogan{font-size:13px}
+.brand-bug.on{animation:bug-in 6.5s cubic-bezier(.2,.8,.2,1) forwards}
+@keyframes bug-in{
+  0%{opacity:0;clip-path:inset(0 100% 0 0 round 12px)}
+  10%{opacity:1;clip-path:inset(0 0 0 0 round 12px)}
+  88%{opacity:1;clip-path:inset(0 0 0 0 round 12px)}
+  100%{opacity:0;clip-path:inset(0 0 0 100% round 12px)}
+}
+#wrap.show-ctrl .brand-bug{opacity:0 !important}
+@media (max-width:480px){.brand-bug{padding:6px 10px 6px 8px;gap:8px}.brand-bug img{height:12px}.brand-bug .slogan{font-size:11px}}
+@media (prefers-reduced-motion:reduce){.slogan-text{animation:none}}
 .loader-spinner{
   width:38px;height:38px;border-radius:50%;
   border:2.5px solid rgba(34,197,94,.1);border-top-color:#22c55e;
@@ -332,6 +370,7 @@ body.is-android.compact-controls #pipBtn{display:none}
   <!-- Loading -->
   <div class="loader" id="loader">
     <img class="loader-logo" src="/logom.png" alt="">
+    <span class="slogan"><span class="slogan-line"></span><span class="slogan-text">kalitenin beşiği</span><span class="slogan-line r"></span></span>
     <div class="loader-spinner"></div>
     <div class="loader-text">Yayın yükleniyor…</div>
   </div>
@@ -339,6 +378,12 @@ body.is-android.compact-controls #pipBtn{display:none}
   <!-- Big play -->
   <div class="big-play hidden" id="bigPlay" onclick="togglePlay()">
     <div class="big-play-icon"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+  </div>
+
+  <!-- Marka bandı -->
+  <div class="brand-bug" id="brandBug" aria-hidden="true">
+    <img src="/logom.png" alt=""><span class="sep"></span>
+    <span class="slogan"><span class="slogan-text">kalitenin beşiği</span></span>
   </div>
 
   <!-- Watermark -->
@@ -676,7 +721,15 @@ V.addEventListener('playing',function(){
   if(started) return;
   started=true; clearTimeout(stallT);
   tellParent({type:'player:playing',src:src||''});
+  /* Marka bandı: başlangıçtan kısa süre sonra, sonra her 15 dakikada bir */
+  setTimeout(showBrandBug,2500);
+  setInterval(showBrandBug,15*60*1000);
 });
+function showBrandBug(){
+  const b=document.getElementById('brandBug');
+  if(!b||V.paused) return;
+  b.classList.remove('on'); void b.offsetWidth; b.classList.add('on');
+}
 V.addEventListener('webkitbeginfullscreen',()=>onFSChange());
 V.addEventListener('webkitendfullscreen',()=>onFSChange());
 
