@@ -1,9 +1,10 @@
 /**
  * Maç / kanal listesi + yayinlink kaynağı.
- * teletv3.top sık düşüyor; güncel ayna teletv5.top (env ile sabitlemek mümkün).
+ * teletv3.top sık düşüyor; güncel ayna teletv15.top (env ile sabitlemek mümkün).
  */
 
 const DEFAULT_HOSTS = [
+  'https://teletv15.top',
   'https://teletv5.top',
   'https://teletv6.top',
   'https://teletv4.top',
@@ -36,7 +37,7 @@ export function getTeletvHostCandidates() {
   return out
 }
 
-/** Senkron varsayılan (liste URL’leri için); canlı keşif yoksa teletv5. */
+/** Senkron varsayılan (liste URL’leri için); canlı keşif yoksa teletv15. */
 export function getPrimaryTeletvBase() {
   return getTeletvHostCandidates()[0]
 }
@@ -49,7 +50,7 @@ export function teletvLoadUrl(base, path) {
 
 /**
  * Çalışan teletv hostunu bul (matches.php yanıtı + maç id’si).
- * @returns {Promise<string>} host origin, örn. https://teletv5.top
+ * @returns {Promise<string>} host origin, örn. https://teletv15.top
  */
 export async function resolveWorkingTeletvBase(fetchImpl = globalThis.fetch) {
   const now = Date.now()
