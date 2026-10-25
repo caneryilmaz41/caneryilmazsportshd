@@ -10,18 +10,17 @@ const M3U8_PROBE_MS = 8000
  */
 async function verifyM3u8Reachable(url) {
   if (!url || typeof url !== 'string') return false
-  const u = url.trim().replace(/edge\d+/g, 'edge3')
+  const u = url.trim()
   if (!/^https?:\/\//i.test(u)) return false
   try {
-    let res = await fetch(u, { method: 'HEAD', redirect: 'follow', signal: AbortSignal.timeout(M3U8_PROBE_MS) })
-    if (res.ok) return true
-    res = await fetch(u, {
+    // HEAD can succeed for an HTML error page, or be rejected for a valid playlist.
+    const res = await fetch(u, {
       method: 'GET',
       redirect: 'follow',
       signal: AbortSignal.timeout(M3U8_PROBE_MS),
-      headers: { Range: 'bytes=0-8191' },
     })
-    return res.ok
+    if (!res.ok) { await res.body?.cancel(); return false }
+    return (await res.text()).trimStart().startsWith('#EXTM3U')
   } catch {
     return false
   }
@@ -31,7 +30,7 @@ function normalizeM3u8(raw) {
   if (!raw || typeof raw !== 'string') return null
   const u = raw.trim().replace(/&amp;/g, '&').replace(/\\u0026/g, '&')
   if (!u.toLowerCase().includes('m3u8')) return null
-  return u.replace(/edge\d+/g, 'edge3')
+  return /^https?:\/\//i.test(u) ? u.replace(/^http:\/\//i, 'https://') : null
 }
 
 function extractM3u8List(html) {
@@ -52,7 +51,7 @@ const htmlHeaders = {
  * Son çare: trgool HTML. Sayfada reklam / varsayılan player aynı m3u8’i
  * her id için basabiliyor — yalnızca id içeren veya az adaylı sonuçları kabul et.
  */
-async function tryM3u8FromTrgoolPages(id) {
+async function tryM3u8FromTrgoolPages(id, excluded) {
   let domain
   try {
     domain = await getCachedWorkingTrgoolDomain()
@@ -103,12 +102,12 @@ async function tryM3u8FromTrgoolPages(id) {
   })
   scored.sort((a, b) => b.s - a.s)
   for (const { u } of scored) {
-    if (await verifyM3u8Reachable(u)) return u
+    if (!excluded.has(u) && await verifyM3u8Reachable(u)) return u
   }
   return null
 }
 
-async function tryTeletvYayinlink(id) {
+async function tryTeletvYayinlink(id, excluded) {
   const dataBase = await resolveWorkingTeletvBase()
   const r = await fetch(teletvLoadUrl(dataBase, `yayinlink.php?id=${encodeURIComponent(id)}`), {
     headers: {
@@ -121,16 +120,27 @@ async function tryTeletvYayinlink(id) {
   if (!r.ok) return null
   const data = await r.json()
   const url = normalizeM3u8(data?.deismackanal)
-  if (!url) return null
-  if (await verifyM3u8Reachable(url)) return url
-  // corestream vb. sunucu HEAD’i reddedebilir; ID’ye özel link yine de kullan
+  if (!url || excluded.has(url)) return null
+  // The provider resolves the URL; playback must be tested from the viewer's browser.
+  // A server IP can receive 403 even when the same stream works for the viewer.
   return url
 }
 
 export default async function handler(req, res) {
+  res.setHeader('Cache-Control', 'no-store')
   const { id } = req.query
+  let excluded
+  try {
+    const values = JSON.parse(req.query.exclude || '[]')
+    if (!Array.isArray(values) || values.length > 20 || values.some((u) => typeof u !== 'string')) {
+      return res.status(400).json({ error: 'invalid exclude list' })
+    }
+    excluded = new Set(values.map(normalizeM3u8).filter(Boolean))
+  } catch {
+    return res.status(400).json({ error: 'invalid exclude list' })
+  }
 
-  if (!id) {
+  if (typeof id !== 'string' || !id.trim()) {
     return res.status(400).json({ error: 'id required' })
   }
 
@@ -142,11 +152,11 @@ export default async function handler(req, res) {
 
   // 1) teletv yayinlink — maç/kanal id’sine özel m3u8 (asıl doğru kaynak)
   try {
-    const fromTeletv = await tryTeletvYayinlink(id)
+    const fromTeletv = await tryTeletvYayinlink(id, excluded)
     if (fromTeletv) {
       return res.json({ embedUrl: fromTeletv, type: 'hls', source: 'teletv', success: true })
     }
-  } catch {}
+  } catch { /* Continue with the next provider. */ }
 
   // 2) streamsport365 cinema
   try {
@@ -173,20 +183,20 @@ export default async function handler(req, res) {
       const data = await r.json()
       if (data?.URL) {
         const url = normalizeM3u8(String(data.URL))
-        if (url && (await verifyM3u8Reachable(url))) {
+        if (url && !excluded.has(url)) {
           return res.json({ embedUrl: url, type: 'hls', source: 'cinema', success: true })
         }
       }
     }
-  } catch {}
+  } catch { /* Continue with the next provider. */ }
 
   // 3) trgool HTML — yalnızca id’ye özgü / az adaylı m3u8 (ortak varsayılan stream yok)
   try {
-    const fromTrgool = await tryM3u8FromTrgoolPages(id)
+    const fromTrgool = await tryM3u8FromTrgoolPages(id, excluded)
     if (fromTrgool) {
       return res.json({ embedUrl: fromTrgool, type: 'hls', source: 'trgool-html', success: true })
     }
-  } catch {}
+  } catch { /* Continue with the next provider. */ }
 
   return res.json({ embedUrl: null, success: false })
 }

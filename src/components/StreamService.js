@@ -4,6 +4,12 @@ import {
   teletvLoadUrl,
 } from '../../teletvHosts.js'
 
+const OFFICIAL_CHANNEL_STREAMS = {
+  'trt-spor': 'https://tv-trtspor1.medya.trt.com.tr/master.m3u8',
+  'trt-spor-yildiz': 'https://tv-trtspor2.medya.trt.com.tr/master.m3u8',
+  'trt-1': 'https://tv-trt1.medya.trt.com.tr/master.m3u8',
+}
+
 const FALLBACK_API_ORIGIN = 'https://caneryilmazsportshd.vercel.app'
 const isHlsUrl = (url) => typeof url === 'string' && url.toLowerCase().includes('m3u8')
 
@@ -15,40 +21,19 @@ function getApiBaseCandidates() {
   return out
 }
 
-async function resolveFromApi(id) {
+async function resolveFromApi(id, exclude) {
   for (const base of getApiBaseCandidates()) {
     try {
-      const res = await fetch(`${base}/api/resolvePlayer?id=${encodeURIComponent(id)}`)
+      const res = await fetch(`${base}/api/resolvePlayer?${new URLSearchParams({ id, exclude: JSON.stringify(exclude) })}`, { signal: AbortSignal.timeout(60000) })
       if (!res.ok) continue
       const data = await res.json()
-      if (data?.embedUrl && data.success && isHlsUrl(data.embedUrl)) return data
-    } catch {}
+      if (data?.embedUrl && data.success && isHlsUrl(data.embedUrl) && !exclude.includes(toHttps(data.embedUrl))) return data
+    } catch { /* Try the next API or provider. */ }
   }
   return null
 }
 
 const toHttps = (u) => (typeof u === 'string' ? u.trim().replace(/^http:\/\//i, 'https://') : u)
-
-const M3U8_PROBE_MS = 8000
-
-/** Yerel /api yokken ölü m3u8 döndüğünde HLS hata döngüsünü engeller */
-async function verifyM3u8ReachableBrowser(url) {
-  const u = url.trim().replace(/edge\d+/g, 'edge3')
-  if (!/^https?:\/\//i.test(u)) return false
-  try {
-    let res = await fetch(u, { method: 'HEAD', redirect: 'follow', signal: AbortSignal.timeout(M3U8_PROBE_MS) })
-    if (res.ok) return true
-    res = await fetch(u, {
-      method: 'GET',
-      redirect: 'follow',
-      signal: AbortSignal.timeout(M3U8_PROBE_MS),
-      headers: { Range: 'bytes=0-8191' },
-    })
-    return res.ok
-  } catch {
-    return false
-  }
-}
 
 /**
  * @param {object} match
@@ -56,51 +41,57 @@ async function verifyM3u8ReachableBrowser(url) {
  */
 export const getStreamUrl = async (match, { exclude = [] } = {}) => {
   const id = match?.id
-  const skip = new Set(exclude.filter(Boolean))
+  const skip = new Set(exclude.filter(Boolean).map((value) => {
+    try {
+      const url = new URL(value, 'https://local.invalid')
+      return url.pathname === '/api/segment' ? url.searchParams.get('u') || value : value
+    } catch { return value }
+  }))
   if (!id) {
     return { url: null, type: 'hls', iframeUrl: null }
   }
 
-  const returnHls = async (rawUrl, { probe = true } = {}) => {
-    const playlist = toHttps(String(rawUrl)).replace(/edge\d+/g, 'edge3')
+  const returnHls = (rawUrl, proxy = false) => {
+    const playlist = toHttps(String(rawUrl))
     if (skip.has(playlist)) return null
-    if (!probe || (await verifyM3u8ReachableBrowser(playlist))) {
-      return { url: playlist, type: 'hls', iframeUrl: null }
-    }
-    return null
+    return { url: proxy ? '/api/segment?u=' + encodeURIComponent(playlist) : playlist, type: 'hls', iframeUrl: null }
   }
 
   if (match?.hlsUrl && isHlsUrl(String(match.hlsUrl))) {
-    const ok = await returnHls(match.hlsUrl, { probe: false })
+    const ok = returnHls(match.hlsUrl)
     if (ok) return ok
   }
 
-  // 1) API (sunucuda id’ye özel m3u8) — tarayıcıda tekrar probe etme (CORS)
-  const apiData = await resolveFromApi(id)
-  if (apiData?.embedUrl && isHlsUrl(apiData.embedUrl)) {
-    const ok = await returnHls(apiData.embedUrl, { probe: false })
-    if (ok) return ok
+  const official = OFFICIAL_CHANNEL_STREAMS[id]
+  if (official) {
+    const stream = returnHls(official)
+    if (stream) return stream
   }
 
   // 2) Client-side teletv yayinlink (çalışan ayna)
+
   try {
     let dataBase = getPrimaryTeletvBase()
     try {
       dataBase = await resolveWorkingTeletvBase()
-    } catch {}
-    const res = await fetch(teletvLoadUrl(dataBase, `yayinlink.php?id=${encodeURIComponent(id)}`))
+    } catch { /* Try the next API or provider. */ }
+    const res = await fetch(teletvLoadUrl(dataBase, `yayinlink.php?id=${encodeURIComponent(id)}`), { signal: AbortSignal.timeout(8000), cache: 'no-store' })
     if (res.ok) {
       const data = await res.json()
       const link = typeof data?.deismackanal === 'string' ? data.deismackanal.trim() : null
       if (isHlsUrl(link)) {
-        const ok = await returnHls(link, { probe: true })
+        const ok = returnHls(link, true)
         if (ok) return ok
-        // Probe CORS yüzünden fail olabilir; id’ye özel linki yine dene
-        const direct = toHttps(link).replace(/edge\d+/g, 'edge3')
-        if (!skip.has(direct)) return { url: direct, type: 'hls', iframeUrl: null }
       }
     }
-  } catch {}
+  } catch { /* The provider may be unavailable. */ }
+
+  // 1) API (sunucuda id’ye özel m3u8) — tarayıcıda tekrar probe etme (CORS)
+  const apiData = await resolveFromApi(id, [...skip])
+  if (apiData?.embedUrl && isHlsUrl(apiData.embedUrl)) {
+    const ok = returnHls(apiData.embedUrl, true)
+    if (ok) return ok
+  }
 
   return { url: null, type: 'hls', iframeUrl: null }
 }

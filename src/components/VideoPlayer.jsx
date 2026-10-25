@@ -133,16 +133,17 @@ const VideoPlayer = ({
 
   const reload = () => {
     clearTimeout(retryTimer.current);
+    retryTimer.current = null;
     setStatus('idle');
     setReloadKey((prev) => prev + 1);
   };
 
-  const runRetry = () => {
-    const { onRetry: retry } = latest.current;
+  const runRetry = (options = {}) => {
     clearTimeout(retryTimer.current);
     setStatus('retrying');
     retryTimer.current = setTimeout(() => {
-      if (retry) retry();
+      const retry = latest.current.onRetry;
+      if (retry) retry(options);
       else reload();
     }, 1200);
   };
@@ -151,6 +152,7 @@ const VideoPlayer = ({
     const onMessage = (event) => {
       const data = event?.data;
       if (!data) return;
+      if (!iframeRef.current || event.source !== iframeRef.current.contentWindow) return;
       const cur = latest.current;
       if (data.type === 'player:fake-fs') {
         setFakeFs(!!data.on);
@@ -168,10 +170,14 @@ const VideoPlayer = ({
       if (!iframeRef.current || event.source !== iframeRef.current.contentWindow) return;
       const m = cur.selectedMatch;
       if (data.type === 'player:playing') {
+        clearTimeout(retryTimer.current);
+        retryTimer.current = null;
         failRef.current = 0;
         setStatus('playing');
         track('stream_play', { kind: cur.isChannel ? 'channel' : 'match', name: m?.name || '' });
       } else if (data.type === 'player:error') {
+        // Ignore duplicate errors while this source is already being replaced.
+        if (retryTimer.current !== null) return;
         const attempts = m?.attempt || 0;
         if (failRef.current < MAX_AUTO_RETRY && attempts < MAX_TOTAL_ATTEMPTS) {
           failRef.current += 1;
@@ -229,11 +235,14 @@ const VideoPlayer = ({
   }, []);
 
   useEffect(() => {
+    clearTimeout(retryTimer.current);
+    retryTimer.current = null;
+    setStatus('idle');
     setReloadKey(0);
     setFakeFs(false);
     document.documentElement.classList.remove('player-fake-fs');
     document.body.classList.remove('player-fake-fs');
-  }, [selectedMatch?.id, selectedMatch?.url, selectedMatch?.streamType]);
+  }, [selectedMatch?.id, selectedMatch?.url, selectedMatch?.streamType, selectedMatch?.attempt]);
 
   useEffect(() => {
     failRef.current = 0;
@@ -621,7 +630,7 @@ const VideoPlayer = ({
                   <p className="text-sm text-slate-200 font-medium">Yayın adresi alınamadı</p>
                   <p className="text-xs text-slate-400 mt-1">Lütfen başka bir maç veya kanal seçin</p>
                   {onRetry ? (
-                    <button type="button" onClick={() => { failRef.current = 0; onRetry(); }} className={`${barBtn} mt-3`}>
+                    <button type="button" onClick={() => { failRef.current = 0; onRetry({ reset: true }); }} className={`${barBtn} mt-3`}>
                       <RefreshIcon /> Tekrar dene
                     </button>
                   ) : null}
@@ -654,7 +663,7 @@ const VideoPlayer = ({
                       <p className="text-sm font-semibold text-slate-100">Bu yayın şu an açılmıyor</p>
                       <p className="mt-1 text-xs text-slate-400">Sorunu otomatik olarak bildirdik. Başka bir maç veya kanal deneyebilirsin.</p>
                       <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-                        <button type="button" onClick={() => { failRef.current = 0; runRetry(); }} className={barBtn}>
+                        <button type="button" onClick={() => { failRef.current = 0; if (onRetry) onRetry({ reset: true }); else reload(); }} className={barBtn}>
                           <RefreshIcon /> Tekrar dene
                         </button>
                         {onStep ? (

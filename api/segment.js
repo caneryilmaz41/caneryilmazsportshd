@@ -1,47 +1,66 @@
+import { once } from 'node:events'
+import { isAllowedStreamUrl, rewriteStreamPlaylist, streamRequestHeaders } from '../streamProxy.js'
+
 export default async function handler(req, res) {
   const { u } = req.query
-  
-  if (!u) {
-    return res.status(400).json({ error: 'u parameter required' })
-  }
-
+  res.setHeader('Cache-Control', 'no-store')
+  if (typeof u !== 'string' || !isAllowedStreamUrl(u)) return res.status(400).json({ error: 'Stream host is not allowed' })
+  if (req.method && req.method !== 'GET') return res.status(405).json({ error: 'GET required' })
+  const abort = new AbortController()
+  const timer = setTimeout(() => abort.abort(), 15000)
+  const onClose = () => abort.abort()
+  res.on('close', onClose)
   try {
-    const response = await fetch(u, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Referer': new URL(u).origin
-      },
-      timeout: 15000
-    })
-    
+    let url = u
+    let response
+    for (let count = 0; count < 4; count++) {
+      if (!isAllowedStreamUrl(url)) return res.status(400).json({ error: 'Redirect host is not allowed' })
+      const headers = streamRequestHeaders()
+      if (req.headers.range) headers.Range = req.headers.range
+      response = await fetch(url, { headers, redirect: 'manual', signal: abort.signal })
+      if ([301, 302, 303, 307, 308].includes(response.status)) {
+        await response.body?.cancel()
+        const target = response.headers.get('location')
+        if (!target) throw new Error('Invalid stream redirect')
+        url = new URL(target, url).href
+        response = null
+        continue
+      }
+      break
+    }
+    if (!response) throw new Error('Too many stream redirects')
     if (!response.ok) {
-      throw new Error(`Segment fetch failed: ${response.status}`)
+      await response.body?.cancel()
+      return res.status(response.status).json({ error: 'Upstream stream request failed', upstreamStatus: response.status })
     }
-    
-    // Content-Type'ı koru
-    const contentType = response.headers.get('content-type')
-    if (contentType) {
-      res.setHeader('Content-Type', contentType)
+    const type = response.headers.get('content-type') || 'application/octet-stream'
+    const playlist = new URL(url).pathname.endsWith('.m3u8') || /mpegurl/i.test(type)
+    if (playlist) {
+      const text = await response.text()
+      if (!text.trimStart().startsWith('#EXTM3U')) throw new Error('Upstream did not return an HLS playlist')
+      const rewritten = rewriteStreamPlaylist(text, url)
+      res.setHeader('Content-Type', 'application/vnd.apple.mpegurl')
+      res.statusCode = 200
+      res.end(rewritten)
+    } else {
+      res.statusCode = response.status
+      res.setHeader('Content-Type', type)
+      for (const name of ['content-range', 'accept-ranges', 'content-length']) {
+        const value = response.headers.get(name)
+        if (value && !(name === 'content-length' && response.headers.has('content-encoding'))) res.setHeader(name, value)
+      }
+      for await (const chunk of response.body) {
+        if (!res.write(chunk)) await once(res, 'drain', { signal: abort.signal })
+      }
+      res.end()
     }
-    
-    // CORS headers
-    res.setHeader('Access-Control-Allow-Origin', '*')
-    res.setHeader('Access-Control-Allow-Methods', 'GET')
-    res.setHeader('Cache-Control', 'max-age=3600')
-    
-    // Stream the response
-    const reader = response.body.getReader()
-    
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      res.write(value)
+  } catch {
+    if (!res.destroyed) {
+      if (!res.headersSent) res.status(502).json({ error: 'Stream proxy request failed' })
+      else res.destroy()
     }
-    
-    res.end()
-    
-  } catch (error) {
-    console.error('Segment proxy error:', error)
-    return res.status(500).json({ error: error.message })
+  } finally {
+    clearTimeout(timer)
+    res.off('close', onClose)
   }
 }

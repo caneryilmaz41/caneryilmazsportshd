@@ -24,7 +24,7 @@ export const useStreamPlayer = () => {
       const result = await getStreamUrl(match);
       next = {
         ...match,
-        url: result?.url || null,
+          url: result?.url || null,
         streamType: result?.type || 'hls',
         iframeUrl: result?.iframeUrl || null,
       };
@@ -40,25 +40,33 @@ export const useStreamPlayer = () => {
    * Yayın hata verdiğinde: denenmemiş bir kaynak ara; yoksa aynı adresi baştan yükle.
    * @returns {Promise<boolean>} yeni bir kaynak bulundu mu
    */
-  const retryStream = async () => {
+  const retryStream = async ({ reset = false } = {}) => {
     const current = selectedMatch;
     if (!current) return false;
     const req = ++reqRef.current;
-    const tried = [...(current.triedUrls || []), current.url].filter(Boolean);
+    const tried = reset ? [] : [...new Set([...(current.triedUrls || []), current.url].filter(Boolean))];
     setStreamLoading(true);
     let found = null;
+    let streamType = current.streamType;
+    let iframeUrl = null;
     try {
       const result = await getStreamUrl(current, { exclude: tried });
       found = result?.url || null;
+      if (found) {
+        streamType = result.type || 'hls';
+        iframeUrl = result.iframeUrl || null;
+      }
     } catch {
       found = null;
     }
     if (req !== reqRef.current) return false;
     setSelectedMatch({
       ...current,
-      url: found || current.url,
+      url: found,
+      streamType,
+      iframeUrl,
       triedUrls: tried,
-      attempt: (current.attempt || 0) + 1,
+      attempt: reset ? 0 : (current.attempt || 0) + 1,
     });
     setStreamLoading(false);
     return Boolean(found);

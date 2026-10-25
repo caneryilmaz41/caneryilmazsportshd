@@ -466,7 +466,7 @@ body.is-android.compact-controls #pipBtn{display:none}
   <div class="error-box" id="error"><p>Yayın bulunamadı</p><p>Lütfen başka bir kanal deneyin</p></div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="/vendor/hls.min.js"></script>
 <script>
 const src=new URLSearchParams(location.search).get('src');
 const fallback=new URLSearchParams(location.search).get('fallback');
@@ -762,7 +762,7 @@ function go(){
 
 /* HLS */
 if(!src)err();
-else if(Hls.isSupported()){
+else if(window.Hls && Hls.isSupported()){
   const h=new Hls({xhrSetup:x=>x.overrideMimeType('application/octet-stream')});
   h.loadSource(src);h.attachMedia(V);
   h.on(Hls.Events.MANIFEST_PARSED,()=>{hide();go()});
