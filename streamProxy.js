@@ -1,13 +1,51 @@
 import { getPrimaryTrgoolDomain } from './trgoolDomains.js'
 
-// Only the upstream hosts observed in the provider playlist may be proxied.
-const defaults = ['css.d6e3eae5e065d5.help', 'd1dshreoaq9swe.cloudfront.net']
+// Playlist origin + segment CDNs observed from the provider. Suffixes cover CDN hostname rotation.
+const defaultHosts = [
+  'css.d6e3eae5e065d5.help',
+  'd1dshreoaq9swe.cloudfront.net',
+  'viagsak-skak-skma.global.ssl.fastly.net',
+]
+const defaultSuffixes = ['.global.ssl.fastly.net', '.cloudfront.net']
+
+function allowedHostList() {
+  const configured = (globalThis.process?.env?.STREAM_PROXY_ALLOWED_HOSTS || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+  return [...defaultHosts, ...configured]
+}
+
+function allowedSuffixList() {
+  const configured = (globalThis.process?.env?.STREAM_PROXY_ALLOWED_SUFFIXES || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+  return [...defaultSuffixes, ...configured]
+}
+
+function isAllowedHostname(hostname) {
+  if (!hostname) return false
+  if (allowedHostList().includes(hostname)) return true
+  return allowedSuffixList().some((suffix) => {
+    const s = suffix.startsWith('.') ? suffix : `.${suffix}`
+    return hostname.length > s.length && hostname.endsWith(s)
+  })
+}
+
 export function isAllowedStreamUrl(value) {
   try {
     const url = new URL(value)
-    const configured = (globalThis.process?.env?.STREAM_PROXY_ALLOWED_HOSTS || '').split(',').map((s) => s.trim()).filter(Boolean)
-    return url.protocol === 'https:' && !url.username && !url.password && (!url.port || url.port === '443') && [...defaults, ...configured].includes(url.hostname)
-  } catch { return false }
+    return (
+      url.protocol === 'https:' &&
+      !url.username &&
+      !url.password &&
+      (!url.port || url.port === '443') &&
+      isAllowedHostname(url.hostname)
+    )
+  } catch {
+    return false
+  }
 }
 
 export function streamProxyUrl(value) {
