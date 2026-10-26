@@ -1,10 +1,17 @@
 import { once } from 'node:events'
-import { isAllowedStreamUrl, rewriteStreamPlaylist, streamRequestHeaders } from '../streamProxy.js'
+import {
+  isAuthorizedStreamProxyRequest,
+  isSafeHttpsUrl,
+  rewriteStreamPlaylist,
+  streamRequestHeaders,
+} from '../streamProxy.js'
 
 export default async function handler(req, res) {
-  const { u } = req.query
+  const { u, s } = req.query
   res.setHeader('Cache-Control', 'no-store')
-  if (typeof u !== 'string' || !isAllowedStreamUrl(u)) return res.status(400).json({ error: 'Stream host is not allowed' })
+  if (typeof u !== 'string' || !isAuthorizedStreamProxyRequest(u, s)) {
+    return res.status(400).json({ error: 'Stream host is not allowed' })
+  }
   if (req.method && req.method !== 'GET') return res.status(405).json({ error: 'GET required' })
   const abort = new AbortController()
   const timer = setTimeout(() => abort.abort(), 15000)
@@ -14,7 +21,8 @@ export default async function handler(req, res) {
     let url = u
     let response
     for (let count = 0; count < 4; count++) {
-      if (!isAllowedStreamUrl(url)) return res.status(400).json({ error: 'Redirect host is not allowed' })
+      // Authorized first hop may follow CDN redirects to any safe https URL.
+      if (!isSafeHttpsUrl(url)) return res.status(400).json({ error: 'Redirect host is not allowed' })
       const headers = streamRequestHeaders()
       if (req.headers.range) headers.Range = req.headers.range
       response = await fetch(url, { headers, redirect: 'manual', signal: abort.signal })
