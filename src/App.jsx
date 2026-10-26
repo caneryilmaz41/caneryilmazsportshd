@@ -16,6 +16,7 @@ import ChannelHeaderSlider from './components/ChannelHeaderSlider';
 import ScheduleList from './components/ScheduleList';
 import MultiView from './components/MultiView';
 import ReminderToast from './components/ReminderToast';
+import DerbyBanner from './components/DerbyBanner';
 
 import { useStreamData } from './hooks/useStreamData';
 import { useStreamPlayer } from './hooks/useStreamPlayer';
@@ -28,6 +29,7 @@ import { getFilteredMatches } from './utils/matchFilter';
 import { useFavorites, favKey } from './hooks/useFavorites';
 import { useReminders } from './hooks/useReminders';
 import { track } from './utils/analytics';
+import { isGsFbDerby, isDerbySpecialDay } from './utils/derby';
 
 const SITE_TITLE = 'caneryılmazsports';
 
@@ -61,6 +63,10 @@ function App() {
     // HLS probe boş dönerse liste tamamen kaybolmasın; ham maçları fallback göster.
     return hlsMatches.length > 0 ? hlsMatches : matches;
   }, [hlsMatches, matches]);
+  const derbyMatch = useMemo(() => {
+    if (!isDerbySpecialDay()) return null;
+    return visibleMatches.find((m) => isGsFbDerby(m.name)) || null;
+  }, [visibleMatches]);
   const safeChannels = useMemo(() => {
     const merged = [...(channels || []), ...(belgeselChannels || [])];
     return getFilteredChannels(merged);
@@ -275,6 +281,13 @@ function App() {
       <PrayerCountdown />
 
       <main className="mx-auto max-w-[1600px] px-3 pt-4 sm:px-4 lg:px-6 lg:pt-5">
+        <DerbyBanner
+          match={derbyMatch}
+          onWatch={() => {
+            setActiveTab('matches');
+            selectMatch(derbyMatch);
+          }}
+        />
         <div className="-mx-3 mb-4 sm:mx-0 lg:mb-5">
           <ChannelHeaderSlider
             channels={headerSliderChannels}
