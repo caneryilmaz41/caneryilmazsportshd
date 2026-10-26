@@ -288,38 +288,58 @@ const VideoPlayer = ({
   if (!selectedMatch) {
     return (
       <div>
-        <div
-          className="relative aspect-video flex flex-col justify-center text-center overflow-hidden"
-          style={{
-            backgroundImage:
-              'linear-gradient(135deg, rgba(15,23,42,0.95), rgba(30,41,59,0.9)), url("https://images.unsplash.com/photo-1574629810360-7efbbe195018?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80")',
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        >
-          <div className="relative z-10 p-4 lg:p-12">
-            <div className="mb-4 lg:mb-8">
-              <img src="/logom.png" alt="Logo" className="h-10 lg:h-24 mx-auto opacity-90" />
-              <Slogan className="mt-2 text-xs lg:mt-3 lg:text-lg" />
+        <div className="relative aspect-video flex items-center justify-center overflow-hidden bg-[#05070d]">
+          {/* Zemin: marka renklerinde gradyan + ince ızgara dokusu */}
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage:
+                'radial-gradient(55rem 28rem at 18% -10%, rgba(16,185,129,0.16), transparent 60%), radial-gradient(46rem 26rem at 100% 112%, rgba(56,189,248,0.10), transparent 60%), linear-gradient(180deg, #0b1222 0%, #05070d 100%)',
+            }}
+          />
+          <div
+            className="absolute inset-0 opacity-[0.05]"
+            style={{
+              backgroundImage:
+                'linear-gradient(rgba(255,255,255,0.7) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.7) 1px, transparent 1px)',
+              backgroundSize: '38px 38px',
+              maskImage: 'radial-gradient(70% 70% at 50% 45%, black, transparent)',
+            }}
+          />
+          <div className="pointer-events-none absolute -top-24 left-1/2 h-56 w-[36rem] -translate-x-1/2 rounded-full bg-emerald-500/10 blur-3xl" />
+
+          <div className="relative z-10 w-full max-w-md px-4 lg:max-w-lg">
+            <div className="app-panel px-5 py-7 text-center sm:px-8 sm:py-9 lg:px-10 lg:py-11">
+              <div className="mb-5 lg:mb-7">
+                <img src="/logom.png" alt="Logo" className="h-9 lg:h-16 mx-auto opacity-95" />
+                <Slogan className="mt-2 text-[11px] lg:mt-2.5 lg:text-sm" />
+              </div>
+
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/[0.08] px-2.5 py-1 mb-4 lg:mb-5">
+                <span className="live-dot !h-1.5 !w-1.5" aria-hidden />
+                <span className="text-emerald-300 font-semibold text-[10px] lg:text-[11px] tracking-[0.18em]">
+                  YAYIN HAZIR
+                </span>
+              </div>
+
+              <h2 className="text-base lg:text-2xl font-bold text-white tracking-tight">
+                Bir maç veya kanal seçin
+              </h2>
+              <p className="mt-2 text-[11px] lg:text-sm text-slate-400 leading-relaxed px-2">
+                Listeden canlı bir maç ya da TV kanalı seçerek izlemeye başlayın.
+              </p>
+
+              {onMultiView ? (
+                <button
+                  type="button"
+                  onClick={onMultiView}
+                  className="mx-auto mt-5 hidden items-center gap-2 rounded-full bg-emerald-500/90 px-4 py-2 text-xs font-semibold text-slate-950 shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-400 md:inline-flex"
+                >
+                  <GridIcon /> Çoklu izle
+                </button>
+              ) : null}
             </div>
-            <h2 className="text-lg lg:text-3xl font-light mb-3 lg:mb-6 text-white tracking-wide">
-              YAYIN BAŞLIYOR
-            </h2>
-            <div className="w-16 lg:w-24 h-0.5 bg-gradient-to-r from-transparent via-green-400 to-transparent mx-auto mb-4 lg:mb-8"></div>
-            <div className="inline-flex items-center gap-2 bg-black/30 border border-green-500/30 px-3 lg:px-4 py-1.5 lg:py-2 rounded-full mb-3 lg:mb-6">
-              <span className="live-dot" aria-hidden />
-              <span className="text-green-400 font-medium text-xs lg:text-sm tracking-wider">CANLI</span>
-            </div>
-            <p className="text-slate-300 text-xs lg:text-base font-light tracking-wide opacity-80 px-2">
-              Bir maç veya kanal seçin
-            </p>
-            {onMultiView ? (
-              <button type="button" onClick={onMultiView} className={`${barBtn} mx-auto mt-4 hidden md:inline-flex`}>
-                <GridIcon /> Çoklu izle
-              </button>
-            ) : null}
           </div>
-          <div className="absolute inset-0 bg-gradient-to-t from-green-500/5 to-transparent pointer-events-none"></div>
         </div>
       </div>
     );

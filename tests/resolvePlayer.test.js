@@ -31,6 +31,9 @@ async function resolve(t, { exclude = [], primaryStatus = 200, primaryBody = '#E
 test('preserves the supplied CDN hostname, path and token', async (t) => {
   const { res, requests } = await resolve(t)
   assert.equal(res.body.embedUrl, primary)
+  assert.ok(String(res.body.proxyUrl || '').startsWith('/api/segment?'))
+  assert.ok(String(res.body.proxyUrl).includes(encodeURIComponent(primary)))
+  assert.ok(String(res.body.proxyUrl).includes('s='))
   assert.ok(!requests.some((r) => r.url === primary))
 })
 

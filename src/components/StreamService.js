@@ -27,7 +27,7 @@ async function resolveFromApi(id, exclude) {
       const res = await fetch(`${base}/api/resolvePlayer?${new URLSearchParams({ id, exclude: JSON.stringify(exclude) })}`, { signal: AbortSignal.timeout(60000) })
       if (!res.ok) continue
       const data = await res.json()
-      if (data?.embedUrl && data.success && isHlsUrl(data.embedUrl) && !exclude.includes(toHttps(data.embedUrl))) return data
+      if (data?.success && data?.embedUrl && isHlsUrl(data.embedUrl) && !exclude.includes(toHttps(data.embedUrl))) return data
     } catch { /* Try the next API or provider. */ }
   }
   return null
@@ -68,8 +68,17 @@ export const getStreamUrl = async (match, { exclude = [] } = {}) => {
     if (stream) return stream
   }
 
-  // 2) Client-side teletv yayinlink (çalışan ayna)
+  // 1) Server resolve first — returns HMAC-signed proxyUrl (survives CDN apex rotation)
+  const apiData = await resolveFromApi(id, [...skip])
+  if (apiData?.proxyUrl && typeof apiData.proxyUrl === 'string' && apiData.proxyUrl.startsWith('/api/segment?')) {
+    return { url: apiData.proxyUrl, type: 'hls', iframeUrl: null }
+  }
+  if (apiData?.embedUrl && isHlsUrl(apiData.embedUrl)) {
+    const ok = returnHls(apiData.embedUrl, true)
+    if (ok) return ok
+  }
 
+  // 2) Client-side teletv fallback (unsigned proxy; pattern allowlist covers css.*.help)
   try {
     let dataBase = getPrimaryTeletvBase()
     try {
@@ -85,13 +94,6 @@ export const getStreamUrl = async (match, { exclude = [] } = {}) => {
       }
     }
   } catch { /* The provider may be unavailable. */ }
-
-  // 1) API (sunucuda id’ye özel m3u8) — tarayıcıda tekrar probe etme (CORS)
-  const apiData = await resolveFromApi(id, [...skip])
-  if (apiData?.embedUrl && isHlsUrl(apiData.embedUrl)) {
-    const ok = returnHls(apiData.embedUrl, true)
-    if (ok) return ok
-  }
 
   return { url: null, type: 'hls', iframeUrl: null }
 }

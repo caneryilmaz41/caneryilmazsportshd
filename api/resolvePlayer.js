@@ -1,5 +1,17 @@
 import { getCachedWorkingTrgoolDomain } from '../trgoolDomains.js'
 import { resolveWorkingTeletvBase, teletvLoadUrl } from '../teletvHosts.js'
+import { streamProxyUrl } from '../streamProxy.js'
+
+function successPayload(url, source) {
+  return {
+    embedUrl: url,
+    // Signed proxy path: survives CDN apex rotation without a client allowlist update.
+    proxyUrl: streamProxyUrl(url, { sign: true }),
+    type: 'hls',
+    source,
+    success: true,
+  }
+}
 
 const TIMEOUT = 10_000
 const M3U8_PROBE_MS = 8000
@@ -154,7 +166,7 @@ export default async function handler(req, res) {
   try {
     const fromTeletv = await tryTeletvYayinlink(id, excluded)
     if (fromTeletv) {
-      return res.json({ embedUrl: fromTeletv, type: 'hls', source: 'teletv', success: true })
+      return res.json(successPayload(fromTeletv, 'teletv'))
     }
   } catch { /* Continue with the next provider. */ }
 
@@ -184,7 +196,7 @@ export default async function handler(req, res) {
       if (data?.URL) {
         const url = normalizeM3u8(String(data.URL))
         if (url && !excluded.has(url)) {
-          return res.json({ embedUrl: url, type: 'hls', source: 'cinema', success: true })
+          return res.json(successPayload(url, 'cinema'))
         }
       }
     }
@@ -194,7 +206,7 @@ export default async function handler(req, res) {
   try {
     const fromTrgool = await tryM3u8FromTrgoolPages(id, excluded)
     if (fromTrgool) {
-      return res.json({ embedUrl: fromTrgool, type: 'hls', source: 'trgool-html', success: true })
+      return res.json(successPayload(fromTrgool, 'trgool-html'))
     }
   } catch { /* Continue with the next provider. */ }
 

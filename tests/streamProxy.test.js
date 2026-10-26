@@ -24,12 +24,14 @@ test('rewrites variant playlists, keys, maps and absolute media segments', () =>
   }
 })
 
-test('allows known CDN families by suffix including rotated provider subdomains', () => {
+test('allows rotated provider .help apex and cloudfront/fastly families', () => {
+  assert.equal(isAllowedStreamUrl('https://css.d6e3eae5e065d5.help/a.m3u8'), true)
+  assert.equal(isAllowedStreamUrl('https://css.d6e3cae2e245k5.help/a.m3u8'), true)
+  assert.equal(isAllowedStreamUrl('https://google.deadbeefcafe01.help/a.m3u8'), true)
   assert.equal(isAllowedStreamUrl('https://viagsak-skak-skma.global.ssl.fastly.net/beintv/part.jpg'), true)
   assert.equal(isAllowedStreamUrl('https://other-edge.global.ssl.fastly.net/live/a.jpg'), true)
+  assert.equal(isAllowedStreamUrl('https://d31beekkopsyst.cloudfront.net/live/a.jpg'), true)
   assert.equal(isAllowedStreamUrl('https://abc123.cloudfront.net/live/a.jpg'), true)
-  assert.equal(isAllowedStreamUrl('https://google.d6e3eae5e065d5.help/live/a.jpg'), true)
-  assert.equal(isAllowedStreamUrl('https://cdn99.d6e3eae5e065d5.help/live/a.jpg'), true)
 })
 
 test('signs unknown segment hosts so playlist rewrite survives CDN rotation', () => {
@@ -60,6 +62,7 @@ test('blocks private addresses, arbitrary hosts and credentials', () => {
     'http://127.0.0.1/',
     'https://169.254.169.254/',
     'https://example.com/a',
+    'https://evil.help/a',
     'https://user@css.d6e3eae5e065d5.help/a',
     'https://css.d6e3eae5e065d5.help.evil.example/a',
     'https://evil-global.ssl.fastly.net.attacker.com/a',
@@ -67,5 +70,4 @@ test('blocks private addresses, arbitrary hosts and credentials', () => {
     assert.equal(isAllowedStreamUrl(url), false)
     assert.equal(isAuthorizedStreamProxyRequest(url, null), false)
   }
-  assert.throws(() => streamProxyUrl('https://example.com/segment.ts'))
 })

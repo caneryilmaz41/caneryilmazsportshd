@@ -2,22 +2,30 @@ import { createHmac, timingSafeEqual } from 'node:crypto'
 import { getPrimaryTrgoolDomain } from './trgoolDomains.js'
 
 /**
- * Provider CDN hostnames rotate often (css.* → google.* → Fastly, …).
- * 1) Suffix allowlist covers known CDN families for the first playlist hop.
- * 2) Playlist rewrite HMAC-signs every segment URL so a brand-new CDN host
- *    still proxies without a code change (open-proxy safe: only signed URLs).
+ * Provider CDN hostnames rotate constantly:
+ *   css.d6e3eae5e065d5.help → css.d6e3cae2e245k5.help
+ *   google.* / Fastly / CloudFront …
+ *
+ * Strategy (durable):
+ * 1) Pattern + CDN-family suffix allowlist for the first playlist hop
+ * 2) HMAC-sign every rewritten segment so unknown hosts still proxy safely
  */
 const defaultHosts = [
   'css.d6e3eae5e065d5.help',
   'google.d6e3eae5e065d5.help',
+  'css.d6e3cae2e245k5.help',
   'd1dshreoaq9swe.cloudfront.net',
+  'd31beekkopsyst.cloudfront.net',
   'viagsak-skak-skma.global.ssl.fastly.net',
 ]
 const defaultSuffixes = [
-  '.d6e3eae5e065d5.help',
   '.global.ssl.fastly.net',
   '.cloudfront.net',
 ]
+
+/** css.<token>.help / google.<token>.help — token (apex) rotates without notice */
+const PROVIDER_HELP_HOST =
+  /^(css|google|cdn|edge|live|stream|www)\.[a-z0-9]{6,}\.help$/i
 
 function splitEnvList(name) {
   return (globalThis.process?.env?.[name] || '')
@@ -38,10 +46,11 @@ function allowedSuffixList() {
   return [...defaultSuffixes, ...splitEnvList('STREAM_PROXY_ALLOWED_SUFFIXES')]
 }
 
-function isAllowedHostname(hostname) {
+export function isAllowedHostname(hostname) {
   if (!hostname) return false
   const host = hostname.toLowerCase()
   if (allowedHostList().some((h) => h.toLowerCase() === host)) return true
+  if (PROVIDER_HELP_HOST.test(host)) return true
   return allowedSuffixList().some((suffix) => {
     const s = (suffix.startsWith('.') ? suffix : `.${suffix}`).toLowerCase()
     return host.length > s.length && host.endsWith(s)
@@ -86,19 +95,20 @@ function signaturesMatch(expected, provided) {
   }
 }
 
-/** First playlist hop (allowlist) or any later segment hop (valid HMAC). */
+/** First playlist hop (allowlist/pattern) or any later hop (valid HMAC). */
 export function isAuthorizedStreamProxyRequest(u, s) {
   if (typeof u !== 'string' || !isSafeHttpsUrl(u)) return false
   if (isAllowedStreamUrl(u)) return true
   return signaturesMatch(signStreamUrl(u), s)
 }
 
-export function streamProxyUrl(value, { sign = false } = {}) {
+export function streamProxyUrl(value, { sign = true } = {}) {
   if (!isSafeHttpsUrl(value)) throw new Error('Stream URL must be https without credentials')
-  if (!sign && !isAllowedStreamUrl(value)) throw new Error('Stream host is not allowed')
   const href = new URL(value).href
+  // Prefer signing always so clients never depend on a frozen host list.
+  if (!sign && !isAllowedStreamUrl(href)) throw new Error('Stream host is not allowed')
   const params = new URLSearchParams({ u: href })
-  if (sign || !isAllowedStreamUrl(href)) params.set('s', signStreamUrl(href))
+  if (sign) params.set('s', signStreamUrl(href))
   return `/api/segment?${params}`
 }
 
@@ -107,7 +117,6 @@ export function rewriteStreamPlaylist(text, baseUrl) {
   const rewrite = (value) => {
     if (/^(data|skd):/i.test(value)) return value
     const absolute = new URL(value, baseUrl).href
-    // Always sign rewritten URLs so CDN hostname rotation never breaks playback.
     return streamProxyUrl(absolute, { sign: true })
   }
   return text.split(/\r?\n/).map((line) => {
