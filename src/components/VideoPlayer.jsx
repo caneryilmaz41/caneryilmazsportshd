@@ -81,7 +81,6 @@ const VideoPlayer = ({
   onStep,
   onMultiView,
 }) => {
-  const [reloadKey, setReloadKey] = useState(0);
   const [fakeFs, setFakeFs] = useState(false);
   const [status, setStatus] = useState('idle'); // idle | playing | retrying | failed
   const [menu, setMenu] = useState(null); // 'report' | 'keys' | null
@@ -93,6 +92,12 @@ const VideoPlayer = ({
   const failRef = useRef(0);
   const retryTimer = useRef(null);
   const noticeTimer = useRef(null);
+  // Oynatıcı iframe'i bir kez açılır; sonraki maç/kanal değişimlerinde sayfa
+  // yeniden yüklenmesin diye kaynak postMessage ile içeri gönderilir.
+  const iframeSrcRef = useRef(null);
+  const appliedKeyRef = useRef(null);
+  const iframeLoadedRef = useRef(false);
+  const pendingLoadRef = useRef(null);
 
   const isChannel = detectIsChannel(selectedMatch);
   const teams = useMemo(() => parseMatchTeams(selectedMatch?.name || ''), [selectedMatch?.name]);
@@ -112,6 +117,61 @@ const VideoPlayer = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [selectedMatch?.id]
   );
+
+  const hlsSrc = selectedMatch?.url && !isTrgoolSiteUrl(selectedMatch.url) ? selectedMatch.url : '';
+  const hasValidSrc = selectedMatch?.streamType === 'hls' && Boolean(hlsSrc);
+
+  // İlk kez oynatılabilir bir kaynak bulununca iframe bir defa açılır; adresi
+  // artık hiç değişmez — sonraki yayınlar postMessage ile aynı iframe'e gönderilir.
+  if (hasValidSrc && !iframeSrcRef.current) {
+    iframeSrcRef.current = `/player.html?ui=${encodeURIComponent(PLAYER_UI_VERSION)}&src=${encodeURIComponent(hlsSrc)}&rail=${encodeURIComponent(JSON.stringify(railPayload))}&selected=${encodeURIComponent(selectedMatch?.id || '')}`;
+    appliedKeyRef.current = `${selectedMatch?.id || ''}|${hlsSrc}|${selectedMatch?.attempt || 0}`;
+  }
+
+  const handleIframeLoad = () => {
+    iframeLoadedRef.current = true;
+    if (pendingLoadRef.current) {
+      const payload = pendingLoadRef.current;
+      pendingLoadRef.current = null;
+      try {
+        iframeRef.current?.contentWindow?.postMessage({ type: 'player:load', ...payload }, '*');
+      } catch {
+        /* ignore */
+      }
+    }
+  };
+
+  const sendLoad = (payload) => {
+    if (iframeLoadedRef.current) {
+      try {
+        iframeRef.current?.contentWindow?.postMessage({ type: 'player:load', ...payload }, '*');
+      } catch {
+        /* ignore */
+      }
+    } else {
+      pendingLoadRef.current = payload;
+    }
+  };
+
+  // Yeni maç/kanal seçilince mevcut iframe'i yeniden açmadan yayını değiştir.
+  useEffect(() => {
+    if (!iframeSrcRef.current || !hasValidSrc) return;
+    const key = `${selectedMatch?.id || ''}|${hlsSrc}|${selectedMatch?.attempt || 0}`;
+    if (appliedKeyRef.current === key) return;
+    appliedKeyRef.current = key;
+    sendLoad({ src: hlsSrc, rail: railPayload, selected: selectedMatch?.id || '' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedMatch?.id, selectedMatch?.attempt, hlsSrc, hasValidSrc]);
+
+  // Yeni bir seçim başlarken eski yayının sesi kesilsin (yeni kaynak gelene kadar).
+  useEffect(() => {
+    if (!iframeLoadedRef.current) return;
+    try {
+      iframeRef.current?.contentWindow?.postMessage({ type: 'player:cmd', cmd: 'silence' }, '*');
+    } catch {
+      /* ignore */
+    }
+  }, [selectedMatch?.id]);
 
   // Mesaj ve klavye dinleyicileri tek sefer bağlanır; güncel değerler ref'ten okunur.
   const latest = useRef({});
@@ -135,7 +195,9 @@ const VideoPlayer = ({
     clearTimeout(retryTimer.current);
     retryTimer.current = null;
     setStatus('idle');
-    setReloadKey((prev) => prev + 1);
+    if (iframeSrcRef.current) {
+      sendLoad({ src: hlsSrc, rail: railPayload, selected: selectedMatch?.id || '' });
+    }
   };
 
   const runRetry = (options = {}) => {
@@ -238,7 +300,6 @@ const VideoPlayer = ({
     clearTimeout(retryTimer.current);
     retryTimer.current = null;
     setStatus('idle');
-    setReloadKey(0);
     setFakeFs(false);
     document.documentElement.classList.remove('player-fake-fs');
     document.body.classList.remove('player-fake-fs');
@@ -345,16 +406,8 @@ const VideoPlayer = ({
     );
   }
 
-  const hlsSrc = selectedMatch.url && !isTrgoolSiteUrl(selectedMatch.url) ? selectedMatch.url : '';
-  const useOwnPlayer = selectedMatch.streamType === 'hls' && hlsSrc;
-  const playerSrc = useOwnPlayer
-    ? `/player.html?ui=${encodeURIComponent(PLAYER_UI_VERSION)}&src=${encodeURIComponent(hlsSrc)}&rail=${encodeURIComponent(JSON.stringify(railPayload))}&selected=${encodeURIComponent(selectedMatch.id || '')}`
-    : '';
-  const isInvalidPlayerSrc =
-    !playerSrc ||
-    playerSrc === '/' ||
-    playerSrc === window.location.pathname ||
-    playerSrc === window.location.href;
+  const showIframe = Boolean(iframeSrcRef.current);
+  const isInvalidPlayerSrc = !hasValidSrc;
 
   const mini = !inView && !miniClosed && !fakeFs && !streamLoading && !isInvalidPlayerSrc;
   const kindParam = isChannel ? 'kanal' : 'mac';
@@ -590,15 +643,29 @@ const VideoPlayer = ({
           <div
             className={
               fakeFs
-                ? 'h-full w-full overflow-hidden'
+                ? 'relative h-full w-full overflow-hidden'
                 : mini
                   ? 'relative aspect-video w-full overflow-hidden'
                   : 'relative h-full w-full overflow-hidden'
             }
           >
+            {showIframe ? (
+              <iframe
+                ref={iframeRef}
+                title="Canlı yayın"
+                src={iframeSrcRef.current}
+                onLoad={handleIframeLoad}
+                className="absolute inset-0 h-full w-full border-0 bg-black"
+                allowFullScreen
+                webkitallowfullscreen="true"
+                mozallowfullscreen="true"
+                allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+              />
+            ) : null}
+
             {streamLoading ? (
               <div
-                className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden"
+                className="absolute inset-0 flex h-full w-full flex-col items-center justify-center overflow-hidden"
                 style={{
                   backgroundImage: SPLASH_BG,
                   backgroundSize: 'cover',
@@ -645,7 +712,7 @@ const VideoPlayer = ({
                 </div>
               </div>
             ) : isInvalidPlayerSrc ? (
-              <div className="w-full h-full bg-slate-900 flex items-center justify-center text-center px-4">
+              <div className="absolute inset-0 h-full w-full bg-slate-900 flex items-center justify-center text-center px-4">
                 <div>
                   <p className="text-sm text-slate-200 font-medium">Yayın adresi alınamadı</p>
                   <p className="text-xs text-slate-400 mt-1">Lütfen başka bir maç veya kanal seçin</p>
@@ -656,47 +723,32 @@ const VideoPlayer = ({
                   ) : null}
                 </div>
               </div>
-            ) : (
-              <>
-                <iframe
-                  ref={iframeRef}
-                  key={`${selectedMatch.id || selectedMatch.url}-${reloadKey}-${selectedMatch.attempt || 0}`}
-                  title="Canlı yayın"
-                  src={playerSrc}
-                  className="w-full h-full border-0 bg-black"
-                  allowFullScreen
-                  webkitallowfullscreen="true"
-                  mozallowfullscreen="true"
-                  allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
-                />
-                {status === 'retrying' ? (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-950/80 px-4 text-center backdrop-blur-sm">
-                    <div>
-                      <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-emerald-500/30 border-t-emerald-400 motion-reduce:animate-none" />
-                      <p className="text-sm font-semibold text-slate-100">Yayın açılamadı, yedek kaynak deneniyor…</p>
-                      <p className="mt-1 text-xs text-slate-400">Deneme {failRef.current}/{MAX_AUTO_RETRY}</p>
-                    </div>
+            ) : status === 'retrying' ? (
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-950/80 px-4 text-center backdrop-blur-sm">
+                <div>
+                  <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-emerald-500/30 border-t-emerald-400 motion-reduce:animate-none" />
+                  <p className="text-sm font-semibold text-slate-100">Yayın açılamadı, yedek kaynak deneniyor…</p>
+                  <p className="mt-1 text-xs text-slate-400">Deneme {failRef.current}/{MAX_AUTO_RETRY}</p>
+                </div>
+              </div>
+            ) : status === 'failed' ? (
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-950/85 px-4 text-center backdrop-blur-sm">
+                <div>
+                  <p className="text-sm font-semibold text-slate-100">Bu yayın şu an açılmıyor</p>
+                  <p className="mt-1 text-xs text-slate-400">Sorunu otomatik olarak bildirdik. Başka bir maç veya kanal deneyebilirsin.</p>
+                  <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                    <button type="button" onClick={() => { failRef.current = 0; if (onRetry) onRetry({ reset: true }); else reload(); }} className={barBtn}>
+                      <RefreshIcon /> Tekrar dene
+                    </button>
+                    {onStep ? (
+                      <button type="button" onClick={() => onStep(1)} className={barBtn}>
+                        Sonraki maç →
+                      </button>
+                    ) : null}
                   </div>
-                ) : status === 'failed' ? (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-950/85 px-4 text-center backdrop-blur-sm">
-                    <div>
-                      <p className="text-sm font-semibold text-slate-100">Bu yayın şu an açılmıyor</p>
-                      <p className="mt-1 text-xs text-slate-400">Sorunu otomatik olarak bildirdik. Başka bir maç veya kanal deneyebilirsin.</p>
-                      <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-                        <button type="button" onClick={() => { failRef.current = 0; if (onRetry) onRetry({ reset: true }); else reload(); }} className={barBtn}>
-                          <RefreshIcon /> Tekrar dene
-                        </button>
-                        {onStep ? (
-                          <button type="button" onClick={() => onStep(1)} className={barBtn}>
-                            Sonraki maç →
-                          </button>
-                        ) : null}
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
-              </>
-            )}
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>

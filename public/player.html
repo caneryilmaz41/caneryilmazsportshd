@@ -468,9 +468,9 @@ body.is-android.compact-controls #pipBtn{display:none}
 
 <script src="/vendor/hls.min.js"></script>
 <script>
-const src=new URLSearchParams(location.search).get('src');
+let src=new URLSearchParams(location.search).get('src');
 const fallback=new URLSearchParams(location.search).get('fallback');
-const selectedId=new URLSearchParams(location.search).get('selected')||'';
+let selectedId=new URLSearchParams(location.search).get('selected')||'';
 const railRaw=new URLSearchParams(location.search).get('rail');
 const startMuted=new URLSearchParams(location.search).get('muted')==='1';
 /* Çoklu izlemede üst sayfanın ses tercihi, yayın başlamadan gelse de geçerli olsun */
@@ -505,7 +505,7 @@ function err(){
 }
 /* Manifest hiç gelmez / görüntü hiç başlamazsa da hata say */
 let started=false;
-const stallT=setTimeout(function(){ if(!started) err(); },30000);
+let stallT=setTimeout(function(){ if(!started) err(); },30000);
 function fmt(s){const m=Math.floor(s/60),ss=Math.floor(s%60);return m+':'+(ss<10?'0':'')+ss}
 
 /* Icons */
@@ -548,10 +548,6 @@ showC();
 
 /* Matches menu in controls */
 let railData=[];
-try{
-  railData=JSON.parse(decodeURIComponent(railRaw||'[]'));
-  if(!Array.isArray(railData)) railData=[];
-}catch(_e){railData=[]}
 function closeMatches(){matchesPanel.classList.remove('open');showC()}
 function toggleMatches(e){
   if(e) e.stopPropagation();
@@ -613,20 +609,33 @@ function makeItem(item){
   });
   return b;
 }
-if(railData.length){
-  matchesWrap.style.display='block';
-  matchesCount.textContent=railData.length+' yayin';
-  const frag=document.createDocumentFragment();
-  railData.forEach(function(item){ if(item&&item.id) frag.appendChild(makeItem(item)); });
-  matchesList.appendChild(frag);
-  matchesBtn.addEventListener('click',toggleMatches);
-  W.addEventListener('click',closeMatches);
-  matchesPanel.addEventListener('click',function(e){e.stopPropagation()});
-  if(mPrev&&mNext){
-    mPrev.addEventListener('click',function(e){e.stopPropagation();matchesList.scrollBy({left:-220,behavior:'smooth'})});
-    mNext.addEventListener('click',function(e){e.stopPropagation();matchesList.scrollBy({left:220,behavior:'smooth'})});
+function renderRail(rawRail,newSelectedId){
+  let data=[];
+  try{
+    data=JSON.parse(decodeURIComponent(rawRail||'[]'));
+    if(!Array.isArray(data)) data=[];
+  }catch(_e){data=[]}
+  railData=data;
+  selectedId=newSelectedId||'';
+  matchesList.innerHTML='';
+  if(data.length){
+    matchesWrap.style.display='block';
+    matchesCount.textContent=data.length+' yayin';
+    const frag=document.createDocumentFragment();
+    data.forEach(function(item){ if(item&&item.id) frag.appendChild(makeItem(item)); });
+    matchesList.appendChild(frag);
+  }else{
+    matchesWrap.style.display='none';
   }
 }
+matchesBtn.addEventListener('click',toggleMatches);
+W.addEventListener('click',closeMatches);
+matchesPanel.addEventListener('click',function(e){e.stopPropagation()});
+if(mPrev&&mNext){
+  mPrev.addEventListener('click',function(e){e.stopPropagation();matchesList.scrollBy({left:-220,behavior:'smooth'})});
+  mNext.addEventListener('click',function(e){e.stopPropagation();matchesList.scrollBy({left:220,behavior:'smooth'})});
+}
+renderRail(railRaw,selectedId);
 
 /* Play */
 function togglePlay(){V.paused?V.play().catch(()=>{}):V.pause();ui()}
@@ -720,8 +729,15 @@ document.addEventListener('keydown',function(e){
   else if(k==='r'||k==='n'||k==='b'||k==='arrowup'||k==='arrowdown'){ e.preventDefault(); tellParent({type:'player:key',key:k}); }
 });
 window.addEventListener('message',function(e){
-  if(e?.data?.type==='player:exit-fake-fs'&&isFakeFS()){ setFakeFS(false); onFSChange(); }
-  if(e?.data?.type==='player:cmd') runCmd(e.data.cmd);
+  const d=e?.data;
+  if(!d) return;
+  if(d.type==='player:exit-fake-fs'&&isFakeFS()){ setFakeFS(false); onFSChange(); }
+  else if(d.type==='player:cmd') runCmd(d.cmd);
+  else if(d.type==='player:load'){
+    forcedMute=null;
+    renderRail(d.rail,d.selected);
+    loadStream(d.src||'');
+  }
 });
 V.addEventListener('playing',function(){
   if(started) return;
@@ -760,16 +776,31 @@ function go(){
   ui();
 }
 
-/* HLS */
-if(!src)err();
-else if(window.Hls && Hls.isSupported()){
-  const h=new Hls({xhrSetup:x=>x.overrideMimeType('application/octet-stream')});
-  h.loadSource(src);h.attachMedia(V);
-  h.on(Hls.Events.MANIFEST_PARSED,()=>{hide();go()});
-  h.on(Hls.Events.ERROR,(e,d)=>{if(d.fatal){d.type===Hls.ErrorTypes.MEDIA_ERROR?h.recoverMediaError():err()}});
-}else if(V.canPlayType('application/vnd.apple.mpegurl')){
-  V.src=src;V.addEventListener('canplay',()=>{hide();go()},{once:true});V.addEventListener('error',err);
-}else err();
+/* HLS — aynı iframe'de yayın değişebilsin diye tekrar kullanılabilir fonksiyon */
+let hls=null;
+function loadStream(newSrc){
+  src=newSrc;
+  started=false;
+  errorSent=false;
+  clearTimeout(stallT);
+  stallT=setTimeout(function(){ if(!started) err(); },30000);
+  errEl.classList.remove('show');
+  loader.classList.remove('hidden');
+  brandBug.classList.remove('on');
+  V.onerror=null;
+  V.oncanplay=null;
+  if(hls){ try{hls.destroy()}catch(_e){} hls=null; }
+  if(!src){ err(); return; }
+  if(window.Hls && Hls.isSupported()){
+    hls=new Hls({xhrSetup:x=>x.overrideMimeType('application/octet-stream')});
+    hls.loadSource(src);hls.attachMedia(V);
+    hls.on(Hls.Events.MANIFEST_PARSED,()=>{hide();go()});
+    hls.on(Hls.Events.ERROR,(e,d)=>{if(d.fatal){d.type===Hls.ErrorTypes.MEDIA_ERROR?hls.recoverMediaError():err()}});
+  }else if(V.canPlayType('application/vnd.apple.mpegurl')){
+    V.src=src;V.oncanplay=()=>{V.oncanplay=null;hide();go()};V.onerror=err;
+  }else err();
+}
+loadStream(src);
 </script>
 </body>
 </html>
